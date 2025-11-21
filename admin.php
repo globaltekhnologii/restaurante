@@ -342,6 +342,25 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
             from { transform: translateX(400px); }
             to { transform: translateX(0); }
         }
+        /* Animaciones para mensajes */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-5px); }
+        }
+    
     </style>
 </head>
 <body>
@@ -399,7 +418,24 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
                 <div class="number"><?php echo $stats['veganos']; ?></div>
             </div>
         </div>
+        <!-- Mensajes de Feedback -->
+        <?php if(isset($_GET['success'])): ?>
+        <div style="background: #d4edda; border-left: 4px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: slideDown 0.5s ease;">
+        <strong>✅ ¡Éxito!</strong> El plato ha sido guardado correctamente.
+        </div>
+        <?php endif; ?>
 
+         <?php if(isset($_GET['deleted'])): ?>
+          <div style="background: #d4edda; border-left: 4px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: slideDown 0.5s ease;">
+           <strong>✅ ¡Éxito!</strong> El plato ha sido eliminado correctamente.
+            </div>
+              <?php endif; ?>
+
+               <?php if(isset($_GET['error'])): ?>
+            <div style="background: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: shake 0.5s ease;">
+         <strong>⚠️ Error:</strong> <?php echo htmlspecialchars($_GET['error']); ?>
+       </div>
+      <?php endif; ?>
         <!-- Formulario para Añadir Plato -->
         <div class="form-section">
             <h2>➕ Añadir Nuevo Plato</h2>
@@ -591,6 +627,16 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
         setTimeout(() => toast.remove(), 3000);
         <?php endif; ?>
     </script>
-
+    <script>
+        // Auto-ocultar mensajes después de 5 segundos
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('[style*="slideDown"], [style*="shake"]');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
 </body>
 </html>
