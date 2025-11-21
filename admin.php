@@ -373,6 +373,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
             <a href="logout.php">🚪 Cerrar Sesión</a>
         </div>
     </div>
+    <div class="navbar-actions">
+    <a href="admin_pedidos.php">📦 Pedidos</a>  <!-- NUEVO -->
+    <a href="index.php" target="_blank">👁️ Ver Menú</a>
+    <a href="logout.php">🚪 Cerrar Sesión</a>
+    </div>
 
     <div class="admin-container">
         

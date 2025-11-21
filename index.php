@@ -447,6 +447,34 @@
                 font-size: 0.9em;
             }
         }
+
+
+        /* Estilo para el botón de agregar al carrito */
+.btn-add-cart {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-add-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+}
+
+.btn-add-cart:active {
+    transform: scale(0.98);
+}
     </style>
 </head>
 <body>
@@ -510,10 +538,18 @@ if ($conn->connect_error) {
             <span>🍽️</span>
             <strong>Restaurante El Sabor</strong>
         </div>
-        <a href="login.php">
-            <span>👤</span>
-            <span>Panel Admin</span>
-        </a>
+        
+        <div style="display: flex; gap: 10px;">
+            <a href="carrito.php" style="background: #ff6b6b; font-weight: bold;">
+                <span>🛒</span>
+                <span id="texto-carrito">Ver Carrito (0)</span>
+            </a>
+
+            <a href="login.php">
+                <span>👤</span>
+                <span>Panel Admin</span>
+            </a>
+        </div>
     </div>
 
     <!-- Header Principal -->
@@ -635,6 +671,17 @@ if ($conn->connect_error) {
                                     <div class="descripcion">
                                         <?php echo htmlspecialchars($plato["descripcion"], ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
+                                    <button 
+                                        class="btn-add-cart" 
+                                        onclick="agregarAlCarrito(<?php echo htmlspecialchars(json_encode([
+                                            'id' => $plato['nombre'],
+                                            'nombre' => $plato['nombre'],
+                                            'precio' => $plato['precio'],
+                                            'imagen' => $plato['imagen_ruta']
+                                        ]), ENT_QUOTES, 'UTF-8'); ?>)"
+                                    >
+                                        🛒 Agregar al Carrito
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -652,21 +699,62 @@ if ($conn->connect_error) {
     </div>
 
     <script>
-        // Función para actualizar contador de resultados
-        function actualizarContador() {
-            const platosVisibles = document.querySelectorAll('.plato:not([style*="display: none"])').length;
-            document.getElementById('resultCount').textContent = platosVisibles;
+          
+        // 1. Función para actualizar el contador rojo de la barra superior
+        function actualizarContadorVisual() {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+            
+            const spanCarrito = document.getElementById('texto-carrito');
+            if (spanCarrito) {
+                spanCarrito.innerText = `Ver Carrito (${totalItems})`;
+            }
         }
 
-        // Función para filtrar por búsqueda
+        // 2. Función principal para agregar productos
+        function agregarAlCarrito(producto) {
+            let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            
+            // Verificar si ya existe para sumar cantidad
+            const indice = carrito.findIndex(item => item.nombre === producto.nombre);
+            
+            if (indice !== -1) {
+                carrito[indice].cantidad++;
+            } else {
+                producto.cantidad = 1;
+                carrito.push(producto);
+            }
+            
+            // Guardar y actualizar
+            localStorage.setItem('carrito', JSON.stringify(carrito));
+            actualizarContadorVisual(); // <--- ¡ESTA LÍNEA ES CLAVE!
+            
+            // Feedback visual
+            alert(`¡${producto.nombre} agregado! 🛒`);
+            
+            // Animación opcional del icono
+            const cartIcon = document.querySelector('.top-bar-brand');
+            if(cartIcon) {
+                cartIcon.style.transform = "scale(1.2)";
+                setTimeout(() => cartIcon.style.transform = "scale(1)", 200);
+            }
+        }
+
+        // 3. Función para actualizar contador de resultados de búsqueda
+        function actualizarContador() {
+            const platosVisibles = document.querySelectorAll('.plato:not([style*="display: none"])').length;
+            const countElement = document.getElementById('resultCount');
+            if(countElement) countElement.textContent = platosVisibles;
+        }
+
+        // 4. Función para filtrar por búsqueda
         function filtrarPlatos() {
             const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
             const platos = document.querySelectorAll('.plato');
             const clearBtn = document.getElementById('clearSearch');
             let visibleCount = 0;
 
-            // Mostrar/ocultar botón de limpiar
-            clearBtn.style.display = searchTerm ? 'flex' : 'none';
+            if(clearBtn) clearBtn.style.display = searchTerm ? 'flex' : 'none';
 
             platos.forEach(plato => {
                 const nombre = plato.dataset.nombre.toLowerCase();
@@ -680,73 +768,76 @@ if ($conn->connect_error) {
                 }
             });
 
-            // Mostrar/ocultar categorías vacías
+            // Ocultar categorías vacías
             document.querySelectorAll('.categoria-section').forEach(section => {
                 const platosVisibles = Array.from(section.querySelectorAll('.plato'))
                     .filter(p => p.style.display !== 'none').length;
                 section.style.display = platosVisibles > 0 ? '' : 'none';
             });
 
-            // Mostrar mensaje si no hay resultados
-            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+            const noResults = document.getElementById('noResults');
+            if(noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
             
-            // Actualizar contador
             actualizarContador();
         }
 
-        // Función para limpiar búsqueda
+        // 5. Función para limpiar búsqueda
         function limpiarBusqueda() {
             document.getElementById('searchBox').value = '';
-            document.getElementById('clearSearch').style.display = 'none';
+            const clearBtn = document.getElementById('clearSearch');
+            if(clearBtn) clearBtn.style.display = 'none';
             filtrarPlatos();
         }
 
-        // Función para filtrar por categoría
+        // 6. Función para filtrar por categoría
         function filtrarCategoria(categoria, event) {
-            // Actualizar botones activos
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.currentTarget.classList.add('active');
 
-            // Resetear búsqueda
             limpiarBusqueda();
 
             const secciones = document.querySelectorAll('.categoria-section');
             
             if (categoria === 'todas') {
-                secciones.forEach(seccion => {
-                    seccion.style.display = '';
-                });
-                document.querySelectorAll('.plato').forEach(plato => {
-                    plato.style.display = '';
-                });
+                secciones.forEach(seccion => seccion.style.display = '');
+                document.querySelectorAll('.plato').forEach(plato => plato.style.display = '');
             } else {
                 secciones.forEach(seccion => {
                     if (seccion.dataset.categoria === categoria) {
                         seccion.style.display = '';
-                        seccion.querySelectorAll('.plato').forEach(plato => {
-                            plato.style.display = '';
-                        });
+                        seccion.querySelectorAll('.plato').forEach(plato => plato.style.display = '');
                     } else {
                         seccion.style.display = 'none';
                     }
                 });
             }
 
-            document.getElementById('noResults').style.display = 'none';
+            const noResults = document.getElementById('noResults');
+            if(noResults) noResults.style.display = 'none';
             actualizarContador();
         }
 
-        // Smooth scroll al hacer clic en categorías
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                window.scrollTo({
-                    top: document.querySelector('.menu-container').offsetTop - 100,
-                    behavior: 'smooth'
+        // Eventos al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            actualizarContadorVisual();
+            
+            // Smooth scroll
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const menuContainer = document.querySelector('.menu-container');
+                    if(menuContainer) {
+                        window.scrollTo({
+                            top: menuContainer.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
                 });
             });
         });
+    
+
     </script>
 
 </body>
