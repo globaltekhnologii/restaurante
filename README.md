@@ -42,11 +42,28 @@ Sistema completo de administración de menú para restaurante con panel de admin
 ### 👨‍💼 Panel de Administración
 - ✅ Dashboard con estadísticas en tiempo real
 - ✅ CRUD completo de platos (Crear, Leer, Actualizar, Eliminar)
+- ✅ Gestión de usuarios y roles
+- ✅ Gestión de pedidos y entregas
+- ✅ Asignación de domiciliarios
 - ✅ Gestión de imágenes
 - ✅ Asignación de categorías
-- ✅ Configuración de características especiales
 - ✅ Búsqueda y filtros avanzados
 - ✅ Interfaz moderna con animaciones
+
+### 👥 Sistema Multi-Usuario
+- ✅ 4 Roles definidos: Admin, Mesero, Chef, Domiciliario
+- ✅ Paneles personalizados por rol
+- ✅ Mesero: Toma de pedidos, gestión de mesas
+- ✅ Chef: Visualización de comandas en cocina
+- ✅ Domiciliario: Gestión de entregas y rutas
+- ✅ Admin: Control total del sistema
+
+### 📦 Gestión de Pedidos
+- ✅ Carrito de compras dinámico
+- ✅ Toma de pedidos en mesa y domicilio
+- ✅ Tracking de estados (Pendiente -> Confirmado -> Preparando -> En Camino -> Entregado)
+- ✅ Timeline de tiempos de entrega
+
 
 ### 🎨 Diseño
 - ✅ UI/UX moderno y profesional
@@ -105,7 +122,7 @@ O ejecuta estos comandos SQL manualmente:
 CREATE DATABASE menu_restaurante CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE menu_restaurante;
 
--- Crear tabla de platos
+-- Tabla de platos
 CREATE TABLE platos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -119,17 +136,56 @@ CREATE TABLE platos (
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Crear tabla de usuarios
+-- Tabla de usuarios
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario VARCHAR(50) UNIQUE NOT NULL,
     clave VARCHAR(255) NOT NULL,
     nombre VARCHAR(100),
     email VARCHAR(100),
-    rol ENUM('admin', 'mesero', 'chef') DEFAULT 'admin',
+    rol ENUM('admin', 'mesero', 'chef', 'domiciliario') DEFAULT 'admin',
     activo TINYINT(1) DEFAULT 1,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    ultimo_acceso DATETIME
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de mesas
+CREATE TABLE mesas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero_mesa VARCHAR(10) UNIQUE NOT NULL,
+    capacidad INT DEFAULT 4,
+    estado ENUM('disponible', 'ocupada', 'reservada') DEFAULT 'disponible',
+    pedido_actual INT,
+    mesero_asignado INT,
+    fecha_ocupacion DATETIME
+);
+
+-- Tabla de pedidos
+CREATE TABLE pedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero_pedido VARCHAR(20) UNIQUE,
+    mesa_id INT,
+    usuario_id INT, -- Mesero
+    domiciliario_id INT,
+    nombre_cliente VARCHAR(100),
+    telefono VARCHAR(20),
+    direccion TEXT,
+    notas TEXT,
+    total DECIMAL(10,2),
+    estado ENUM('pendiente', 'confirmado', 'preparando', 'en_camino', 'entregado', 'cancelado') DEFAULT 'pendiente',
+    fecha_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
+    hora_salida DATETIME,
+    hora_entrega DATETIME
+);
+
+-- Tabla de items del pedido
+CREATE TABLE pedidos_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT,
+    plato_id INT,
+    nombre_plato VARCHAR(100),
+    precio DECIMAL(10,2),
+    cantidad INT,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id) ON DELETE CASCADE
 );
 
 -- Insertar usuario administrador por defecto
@@ -185,7 +241,15 @@ restaurante/
 ├── 🚪 logout.php                     # Cerrar sesión
 ├── ✅ verificar_login.php            # Validación de credenciales
 │
-├── 👨‍💼 admin.php                       # Panel de administración
+├── 👨‍💼 admin.php                       # Panel de administración principal
+├── 🍽️ mesero.php                      # Panel de mesero
+├── 👨‍🍳 chef.php                        # Panel de chef
+├── 🏍️ domiciliario.php                # Panel de domiciliario
+├── 📝 tomar_pedido_mesero.php         # Interfaz de toma de pedidos
+├── 👁️ ver_pedido.php                  # Vista detallada de pedidos
+├── 📦 admin_pedidos.php               # Gestión de pedidos (Admin)
+├── 👥 admin_usuarios.php              # Gestión de usuarios (Admin)
+│
 ├── ➕ insertar_plato_con_imagen.php  # Agregar nuevo plato
 ├── ✏️ editar_plato.php                # Editar plato existente
 ├── 💾 actualizar_plato.php           # Procesar actualización
@@ -193,7 +257,7 @@ restaurante/
 │
 ├── 🎨 style.css                      # Estilos principales
 ├── 📸 imagenes_platos/               # Carpeta de imágenes
-├── 📋 database.sql                   # Script de base de datos
+├── 📋 database.sql                   # Script de base de datos completo
 ├── 📖 README.md                      # Este archivo
 └── 🚫 .gitignore                     # Archivos ignorados por Git
 ```
@@ -269,15 +333,20 @@ Usa emojis para identificar el tipo de commit:
 - ✅ Búsqueda y filtros
 - ✅ Categorización
 
-### Versión 2.0 (Planeado)
-- ⬜ Sistema de pedidos online
-- ⬜ Carrito de compras
-- ⬜ Gestión de múltiples usuarios
-- ⬜ Sistema de reservas de mesas
-- ⬜ Dashboard con gráficos
+### Versión 2.0 (Completado)
+- ✅ Sistema de pedidos online
+- ✅ Carrito de compras
+- ✅ Gestión de múltiples usuarios (Roles)
+- ✅ Sistema de mesas
+- ✅ Dashboard con gráficos y estadísticas
+- ✅ Tracking de entregas
+
+### Versión 3.0 (Planeado)
 - ⬜ Exportar/Importar menú
 - ⬜ API REST
 - ⬜ Modo oscuro
+- ⬜ Impresión de tickets
+- ⬜ Notificaciones en tiempo real (WebSockets)
 
 ## 📄 Licencia
 
