@@ -160,23 +160,6 @@ chmod 777 imagenes_platos  # Solo en Linux/Mac
 En Windows, asegúrate de que la carpeta tenga permisos de escritura.
 
 ## 🎯 Uso
-
-### Acceder al Sistema
-
-1. **Menú Público:** `http://localhost/restaurante/`
-2. **Panel Admin:** `http://localhost/restaurante/login.php`
-
-### Credenciales por Defecto
-
-```
-👤 Usuario: admin
-🔐 Contraseña: admin123
-```
-
-> ⚠️ **IMPORTANTE:** Cambia estas credenciales en producción por seguridad.
-
-### Funcionalidades Principales
-
 #### Como Usuario (Público)
 1. Navega por el menú completo
 2. Usa el buscador para encontrar platos específicos

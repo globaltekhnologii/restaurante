@@ -483,23 +483,15 @@
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
 // ============================================
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
+require_once 'config.php';
 
 $error = false;
 $platos = [];
 $categorias = [];
 $totalPlatos = 0;
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    error_log("Error de conexión a la base de datos: " . $conn->connect_error);
-    $error = true;
-} else {
-    $conn->set_charset("utf8mb4");
+try {
+    $conn = getDatabaseConnection();
     
     // Consulta optimizada
     $sql = "SELECT nombre, descripcion, precio, imagen_ruta, 
@@ -528,7 +520,11 @@ if ($conn->connect_error) {
         $error = true;
     }
     
-    $conn->close();
+    closeDatabaseConnection($conn);
+    
+} catch (Exception $e) {
+    error_log("Error en index.php: " . $e->getMessage());
+    $error = true;
 }
 ?>
 

@@ -1,12 +1,7 @@
 <?php
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
+// Usar configuración centralizada
+require_once 'config.php';
+$conn = getDatabaseConnection();
 
 // Obtener teléfono del cliente
 $telefono = isset($_GET['telefono']) ? trim($_GET['telefono']) : '';

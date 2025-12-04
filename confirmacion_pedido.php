@@ -7,14 +7,9 @@ if (empty($numero_pedido)) {
     exit;
 }
 
-// Conectar a la base de datos para obtener detalles
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
+// Usar configuración centralizada
+require_once 'config.php';
+$conn = getDatabaseConnection();
 
 $stmt = $conn->prepare("SELECT * FROM pedidos WHERE numero_pedido = ?");
 $stmt->bind_param("s", $numero_pedido);

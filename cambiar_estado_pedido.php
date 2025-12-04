@@ -23,14 +23,9 @@ if (!in_array($nuevo_estado, $estados_validos)) {
     exit;
 }
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
+// Usar configuración centralizada
+require_once 'config.php';
+$conn = getDatabaseConnection();
 
 // Actualizar estado
 $stmt = $conn->prepare("UPDATE pedidos SET estado = ?, fecha_actualizacion = NOW() WHERE id = ?");

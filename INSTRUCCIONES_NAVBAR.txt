@@ -1,0 +1,48 @@
+# Instrucciones para Corregir Navbar Duplicada en admin.php
+
+## Problema
+El archivo `admin.php` tiene una navbar duplicada en las líneas 368-380.
+
+## Solución Manual
+
+### Paso 1: Abrir el archivo
+Abre `c:\xampp\htdocs\Restaurante\admin.php` en tu editor de código favorito.
+
+### Paso 2: Buscar la sección
+Busca las líneas 368-380. Deberías ver algo como esto:
+
+```html
+<!-- Navbar Superior -->
+<div class="admin-navbar">
+    <h1>🍽️ Panel de Administración</h1>
+    <div class="navbar-actions">
+        <a href="index.php" target="_blank">👁️ Ver Menú</a>
+        <a href="logout.php">🚪 Cerrar Sesión</a>
+    </div>
+</div>
+<div class="navbar-actions">
+<a href="admin_pedidos.php">📦 Pedidos</a>  <!-- NUEVO -->
+<a href="index.php" target="_blank">👁️ Ver Menú</a>
+<a href="logout.php">🚪 Cerrar Sesión</a>
+</div>
+```
+
+### Paso 3: Reemplazar con esto
+
+```html
+<!-- Navbar Superior -->
+<div class="admin-navbar">
+    <h1>🍽️ Panel de Administración</h1>
+    <div class="navbar-actions">
+        <a href="admin_pedidos.php">📦 Pedidos</a>
+        <a href="index.php" target="_blank">👁️ Ver Menú</a>
+        <a href="logout.php">🚪 Cerrar Sesión</a>
+    </div>
+</div>
+```
+
+### Paso 4: Guardar
+Guarda el archivo y recarga la página en tu navegador.
+
+## Resultado
+Ahora tendrás una sola navbar con todos los enlaces correctamente organizados.

@@ -3,7 +3,7 @@
 $host = "localhost";
 $usuario = "root"; // En XAMPP el usuario por defecto es root
 $contrasenia = ""; // En XAMPP la contraseña por defecto viene vacía
-$base_de_datos = "platofacil";
+$base_de_datos = "menu_restaurante";
 
 // Intentar conectar
 $conexion = new mysqli($host, $usuario, $contrasenia, $base_de_datos);

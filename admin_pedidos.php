@@ -6,14 +6,9 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
     exit;
 }
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-$conn->set_charset("utf8mb4");
+// Usar configuración centralizada
+require_once 'config.php';
+$conn = getDatabaseConnection();
 
 // Filtros
 $filtro_estado = isset($_GET['estado']) ? $_GET['estado'] : '';

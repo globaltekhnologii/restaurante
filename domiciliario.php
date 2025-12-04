@@ -1,0 +1,615 @@
+<?php
+session_start();
+
+// Verificar sesión y rol de domiciliario
+require_once 'auth_helper.php';
+verificarSesion();
+verificarRolORedirect(['domiciliario'], 'login.php');
+
+require_once 'config.php';
+$conn = getDatabaseConnection();
+
+// Obtener información del domiciliario
+$domiciliario_id = $_SESSION['user_id'];
+$domiciliario_nombre = $_SESSION['nombre'];
+
+// Obtener estadísticas
+$stats = [];
+
+// Entregas del día
+$hoy = date('Y-m-d');
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND DATE(fecha_pedido) = ?");
+$stmt->bind_param("is", $domiciliario_id, $hoy);
+$stmt->execute();
+$stats['entregas_hoy'] = $stmt->get_result()->fetch_assoc()['count'];
+$stmt->close();
+
+// Entregas completadas hoy
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND DATE(fecha_pedido) = ? AND estado = 'entregado'");
+$stmt->bind_param("is", $domiciliario_id, $hoy);
+$stmt->execute();
+$stats['completadas_hoy'] = $stmt->get_result()->fetch_assoc()['count'];
+$stmt->close();
+
+// Entregas pendientes (asignadas pero no entregadas)
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado IN ('en_camino', 'preparando')");
+$stmt->bind_param("i", $domiciliario_id);
+$stmt->execute();
+$stats['pendientes'] = $stmt->get_result()->fetch_assoc()['count'];
+$stmt->close();
+
+// Entregas en camino
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado = 'en_camino'");
+$stmt->bind_param("i", $domiciliario_id);
+$stmt->execute();
+$stats['en_camino'] = $stmt->get_result()->fetch_assoc()['count'];
+$stmt->close();
+
+// Pedidos listos para recoger (sin asignar domiciliario)
+$stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id IS NULL AND estado = 'en_camino' AND direccion IS NOT NULL AND direccion != ''")->fetch_assoc()['count'];
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Domiciliario - Restaurante El Sabor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+        
+        /* Navbar - Color azul cielo para domiciliario */
+        .domiciliario-navbar {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .domiciliario-navbar h1 { 
+            font-size: 1.5em; 
+            font-weight: 600;
+        }
+        
+        .navbar-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .navbar-actions span {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .navbar-actions a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .navbar-actions a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4299e1;
+        }
+        
+        /* Section */
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #4299e1;
+        }
+        
+        /* Entregas Grid */
+        .entregas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .entrega-card {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        .entrega-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .entrega-card.en_camino {
+            border-color: #4299e1;
+            background: #ebf8ff;
+        }
+        
+        .entrega-card.preparando {
+            border-color: #ed8936;
+            background: #fffaf0;
+        }
+        
+        .entrega-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .entrega-numero {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .entrega-tiempo {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .entrega-cliente {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .cliente-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .cliente-info div {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .entrega-footer {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .entrega-total {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #4299e1;
+            margin-bottom: 10px;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        
+        .badge-preparando { background: #ed8936; color: white; }
+        .badge-en_camino { background: #4299e1; color: white; }
+        .badge-entregado { background: #48bb78; color: white; }
+        
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .message-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state .emoji {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #4299e1;
+            border-bottom-color: #4299e1;
+        }
+        
+        .tab:hover {
+            color: #4299e1;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="domiciliario-navbar">
+        <h1>🏍️ Panel de Entregas</h1>
+        <div class="navbar-actions">
+            <span>👤 <?php echo htmlspecialchars($domiciliario_nombre); ?></span>
+            <a href="index.php" target="_blank">👁️ Ver Menú</a>
+            <a href="logout.php">🚪 Salir</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Estadísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>📦 Entregas Hoy</h3>
+                <div class="number"><?php echo $stats['entregas_hoy']; ?></div>
+            </div>
+            <div class="stat-card">
+                <h3>✅ Completadas Hoy</h3>
+                <div class="number"><?php echo $stats['completadas_hoy']; ?></div>
+            </div>
+            <div class="stat-card">
+                <h3>🔥 Pendientes</h3>
+                <div class="number"><?php echo $stats['pendientes']; ?></div>
+            </div>
+            <div class="stat-card">
+                <h3>🚗 En Camino</h3>
+                <div class="number"><?php echo $stats['en_camino']; ?></div>
+            </div>
+            <div class="stat-card">
+                <h3>📋 Listos para Recoger</h3>
+                <div class="number"><?php echo $stats['listos']; ?></div>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        <?php if(isset($_GET['success'])): ?>
+        <div class="message message-success">
+            <strong>✅ ¡Éxito!</strong> <?php echo htmlspecialchars($_GET['success']); ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('asignadas')">🏍️ Mis Entregas</button>
+            <button class="tab" onclick="cambiarTab('disponibles')">📋 Disponibles</button>
+            <button class="tab" onclick="cambiarTab('historial')">📜 Historial</button>
+        </div>
+
+        <!-- Tab: Mis Entregas -->
+        <div id="tab-asignadas" class="tab-content active">
+            <div class="section">
+                <h2>🏍️ Mis Entregas Activas</h2>
+                
+                <div class="entregas-grid">
+                    <?php
+                    $sql = "SELECT p.* 
+                            FROM pedidos p 
+                            WHERE p.domiciliario_id = ? AND p.estado IN ('preparando', 'en_camino') 
+                            ORDER BY p.fecha_pedido ASC";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $domiciliario_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    
+                    if ($result->num_rows > 0) {
+                        while($entrega = $result->fetch_assoc()) {
+                            $estado_class = strtolower($entrega['estado']);
+                            $badge_class = 'badge-' . $estado_class;
+                            
+                            // Calcular tiempo
+                            $tiempo_pedido = strtotime($entrega['fecha_pedido']);
+                            $tiempo_actual = time();
+                            $minutos = floor(($tiempo_actual - $tiempo_pedido) / 60);
+                            
+                            echo '<div class="entrega-card ' . $estado_class . '">';
+                            echo '<div class="entrega-header">';
+                            echo '<div class="entrega-numero">🧾 ' . htmlspecialchars($entrega['numero_pedido']) . '</div>';
+                            echo '<div class="entrega-tiempo">⏱️ ' . $minutos . ' min</div>';
+                            echo '</div>';
+                            
+                            echo '<div><span class="badge ' . $badge_class . '">' . ucfirst(str_replace('_', ' ', $entrega['estado'])) . '</span></div>';
+                            
+                            echo '<div class="entrega-cliente">';
+                            echo '<div class="cliente-info">';
+                            echo '<div><strong>👤 Cliente:</strong> ' . htmlspecialchars($entrega['nombre_cliente']) . '</div>';
+                            echo '<div><strong>📞 Teléfono:</strong> ' . htmlspecialchars($entrega['telefono']) . '</div>';
+                            echo '<div><strong>📍 Dirección:</strong> ' . htmlspecialchars($entrega['direccion']) . '</div>';
+                            if ($entrega['notas']) {
+                                echo '<div><strong>📝 Notas:</strong> ' . htmlspecialchars($entrega['notas']) . '</div>';
+                            }
+                            echo '</div>';
+                            echo '</div>';
+                            
+                            echo '<div class="entrega-footer">';
+                            echo '<div class="entrega-total">💰 Total: $' . number_format($entrega['total'], 2) . '</div>';
+                            
+                            if ($entrega['estado'] === 'preparando') {
+                                echo '<a href="salir_entrega.php?id=' . $entrega['id'] . '" class="btn btn-primary">🚗 Salir a Entregar</a>';
+                            } else if ($entrega['estado'] === 'en_camino') {
+                                echo '<a href="confirmar_entrega.php?id=' . $entrega['id'] . '" class="btn btn-success">✅ Confirmar Entrega</a>';
+                            }
+                            
+                            echo '</div>';
+                            echo '</div>';
+                        }
+                    } else {
+                        echo '<div class="empty-state">';
+                        echo '<div class="emoji">😌</div>';
+                        echo '<h3>No tienes entregas asignadas</h3>';
+                        echo '<p>Revisa la pestaña "Disponibles" para tomar nuevas entregas.</p>';
+                        echo '</div>';
+                    }
+                    $stmt->close();
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Disponibles -->
+        <div id="tab-disponibles" class="tab-content">
+            <div class="section">
+                <h2>📋 Pedidos Listos para Recoger</h2>
+                
+                <div class="entregas-grid">
+                    <?php
+                    $sql = "SELECT p.* 
+                            FROM pedidos p 
+                            WHERE p.domiciliario_id IS NULL AND p.estado = 'en_camino' 
+                            AND p.direccion IS NOT NULL AND p.direccion != ''
+                            ORDER BY p.fecha_pedido ASC";
+                    $result = $conn->query($sql);
+                    
+                    if ($result->num_rows > 0) {
+                        while($pedido = $result->fetch_assoc()) {
+                            echo '<div class="entrega-card">';
+                            echo '<div class="entrega-header">';
+                            echo '<div class="entrega-numero">🧾 ' . htmlspecialchars($pedido['numero_pedido']) . '</div>';
+                            echo '</div>';
+                            
+                            echo '<div class="entrega-cliente">';
+                            echo '<div class="cliente-info">';
+                            echo '<div><strong>👤 Cliente:</strong> ' . htmlspecialchars($pedido['nombre_cliente']) . '</div>';
+                            echo '<div><strong>📞 Teléfono:</strong> ' . htmlspecialchars($pedido['telefono']) . '</div>';
+                            echo '<div><strong>📍 Dirección:</strong> ' . htmlspecialchars($pedido['direccion']) . '</div>';
+                            echo '</div>';
+                            echo '</div>';
+                            
+                            echo '<div class="entrega-footer">';
+                            echo '<div class="entrega-total">💰 Total: $' . number_format($pedido['total'], 2) . '</div>';
+                            echo '<a href="tomar_entrega.php?id=' . $pedido['id'] . '" class="btn btn-warning">📦 Tomar Entrega</a>';
+                            echo '</div>';
+                            echo '</div>';
+                        }
+                    } else {
+                        echo '<div class="empty-state">';
+                        echo '<div class="emoji">📭</div>';
+                        echo '<h3>No hay pedidos disponibles</h3>';
+                        echo '<p>Todos los pedidos están asignados o no hay entregas pendientes.</p>';
+                        echo '</div>';
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Historial -->
+        <div id="tab-historial" class="tab-content">
+            <div class="section">
+                <h2>📜 Historial de Entregas</h2>
+                
+                <?php
+                $sql = "SELECT p.* 
+                        FROM pedidos p 
+                        WHERE p.domiciliario_id = ? AND p.estado = 'entregado' 
+                        ORDER BY p.hora_entrega DESC 
+                        LIMIT 20";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("i", $domiciliario_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    echo '<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">';
+                    echo '<thead style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white;">';
+                    echo '<tr>';
+                    echo '<th style="padding: 15px; text-align: left;">Pedido</th>';
+                    echo '<th style="padding: 15px; text-align: left;">Cliente</th>';
+                    echo '<th style="padding: 15px; text-align: left;">Dirección</th>';
+                    echo '<th style="padding: 15px; text-align: left;">Total</th>';
+                    echo '<th style="padding: 15px; text-align: left;">Entregado</th>';
+                    echo '</tr>';
+                    echo '</thead><tbody>';
+                    
+                    while($entrega = $result->fetch_assoc()) {
+                        echo '<tr style="border-bottom: 1px solid #e0e0e0;">';
+                        echo '<td style="padding: 15px;"><strong>' . htmlspecialchars($entrega['numero_pedido']) . '</strong></td>';
+                        echo '<td style="padding: 15px;">' . htmlspecialchars($entrega['nombre_cliente']) . '</td>';
+                        echo '<td style="padding: 15px;">' . htmlspecialchars($entrega['direccion']) . '</td>';
+                        echo '<td style="padding: 15px;"><strong>$' . number_format($entrega['total'], 2) . '</strong></td>';
+                        echo '<td style="padding: 15px;">' . ($entrega['hora_entrega'] ? date('d/m/Y H:i', strtotime($entrega['hora_entrega'])) : '-') . '</td>';
+                        echo '</tr>';
+                    }
+                    
+                    echo '</tbody></table>';
+                } else {
+                    echo '<div class="empty-state">';
+                    echo '<div class="emoji">📭</div>';
+                    echo '<h3>No hay entregas en el historial</h3>';
+                    echo '<p>Tus entregas completadas aparecerán aquí.</p>';
+                    echo '</div>';
+                }
+                $stmt->close();
+                ?>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cambiarTab(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar el tab seleccionado
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Auto-refresh cada 30 segundos
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+        
+        // Auto-ocultar mensajes
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(msg => {
+                msg.style.transition = 'opacity 0.5s ease';
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
+<?php $conn->close(); ?>

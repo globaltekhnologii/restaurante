@@ -11,19 +11,11 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
     exit;
 }
 
-// Configuración de la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
+// Usar configuración centralizada
+require_once 'config.php';
+require_once 'file_upload_helper.php';
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Error de conexión: " . $conn->connect_error);
-}
-
-$conn->set_charset("utf8mb4");
+$conn = getDatabaseConnection();
 
 // Verificar que se recibieron los datos por POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
@@ -69,71 +61,30 @@ if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] == 4) {
 // Si hay errores, redirigir de vuelta con mensaje
 if (!empty($errores)) {
     $mensaje_error = implode(" | ", $errores);
+    closeDatabaseConnection($conn);
     header("Location: admin.php?error=" . urlencode($mensaje_error));
     exit;
 }
 
-// Manejar la subida de la imagen
-$imagen_ruta = "";
+// Validar imagen subida con helper seguro
+$validacion = validarImagenSubida($_FILES['imagen']);
 
-if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
-    
-    $directorio_destino = "imagenes_platos/";
-    
-    // Crear directorio si no existe
-    if (!file_exists($directorio_destino)) {
-        mkdir($directorio_destino, 0777, true);
-    }
-    
-    // Obtener información del archivo
-    $nombre_archivo = basename($_FILES['imagen']['name']);
-    $extension = strtolower(pathinfo($nombre_archivo, PATHINFO_EXTENSION));
-    
-    // Extensiones permitidas
-    $extensiones_permitidas = array('jpg', 'jpeg', 'png', 'gif', 'webp');
-    
-    // Validar extensión
-    if (!in_array($extension, $extensiones_permitidas)) {
-        $conn->close();
-        header("Location: admin.php?error=Solo se permiten imágenes (JPG, JPEG, PNG, GIF, WEBP)");
-        exit;
-    }
-    
-    // Validar tamaño (máximo 5MB)
-    if ($_FILES['imagen']['size'] > 5242880) {
-        $conn->close();
-        header("Location: admin.php?error=La imagen es muy grande. Máximo 5MB");
-        exit;
-    }
-    
-    // Validar que es una imagen real
-    $check = getimagesize($_FILES['imagen']['tmp_name']);
-    if ($check === false) {
-        $conn->close();
-        header("Location: admin.php?error=El archivo no es una imagen válida");
-        exit;
-    }
-    
-    // Generar nombre único para evitar duplicados
-    $nuevo_nombre = time() . "_" . uniqid() . "." . $extension;
-    $ruta_completa = $directorio_destino . $nuevo_nombre;
-    
-    // Intentar mover el archivo subido
-    if (move_uploaded_file($_FILES['imagen']['tmp_name'], $ruta_completa)) {
-        $imagen_ruta = $ruta_completa;
-    } else {
-        $conn->close();
-        header("Location: admin.php?error=Error al subir la imagen. Verifica los permisos de la carpeta.");
-        exit;
-    }
-    
-} else {
-    // Error en la subida
-    $error_code = $_FILES['imagen']['error'];
-    $conn->close();
-    header("Location: admin.php?error=Error al subir la imagen (Código: " . $error_code . ")");
+if (!$validacion['valido']) {
+    closeDatabaseConnection($conn);
+    header("Location: admin.php?error=" . urlencode($validacion['error']));
     exit;
 }
+
+// Mover archivo a destino
+$resultado = moverArchivoSubido($_FILES['imagen'], 'imagenes_platos/');
+
+if (!$resultado['exito']) {
+    closeDatabaseConnection($conn);
+    header("Location: admin.php?error=" . urlencode($resultado['error']));
+    exit;
+}
+
+$imagen_ruta = $resultado['ruta'];
 
 // Preparar y ejecutar la consulta de inserción
 $stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -153,7 +104,7 @@ if ($stmt->execute()) {
     // Inserción exitosa
     $nuevo_id = $stmt->insert_id;
     $stmt->close();
-    $conn->close();
+    closeDatabaseConnection($conn);
     
     // Redirigir con mensaje de éxito
     header("Location: admin.php?success=1&nuevo_id=" . $nuevo_id);
@@ -164,12 +115,10 @@ if ($stmt->execute()) {
     error_log("Error al insertar plato: " . $stmt->error);
     
     // Eliminar la imagen si se subió pero falló la inserción
-    if (!empty($imagen_ruta) && file_exists($imagen_ruta)) {
-        unlink($imagen_ruta);
-    }
+    eliminarArchivoSeguro($imagen_ruta);
     
     $stmt->close();
-    $conn->close();
+    closeDatabaseConnection($conn);
     
     // Redirigir con mensaje de error
     header("Location: admin.php?error=Error al guardar el plato en la base de datos. Intenta nuevamente.");

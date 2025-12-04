@@ -14,19 +14,9 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $id_plato = $_GET['id'];
 
-// Conexión a la base de datos
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "menu_restaurante";
-
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Conexión fallida: " . $conn->connect_error);
-}
-
-$conn->set_charset("utf8mb4");
+// Usar configuración centralizada
+require_once 'config.php';
+$conn = getDatabaseConnection();
 
 // Obtener datos del plato
 $stmt = $conn->prepare("SELECT * FROM platos WHERE id = ?");

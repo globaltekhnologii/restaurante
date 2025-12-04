@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
-    header("Location: login.php");
-    exit;
-}
+// Verificar sesión y rol de administrador
+require_once 'auth_helper.php';
+verificarSesion();
+verificarRolORedirect(['admin'], 'login.php');
 ?>
 <!DOCTYPE html>
 <html lang="es">
