@@ -327,7 +327,7 @@ $conn->close();
                     </div>
                     
                     <div>
-                        <a href="detalle_pedido.php?id=<?php echo $pedido['id']; ?>" class="btn-details">
+                        <a href="ver_pedido.php?id=<?php echo $pedido['id']; ?>" class="btn-details">
                             Ver Detalles
                         </a>
                     </div>
