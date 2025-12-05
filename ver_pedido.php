@@ -349,6 +349,12 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
             </a>
             <?php endif; ?>
             
+            <?php if (($user_rol === 'mesero' || $user_rol === 'admin') && ($pedido['estado'] === 'en_camino' || $pedido['estado'] === 'preparando')): ?>
+            <a href="cambiar_estado_pedido.php?id=<?php echo $pedido['id']; ?>&estado=entregado&redirect=<?php echo urlencode('ver_pedido.php?id=' . $pedido['id']); ?>" class="btn" style="background: #ed8936; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;" onclick="return confirm('¿Confirmas que has entregado este pedido a la mesa?');">
+                ✅ Marcar como Entregado
+            </a>
+            <?php endif; ?>
+            
             <?php if ($pedido['pagado']): ?>
             <a href="ver_comprobante_pago.php?pedido_id=<?php echo $pedido['id']; ?>&print=true" target="_blank" class="btn" style="background: #48bb78; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
                 📄 Ver Comprobante de Pago

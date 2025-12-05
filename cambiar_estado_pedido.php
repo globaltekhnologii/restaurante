@@ -41,12 +41,16 @@ if ($nuevo_estado === 'entregado') {
 if ($stmt->execute()) {
     $stmt->close();
     $conn->close();
-    header("Location: admin_pedidos.php?success=Estado actualizado correctamente");
+    
+    $redirect_url = isset($_GET['redirect']) ? $_GET['redirect'] : 'admin_pedidos.php';
+    header("Location: " . $redirect_url . (strpos($redirect_url, '?') !== false ? '&' : '?') . "success=Estado actualizado correctamente");
     exit;
 } else {
     $stmt->close();
     $conn->close();
-    header("Location: admin_pedidos.php?error=Error al actualizar el estado");
+    
+    $redirect_url = isset($_GET['redirect']) ? $_GET['redirect'] : 'admin_pedidos.php';
+    header("Location: " . $redirect_url . (strpos($redirect_url, '?') !== false ? '&' : '?') . "error=Error al actualizar el estado");
     exit;
 }
 ?>
