@@ -257,6 +257,23 @@ $conn->close();
         </div>
     </div>
 
+    <div class="actions" style="text-align: center; margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Imprimir</button>
+        
+        <?php
+        $redirect_url = 'index.php';
+        if (isset($_SESSION['rol'])) {
+            switch ($_SESSION['rol']) {
+                case 'cajero': $redirect_url = 'cajero.php'; break;
+                case 'mesero': $redirect_url = 'mesero.php'; break;
+                case 'admin': $redirect_url = 'admin.php'; break;
+                case 'domiciliario': $redirect_url = 'domiciliario.php'; break;
+            }
+        }
+        ?>
+        <a href="<?php echo $redirect_url; ?>" style="padding: 10px 20px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer; text-decoration: none;">← Volver</a>
+    </div>
+
     <div class="footer">
         <p><strong>¡Gracias por su compra!</strong></p>
         <p>Este es un comprobante válido de pago</p>
