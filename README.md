@@ -63,6 +63,14 @@ Sistema completo de administración de menú para restaurante con panel de admin
 - ✅ Toma de pedidos en mesa y domicilio
 - ✅ Tracking de estados (Pendiente -> Confirmado -> Preparando -> En Camino -> Entregado)
 - ✅ Timeline de tiempos de entrega
+- ✅ **NUEVO:** Tipos de pedido (Mesa, Domicilio, Para Llevar)
+
+### 💳 Sistema de Pagos y Facturación
+- ✅ Múltiples métodos de pago (Efectivo, Nequi, Daviplata, Bancolombia)
+- ✅ Códigos QR dinámicos para pagos
+- ✅ Validación de pagos anticipados
+- ✅ Generación de tickets de cocina y facturas
+- ✅ Liberación automática de mesas al pagar
 
 
 ### 🎨 Diseño
@@ -341,11 +349,16 @@ Usa emojis para identificar el tipo de commit:
 - ✅ Dashboard con gráficos y estadísticas
 - ✅ Tracking de entregas
 
+### Versión 2.5 (Actual)
+- ✅ Sistema de pagos y billeteras digitales
+- ✅ Impresión de tickets y facturas
+- ✅ Flujo mejorado para meseros
+- ✅ Validación de pagos anticipados
+
 ### Versión 3.0 (Planeado)
 - ⬜ Exportar/Importar menú
 - ⬜ API REST
 - ⬜ Modo oscuro
-- ⬜ Impresión de tickets
 - ⬜ Notificaciones en tiempo real (WebSockets)
 
 ## 📄 Licencia
