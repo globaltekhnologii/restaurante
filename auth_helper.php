@@ -71,6 +71,9 @@ function redirigirSegunRol() {
         case 'domiciliario':
             header("Location: domiciliario.php");
             break;
+        case 'cajero':
+            header("Location: cajero.php");
+            break;
         default:
             header("Location: login.php");
             break;
