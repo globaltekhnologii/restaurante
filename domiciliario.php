@@ -362,6 +362,7 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             display: block;
         }
     </style>
+    <link rel="stylesheet" href="css/auto_refresh.css">
 </head>
 <body>
     <!-- Navbar -->
@@ -374,6 +375,20 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <a href="logout.php">🚪 Salir</a>
         </div>
+    </div>
+
+    <!-- Indicador de actualización -->
+    <div id="refresh-indicator" class="refresh-indicator"></div>
+    
+    <!-- Controles de auto-refresh -->
+    <div class="auto-refresh-controls">
+        <button id="btn-toggle-refresh" class="btn-auto-refresh active" onclick="toggleAutoRefresh()">
+            <span id="refresh-icon">▶️</span>
+            <span id="refresh-text">Auto-actualización activa</span>
+        </button>
+        <button id="btn-toggle-sound" class="btn-sound-toggle" onclick="toggleSound()" title="Activar/Desactivar sonido">
+            🔔
+        </button>
     </div>
 
     <div class="container">
@@ -620,6 +635,136 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             pollInterval: 5000,
             soundEnabled: true
         };
+    </script>
+    
+    <!-- Auto-Refresh System -->
+    <script src="js/auto_refresh.js"></script>
+    <script>
+        let pedidosRefresh;
+        let lastPedidosCount = 0;
+        
+        // Función para renderizar pedidos del domiciliario
+        function renderPedidosDomicilio(data) {
+            if (!data.pedidos || data.pedidos.length === 0) {
+                return `<div class="empty-state">
+                    <div class="emoji">🏍️</div>
+                    <h3>No hay pedidos para entregar</h3>
+                    <p>Todos los pedidos han sido entregados</p>
+                </div>`;
+            }
+            
+            let html = '';
+            data.pedidos.forEach(pedido => {
+                const estadoClass = pedido.estado;
+                const badgeClass = `badge-${estadoClass}`;
+                const esMio = pedido.es_mio;
+                
+                html += `<div class="entrega-card ${estadoClass} ${esMio ? 'mi-pedido' : ''}">
+                    <div class="entrega-header">
+                        <div>
+                            <div class="entrega-numero">${pedido.numero_pedido}</div>
+                            <div class="entrega-cliente">👤 ${pedido.nombre_cliente}</div>
+                        </div>
+                        <span class="badge ${badgeClass}">${capitalize(pedido.estado)}</span>
+                    </div>
+                    
+                    <div class="cliente-info">
+                        <div>📞 ${pedido.telefono}</div>
+                        <div>📍 ${pedido.direccion}</div>
+                        <div>💵 Total: $${formatNumber(pedido.total)}</div>
+                        <div>⏰ ${pedido.hora}</div>
+                    </div>`;
+                
+                html += `<div class="entrega-actions">`;
+                
+                if (pedido.estado === 'listo' && !esMio) {
+                    html += `<a href="tomar_pedido.php?pedido_id=${pedido.id}" class="btn btn-primary">
+                        🏍️ Tomar Pedido
+                    </a>`;
+                } else if (pedido.estado === 'en_camino' && esMio) {
+                    html += `<a href="cambiar_estado.php?pedido_id=${pedido.id}&nuevo_estado=entregado" class="btn btn-success">
+                        ✅ Marcar como Entregado
+                    </a>`;
+                }
+                
+                html += `<a href="ver_pedido.php?id=${pedido.id}" class="btn btn-secondary">
+                    👁️ Ver Detalles
+                </a></div></div>`;
+            });
+            
+            return html;
+        }
+        
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('es-CO');
+        }
+        
+        // Inicializar auto-refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            pedidosRefresh = new AutoRefresh({
+                endpoint: 'api/get_pedidos_domiciliario.php',
+                targetElement: '.entregas-grid',
+                interval: 8000, // 8 segundos
+                renderFunction: renderPedidosDomicilio,
+                onNewItems: function(newItems) {
+                    ToastNotification.show(
+                        `🏍️ ${newItems.length} nuevo(s) pedido(s) para entregar`,
+                        'new',
+                        5000
+                    );
+                    NotificationSound.play('new_order');
+                },
+                onUpdate: function(data) {
+                    if (data.total !== lastPedidosCount) {
+                        lastPedidosCount = data.total;
+                    }
+                }
+            });
+            
+            pedidosRefresh.start();
+            console.log('✅ Auto-refresh iniciado para panel de domiciliario');
+        });
+        
+        // Funciones de control
+        function toggleAutoRefresh() {
+            if (pedidosRefresh.isPaused) {
+                pedidosRefresh.resume();
+                document.getElementById('btn-toggle-refresh').classList.add('active');
+                document.getElementById('btn-toggle-refresh').classList.remove('paused');
+                document.getElementById('refresh-icon').textContent = '▶️';
+                document.getElementById('refresh-text').textContent = 'Auto-actualización activa';
+            } else {
+                pedidosRefresh.pause();
+                document.getElementById('btn-toggle-refresh').classList.remove('active');
+                document.getElementById('btn-toggle-refresh').classList.add('paused');
+                document.getElementById('refresh-icon').textContent = '⏸️';
+                document.getElementById('refresh-text').textContent = 'Auto-actualización pausada';
+            }
+        }
+        
+        function toggleSound() {
+            const enabled = NotificationSound.toggle();
+            const btn = document.getElementById('btn-toggle-sound');
+            if (enabled) {
+                btn.classList.remove('muted');
+                btn.textContent = '🔔';
+                ToastNotification.show('Sonido activado', 'success', 2000);
+            } else {
+                btn.classList.add('muted');
+                btn.textContent = '🔕';
+                ToastNotification.show('Sonido desactivado', 'info', 2000);
+            }
+        }
+        
+        // Inicializar estado del botón de sonido
+        if (!NotificationSound.isEnabled()) {
+            document.getElementById('btn-toggle-sound').classList.add('muted');
+            document.getElementById('btn-toggle-sound').textContent = '🔕';
+        }
     </script>
 </body>
 </html>
