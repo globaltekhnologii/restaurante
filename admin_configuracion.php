@@ -152,8 +152,28 @@ require_once 'includes/info_negocio.php';
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Horario de Atención</label>
+                    <label>Horario de Atención General</label>
                     <textarea name="horario_atencion" rows="3"><?php echo htmlspecialchars($info_negocio['horario_atencion']); ?></textarea>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🛵 Configuración de Domicilios</h2>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Hora de Apertura Domicilios</label>
+                        <input type="time" name="horario_apertura_domicilios" value="<?php echo htmlspecialchars($info_negocio['horario_apertura_domicilios']); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Hora de Cierre Domicilios</label>
+                        <input type="time" name="horario_cierre_domicilios" value="<?php echo htmlspecialchars($info_negocio['horario_cierre_domicilios']); ?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="domicilios_habilitados" value="1" <?php echo $info_negocio['domicilios_habilitados'] ? 'checked' : ''; ?>>
+                        Domicilios Habilitados
+                    </label>
                 </div>
             </div>
 

@@ -516,6 +516,19 @@
 require_once 'config.php';
 require_once 'includes/info_negocio.php';
 
+// Lógica de Estado del Restaurante (Abierto/Cerrado)
+$hora_actual = date('H:i:s');
+$apertura = $info_negocio['horario_apertura_domicilios'] ?? '09:00:00';
+$cierre = $info_negocio['horario_cierre_domicilios'] ?? '22:00:00';
+$habilitado = $info_negocio['domicilios_habilitados'] ?? 1;
+
+$esta_abierto = false;
+if ($habilitado) {
+    if ($hora_actual >= $apertura && $hora_actual <= $cierre) {
+        $esta_abierto = true;
+    }
+}
+
 $error = false;
 $platos = [];
 $categorias = [];
@@ -568,6 +581,13 @@ try {
                 <span>🍽️</span>
             <?php endif; ?>
             <strong><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></strong>
+            
+            <!-- Badge de Estado -->
+            <?php if ($esta_abierto): ?>
+                <span class="badge" style="background: #28a745; color: white; margin-left: 15px; animation: none;">🟢 Abierto</span>
+            <?php else: ?>
+                <span class="badge" style="background: #dc3545; color: white; margin-left: 15px; animation: none;">🔴 Cerrado</span>
+            <?php endif; ?>
         </div>
         
         <div style="display: flex; gap: 10px;">
@@ -730,6 +750,10 @@ try {
     </div>
 
     <script>
+        // Pasar estado a JS
+        const ESTA_ABIERTO = <?php echo $esta_abierto ? 'true' : 'false'; ?>;
+        const HORARIO_APERTURA = "<?php echo date('g:i A', strtotime($apertura)); ?>";
+        const HORARIO_CIERRE = "<?php echo date('g:i A', strtotime($cierre)); ?>";
           
         // 1. Función para actualizar el contador rojo de la barra superior
         function actualizarContadorVisual() {
@@ -770,6 +794,11 @@ try {
 
         // 3. Función principal para agregar productos
         function agregarAlCarrito(producto) {
+            if (!ESTA_ABIERTO) {
+                showToast(`⛔ El restaurante está cerrado. Horario: ${HORARIO_APERTURA} - ${HORARIO_CIERRE}`);
+                return;
+            }
+
             let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
             
             const indice = carrito.findIndex(item => item.nombre === producto.nombre);

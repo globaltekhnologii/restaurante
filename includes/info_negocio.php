@@ -32,7 +32,10 @@ if ($result && $result->num_rows > 0) {
         'departamento' => 'Cundinamarca',
         'ciudad' => 'Bogotá',
         'moneda' => 'COP',
-        'impuesto_porcentaje' => 0.00
+        'impuesto_porcentaje' => 0.00,
+        'horario_apertura_domicilios' => '09:00:00',
+        'horario_cierre_domicilios' => '22:00:00',
+        'domicilios_habilitados' => 1
     ];
 }
 

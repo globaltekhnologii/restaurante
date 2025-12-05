@@ -25,6 +25,9 @@ $sitio_web = trim($_POST['sitio_web']);
 $facebook = trim($_POST['facebook']);
 $instagram = trim($_POST['instagram']);
 $horario_atencion = trim($_POST['horario_atencion']);
+$horario_apertura_domicilios = trim($_POST['horario_apertura_domicilios']);
+$horario_cierre_domicilios = trim($_POST['horario_cierre_domicilios']);
+$domicilios_habilitados = isset($_POST['domicilios_habilitados']) ? 1 : 0;
 
 // Manejar subida de logo
 $logo_url = null;
@@ -55,13 +58,17 @@ $sql = "UPDATE configuracion_sistema SET
         sitio_web = ?, 
         facebook = ?, 
         instagram = ?, 
-        horario_atencion = ?";
+        horario_atencion = ?,
+        horario_apertura_domicilios = ?,
+        horario_cierre_domicilios = ?,
+        domicilios_habilitados = ?";
 
 $params = [
     $nombre_restaurante, $pais, $departamento, $ciudad, $direccion, 
-    $telefono, $email, $sitio_web, $facebook, $instagram, $horario_atencion
+    $telefono, $email, $sitio_web, $facebook, $instagram, $horario_atencion,
+    $horario_apertura_domicilios, $horario_cierre_domicilios, $domicilios_habilitados
 ];
-$types = "sssssssssss";
+$types = "sssssssssssssi";
 
 if ($logo_url) {
     $sql .= ", logo_url = ?";

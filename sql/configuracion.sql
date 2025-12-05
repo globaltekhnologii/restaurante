@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS configuracion_sistema (
     ciudad VARCHAR(50) DEFAULT 'Bogotá',
     moneda VARCHAR(10) DEFAULT 'COP',
     impuesto_porcentaje DECIMAL(5,2) DEFAULT 0.00,
+    horario_apertura_domicilios TIME DEFAULT '09:00:00',
+    horario_cierre_domicilios TIME DEFAULT '22:00:00',
+    domicilios_habilitados TINYINT(1) DEFAULT 1,
     fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 

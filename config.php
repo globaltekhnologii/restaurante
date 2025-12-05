@@ -1,5 +1,6 @@
 <?php
 // config.php - Configuración de la base de datos
+date_default_timezone_set('America/Bogota');
 
 // Database configuration
 define('DB_HOST', 'localhost');
