@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?> - Menú Dinámico</title>
-    <link rel="stylesheet" href="style.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
