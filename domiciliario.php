@@ -7,6 +7,8 @@ verificarSesion();
 verificarRolORedirect(['domiciliario'], 'login.php');
 
 require_once 'config.php';
+require_once 'config.php';
+require_once 'includes/info_negocio.php';
 $conn = getDatabaseConnection();
 
 // Obtener información del domiciliario
@@ -53,7 +55,7 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Domiciliario - Restaurante El Sabor</title>
+    <title>Panel Domiciliario - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         

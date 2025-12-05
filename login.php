@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+<?php
+require_once 'config.php';
+require_once 'includes/info_negocio.php';
+?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio de Sesión - Restaurante El Sabor</title>
+    <title>Inicio de Sesión - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         * {
             margin: 0;
@@ -396,7 +400,7 @@
             <!-- Header -->
             <div class="login-header">
                 <div class="login-icon">🍽️</div>
-                <h1>Restaurante El Sabor</h1>
+                <h1><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></h1>
                 <p>Panel de Administración</p>
             </div>
 
@@ -467,22 +471,6 @@
 
                 <button type="submit" class="btn-login" id="btnLogin">
                     Iniciar Sesión
-                </button>
-
-            </form>
-
-            <!-- Footer -->
-            <div class="login-footer">
-                <p>
-                    ¿No tienes acceso? 
-                    <a href="index.php">Ver el menú público</a>
-                </p>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
         // Función para mostrar/ocultar contraseña
         function togglePassword() {
             const passwordInput = document.getElementById('clave');

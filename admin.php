@@ -5,13 +5,14 @@ session_start();
 require_once 'auth_helper.php';
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
+require_once 'includes/info_negocio.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - Restaurante El Sabor</title>
+    <title>Panel de Administración - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <link rel="stylesheet" href="style.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -372,6 +373,7 @@ verificarRolORedirect(['admin'], 'login.php');
             <a href="admin_pedidos.php">📦 Pedidos</a>
             <a href="admin_usuarios.php">👥 Usuarios</a>
             <a href="config_pagos.php">💳 Configurar Pagos</a>
+            <a href="admin_configuracion.php">⚙️ Configuración</a>
             <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <a href="logout.php">🚪 Cerrar Sesión</a>

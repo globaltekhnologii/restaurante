@@ -49,6 +49,7 @@ Sistema completo de administración de menú para restaurante con panel de admin
 - ✅ Asignación de categorías
 - ✅ Búsqueda y filtros avanzados
 - ✅ Interfaz moderna con animaciones
+- ✅ **NUEVO:** Configuración del negocio (Logo, Nombre, Contacto)
 
 ### 👥 Sistema Multi-Usuario
 - ✅ 4 Roles definidos: Admin, Mesero, Chef, Domiciliario
@@ -354,6 +355,11 @@ Usa emojis para identificar el tipo de commit:
 - ✅ Impresión de tickets y facturas
 - ✅ Flujo mejorado para meseros
 - ✅ Validación de pagos anticipados
+
+### Versión 2.6 (Actual)
+- ✅ Personalización completa del negocio
+- ✅ Carga dinámica de logo e información
+- ✅ Panel de configuración administrativa
 
 ### Versión 3.0 (Planeado)
 - ⬜ Exportar/Importar menú

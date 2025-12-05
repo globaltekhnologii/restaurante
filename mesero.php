@@ -7,6 +7,8 @@ verificarSesion();
 verificarRolORedirect(['mesero'], 'login.php');
 
 require_once 'config.php';
+require_once 'config.php';
+require_once 'includes/info_negocio.php';
 $conn = getDatabaseConnection();
 
 // Obtener información del mesero
@@ -45,7 +47,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Mesero - Restaurante El Sabor</title>
+    <title>Panel Mesero - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurante El Sabor - Menú Dinámico</title>
+    <title><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?> - Menú Dinámico</title>
     <link rel="stylesheet" href="style.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -475,15 +475,46 @@
 .btn-add-cart:active {
     transform: scale(0.98);
 }
+
+/* Toast Notification */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.toast {
+    background: #28a745;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    transform: translateY(-20px);
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
     </style>
 </head>
 <body>
+<div id="toastContainer" class="toast-container"></div>
 <?php
 // ============================================
 // CONFIGURACIÓN Y CONEXIÓN A LA BASE DE DATOS
 // ============================================
 
 require_once 'config.php';
+require_once 'includes/info_negocio.php';
 
 $error = false;
 $platos = [];
@@ -531,8 +562,12 @@ try {
     <!-- Barra Superior -->
     <div class="top-bar">
         <div class="top-bar-brand">
-            <span>🍽️</span>
-            <strong>Restaurante El Sabor</strong>
+            <?php if (!empty($info_negocio['logo_url']) && file_exists($info_negocio['logo_url'])): ?>
+                <img src="<?php echo htmlspecialchars($info_negocio['logo_url']); ?>" alt="Logo" style="height: 40px; border-radius: 5px;">
+            <?php else: ?>
+                <span>🍽️</span>
+            <?php endif; ?>
+            <strong><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></strong>
         </div>
         
         <div style="display: flex; gap: 10px;">
@@ -550,7 +585,7 @@ try {
 
     <!-- Header Principal -->
     <header>
-        <h1>Bienvenidos a Restaurante El Sabor</h1>
+        <h1>Bienvenidos a <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></h1>
         <p>Menú cargado automáticamente desde la Base de Datos</p>
     </header>
 
@@ -707,11 +742,36 @@ try {
             }
         }
 
-        // 2. Función principal para agregar productos
+        // 2. Función para mostrar notificaciones toast
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = message;
+
+            container.appendChild(toast);
+
+            // Animar la entrada
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+
+            // Ocultar y eliminar después de 3 segundos
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // Esperar a que la transición termine para eliminar el elemento
+                toast.addEventListener('transitionend', () => {
+                    toast.remove();
+                });
+            }, 3000);
+        }
+
+        // 3. Función principal para agregar productos
         function agregarAlCarrito(producto) {
             let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
             
-            // Verificar si ya existe para sumar cantidad
             const indice = carrito.findIndex(item => item.nombre === producto.nombre);
             
             if (indice !== -1) {
@@ -721,22 +781,21 @@ try {
                 carrito.push(producto);
             }
             
-            // Guardar y actualizar
             localStorage.setItem('carrito', JSON.stringify(carrito));
-            actualizarContadorVisual(); // <--- ¡ESTA LÍNEA ES CLAVE!
+            actualizarContadorVisual();
             
-            // Feedback visual
-            alert(`¡${producto.nombre} agregado! 🛒`);
+            // Feedback visual con Toast
+            showToast(`¡${producto.nombre} agregado! 🛒`);
             
-            // Animación opcional del icono
-            const cartIcon = document.querySelector('.top-bar-brand');
+            // Animación opcional del icono del carrito
+            const cartIcon = document.querySelector('.top-bar a[href="carrito.php"]');
             if(cartIcon) {
-                cartIcon.style.transform = "scale(1.2)";
-                setTimeout(() => cartIcon.style.transform = "scale(1)", 200);
+                cartIcon.style.transform = "scale(1.1)";
+                setTimeout(() => cartIcon.style.transform = "scale(1)", 300);
             }
         }
 
-        // 3. Función para actualizar contador de resultados de búsqueda
+        // 4. Función para actualizar contador de resultados de búsqueda
         function actualizarContador() {
             const platosVisibles = document.querySelectorAll('.plato:not([style*="display: none"])').length;
             const countElement = document.getElementById('resultCount');
@@ -832,9 +891,46 @@ try {
                 });
             });
         });
-    
 
     </script>
+
+    <!-- Footer con Información del Negocio -->
+    <footer style="background: #333; color: white; padding: 40px 20px; margin-top: 60px;">
+        <div class="menu-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; background: transparent; box-shadow: none; margin-top: 0;">
+            <div>
+                <h3>📍 Ubicación</h3>
+                <p><?php echo htmlspecialchars($info_negocio['direccion']); ?></p>
+                <p><?php echo htmlspecialchars($info_negocio['ciudad']); ?>, <?php echo htmlspecialchars($info_negocio['departamento']); ?></p>
+                <p><?php echo htmlspecialchars($info_negocio['pais']); ?></p>
+            </div>
+            <div>
+                <h3>📞 Contacto</h3>
+                <p>Tel: <?php echo htmlspecialchars($info_negocio['telefono']); ?></p>
+                <p>Email: <?php echo htmlspecialchars($info_negocio['email']); ?></p>
+                <?php if($info_negocio['sitio_web']): ?>
+                    <p>Web: <a href="<?php echo htmlspecialchars($info_negocio['sitio_web']); ?>" style="color: #667eea;"><?php echo htmlspecialchars($info_negocio['sitio_web']); ?></a></p>
+                <?php endif; ?>
+            </div>
+            <div>
+                <h3>⏰ Horarios</h3>
+                <p style="white-space: pre-line;"><?php echo htmlspecialchars($info_negocio['horario_atencion']); ?></p>
+            </div>
+            <div>
+                <h3>🌐 Síguenos</h3>
+                <div style="display: flex; gap: 15px; font-size: 1.5em; margin-top: 10px;">
+                    <?php if($info_negocio['facebook']): ?>
+                        <a href="<?php echo htmlspecialchars($info_negocio['facebook']); ?>" style="color: white; text-decoration: none;">f</a>
+                    <?php endif; ?>
+                    <?php if($info_negocio['instagram']): ?>
+                        <a href="<?php echo htmlspecialchars($info_negocio['instagram']); ?>" style="color: white; text-decoration: none;">📸</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #555;">
+            <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?>. Todos los derechos reservados.</p>
+        </div>
+    </footer>
 
 </body>
 </html>
