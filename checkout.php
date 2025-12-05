@@ -155,6 +155,43 @@
                 padding: 25px;
             }
         }
+
+        /* Estilos para selector de tipo de pedido */
+        .order-type-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .order-type-option {
+            position: relative;
+        }
+        .order-type-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .order-type-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .order-type-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .order-type-option input:checked + label {
+            border-color: #667eea;
+            background: #eef2ff;
+            color: #667eea;
+        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -167,6 +204,33 @@
         <div class="checkout-card">
             
             <form id="checkoutForm" action="procesar_pedido.php" method="POST">
+                
+                <!-- TIPO DE PEDIDO -->
+                <h2 class="section-title">📋 Tipo de Pedido</h2>
+                
+                <div class="order-type-selector">
+                    <div class="order-type-option">
+                        <input type="radio" id="tipo_mesa" name="tipo_pedido_visual" value="mesa">
+                        <label for="tipo_mesa" class="order-type-label">
+                            <span class="order-type-icon">🍽️</span>
+                            <span>Para Mesa</span>
+                        </label>
+                    </div>
+                    <div class="order-type-option">
+                        <input type="radio" id="tipo_domicilio" name="tipo_pedido_visual" value="domicilio" checked>
+                        <label for="tipo_domicilio" class="order-type-label">
+                            <span class="order-type-icon">🏍️</span>
+                            <span>Domicilio</span>
+                        </label>
+                    </div>
+                    <div class="order-type-option">
+                        <input type="radio" id="tipo_llevar" name="tipo_pedido_visual" value="para_llevar">
+                        <label for="tipo_llevar" class="order-type-label">
+                            <span class="order-type-icon">📦</span>
+                            <span>Para Llevar</span>
+                        </label>
+                    </div>
+                </div>
                 
                 <h2 class="section-title">📋 Información de Contacto</h2>
                 
@@ -189,7 +253,36 @@
                 
                 <h2 class="section-title" style="margin-top: 40px;">📍 Dirección de Entrega</h2>
                 
-                <div class="form-group">
+                <!-- SELECCIÓN DE MESA (Oculto por defecto) -->
+                <div id="mesa_section" class="hidden form-group">
+                    <label for="mesa_visual">Número de Mesa</label>
+                    <select id="mesa_visual" class="form-control" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <option value="">Seleccione una mesa...</option>
+                        <?php
+                        // Intentar cargar mesas dinámicamente
+                        try {
+                            if (file_exists('config.php')) {
+                                require_once 'config.php';
+                                $conn = getDatabaseConnection();
+                                // CORRECCIÓN: Usar 'estado' en lugar de 'ocupada'
+                                $sql = "SELECT id, numero_mesa FROM mesas WHERE estado = 'disponible' ORDER BY numero_mesa";
+                                $result = $conn->query($sql);
+                                
+                                if ($result) {
+                                    while ($mesa = $result->fetch_assoc()) {
+                                        echo "<option value='{$mesa['id']}'>Mesa {$mesa['numero_mesa']}</option>";
+                                    }
+                                }
+                                $conn->close();
+                            }
+                        } catch (Exception $e) {
+                            // Fallback silencioso
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div class="form-group" id="direccion_container">
                     <label for="direccion">Dirección Completa <span class="required">*</span></label>
                     <textarea id="direccion" name="direccion" required placeholder="Calle, número, apartamento, referencias..."></textarea>
                 </div>
@@ -207,8 +300,12 @@
                 
                 <input type="hidden" id="carritoData" name="carrito">
                 <input type="hidden" id="totalData" name="total">
+                <input type="hidden" id="tipo_pedido" name="tipo_pedido" value="domicilio">
+                <input type="hidden" id="mesa_id" name="mesa_id" value="">
+                <input type="hidden" name="metodo_pago" value="efectivo">
+                <input type="hidden" name="pago_anticipado" value="0">
                 
-                <button type="submit" class="btn-submit">
+                <button type="submit" class="btn-submit" onclick="return validarPedido()">
                     ✅ Confirmar Pedido
                 </button>
                 
@@ -278,6 +375,52 @@
         
         // Cargar al inicio
         cargarResumen();
+
+        // Lógica para selector de tipo de pedido
+        document.querySelectorAll('input[name="tipo_pedido_visual"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const tipo = this.value;
+                document.getElementById('tipo_pedido').value = tipo;
+                
+                const mesaSection = document.getElementById('mesa_section');
+                const direccionContainer = document.getElementById('direccion_container');
+                const direccionInput = document.getElementById('direccion');
+                
+                if (tipo === 'mesa') {
+                    mesaSection.classList.remove('hidden');
+                    direccionContainer.classList.add('hidden');
+                    // Llenar dirección con valor dummy para pasar validación HTML5
+                    direccionInput.value = 'Mesa ' + (document.getElementById('mesa_visual').options[document.getElementById('mesa_visual').selectedIndex]?.text || '');
+                } else if (tipo === 'para_llevar') {
+                    mesaSection.classList.add('hidden');
+                    direccionContainer.classList.add('hidden');
+                    direccionInput.value = 'Para Llevar - Recogida en local';
+                } else {
+                    mesaSection.classList.add('hidden');
+                    direccionContainer.classList.remove('hidden');
+                    if (direccionInput.value.startsWith('Mesa') || direccionInput.value.startsWith('Para Llevar')) {
+                        direccionInput.value = '';
+                    }
+                }
+            });
+        });
+
+        // Actualizar mesa_id oculto
+        document.getElementById('mesa_visual').addEventListener('change', function() {
+            document.getElementById('mesa_id').value = this.value;
+            if (this.value) {
+                document.getElementById('direccion').value = 'Mesa ' + this.options[this.selectedIndex].text;
+            }
+        });
+
+        function validarPedido() {
+            const tipo = document.getElementById('tipo_pedido').value;
+            if (tipo === 'mesa' && !document.getElementById('mesa_id').value) {
+                alert('Por favor selecciona una mesa');
+                return false;
+            }
+            return true;
+        }
     </script>
 
 </body>

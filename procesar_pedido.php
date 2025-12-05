@@ -2,6 +2,9 @@
 // ============================================
 // PROCESAR PEDIDO - Guarda el pedido en la base de datos
 // ============================================
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // Usar configuración centralizada
 require_once 'config.php';
@@ -42,7 +45,7 @@ $conn->begin_transaction();
 
 try {
     // Insertar el pedido principal
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, email, total, estado, notas) VALUES (?, ?, ?, ?, ?, ?, 'pendiente', ?)");
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, email, total, estado, notas) VALUES (?, ?, ?, ?, ?, ?, 'confirmado', ?)");
     
     $stmt->bind_param("sssssds", 
         $numero_pedido,
@@ -111,7 +114,8 @@ try {
     $conn->close();
     
     error_log("Error al procesar pedido: " . $e->getMessage());
-    header("Location: checkout.php?error=Error al procesar el pedido. Intenta nuevamente.");
+    echo "Error: " . $e->getMessage(); // Mostrar error en pantalla también
+    // header("Location: checkout.php?error=Error al procesar el pedido. Intenta nuevamente.");
     exit;
 }
 ?>

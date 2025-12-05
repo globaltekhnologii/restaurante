@@ -301,7 +301,9 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
 <body>
     <!-- Navbar -->
     <div class="chef-navbar">
-        <h1>👨‍🍳 Panel de Cocina</h1>
+        <h1>👨‍🍳 Panel de Cocina 
+            <span id="badge-new_orders" class="badge" style="display:none;">0</span>
+        </h1>
         <div class="navbar-actions">
             <span>👤 <?php echo htmlspecialchars($chef_nombre); ?></span>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
@@ -419,11 +421,15 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
         </div>
     </div>
 
+    <!-- Incluir sistema de notificaciones -->
+    <script src="js/notifications.js"></script>
     <script>
-        // Auto-refresh cada 30 segundos
-        setTimeout(function() {
-            location.reload();
-        }, 30000);
+        // Configurar notificaciones para el chef
+        const notificationConfig = {
+            apiUrl: 'api/check_updates.php',
+            pollInterval: 5000, // 5 segundos
+            soundEnabled: true
+        };
         
         // Auto-ocultar mensajes
         setTimeout(function() {

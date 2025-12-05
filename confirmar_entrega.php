@@ -1,34 +1,44 @@
 <?php
 session_start();
 
-// Verificar sesión y rol de domiciliario
+// Verificar sesión y rol de domiciliario o admin
 require_once 'auth_helper.php';
 verificarSesion();
-verificarRolORedirect(['domiciliario'], 'login.php');
+verificarRolORedirect(['domiciliario', 'admin'], 'login.php');
 
 require_once 'config.php';
 
 // Validar parámetro
 if (!isset($_GET['id'])) {
-    header("Location: domiciliario.php?error=" . urlencode("ID de pedido no especificado"));
+    $redirect = ($_SESSION['rol'] === 'admin') ? 'admin_pedidos.php' : 'domiciliario.php';
+    header("Location: $redirect?error=" . urlencode("ID de pedido no especificado"));
     exit;
 }
 
 $pedido_id = intval($_GET['id']);
-$domiciliario_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'];
+$user_rol = $_SESSION['rol'];
 
 $conn = getDatabaseConnection();
 
-// Verificar que el pedido está asignado al domiciliario y en camino
-$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id = ? AND estado = 'en_camino'");
-$stmt->bind_param("ii", $pedido_id, $domiciliario_id);
+// Verificar que el pedido existe y está en camino
+// Si es domiciliario, verificar que está asignado a él
+if ($user_rol === 'domiciliario') {
+    $stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id = ? AND estado = 'en_camino'");
+    $stmt->bind_param("ii", $pedido_id, $user_id);
+} else {
+    // Si es admin, solo verificar que el pedido está en camino
+    $stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND estado = 'en_camino'");
+    $stmt->bind_param("i", $pedido_id);
+}
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
     $stmt->close();
     $conn->close();
-    header("Location: domiciliario.php?error=" . urlencode("Pedido no encontrado o no está en camino"));
+    $redirect = ($_SESSION['rol'] === 'admin') ? 'admin_pedidos.php' : 'domiciliario.php';
+    header("Location: $redirect?error=" . urlencode("Pedido no encontrado o no está en camino"));
     exit;
 }
 
@@ -41,13 +51,15 @@ $stmt->bind_param("i", $pedido_id);
 if ($stmt->execute()) {
     $stmt->close();
     $conn->close();
-    header("Location: domiciliario.php?success=" . urlencode("Entrega confirmada exitosamente"));
+    $redirect = ($_SESSION['rol'] === 'admin') ? 'admin_pedidos.php' : 'domiciliario.php';
+    header("Location: $redirect?success=" . urlencode("Entrega confirmada exitosamente"));
     exit;
 } else {
     $error = $stmt->error;
     $stmt->close();
     $conn->close();
-    header("Location: domiciliario.php?error=" . urlencode("Error al confirmar entrega: " . $error));
+    $redirect = ($_SESSION['rol'] === 'admin') ? 'admin_pedidos.php' : 'domiciliario.php';
+    header("Location: $redirect?error=" . urlencode("Error al confirmar entrega: " . $error));
     exit;
 }
 ?>

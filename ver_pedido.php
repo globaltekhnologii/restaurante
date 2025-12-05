@@ -342,7 +342,19 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
         </div>
 
         <!-- Acciones de Impresión -->
-        <div class="section" style="padding: 15px; display: flex; gap: 15px; justify-content: flex-end;">
+        <div class="section" style="padding: 15px; display: flex; gap: 15px; justify-content: flex-end; flex-wrap: wrap;">
+            <?php if ($pedido['estado'] === 'entregado' && !$pedido['pagado']): ?>
+            <a href="registrar_pago.php?pedido_id=<?php echo $pedido['id']; ?>" class="btn" style="background: #48bb78; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
+                💳 Registrar Pago
+            </a>
+            <?php endif; ?>
+            
+            <?php if ($pedido['pagado']): ?>
+            <a href="ver_comprobante_pago.php?pedido_id=<?php echo $pedido['id']; ?>&print=true" target="_blank" class="btn" style="background: #48bb78; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
+                📄 Ver Comprobante de Pago
+            </a>
+            <?php endif; ?>
+            
             <a href="ver_ticket.php?id=<?php echo $pedido['id']; ?>&print=true" target="_blank" class="btn" style="background: #333; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
                 🖨️ Ticket Cocina
             </a>

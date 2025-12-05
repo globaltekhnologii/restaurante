@@ -364,7 +364,9 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
 <body>
     <!-- Navbar -->
     <div class="domiciliario-navbar">
-        <h1>🏍️ Panel de Entregas</h1>
+        <h1>🏍️ Panel de Entregas
+            <span id="badge-my_deliveries" class="badge" style="display:none;">0</span>
+        </h1>
         <div class="navbar-actions">
             <span>👤 <?php echo htmlspecialchars($domiciliario_nombre); ?></span>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
@@ -597,11 +599,6 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             event.target.classList.add('active');
         }
         
-        // Auto-refresh cada 30 segundos
-        setTimeout(function() {
-            location.reload();
-        }, 30000);
-        
         // Auto-ocultar mensajes
         setTimeout(function() {
             const messages = document.querySelectorAll('.message');
@@ -611,6 +608,16 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                 setTimeout(() => msg.remove(), 500);
             });
         }, 5000);
+    </script>
+    
+    <!-- Sistema de notificaciones -->
+    <script src="js/notifications.js"></script>
+    <script>
+        const notificationConfig = {
+            apiUrl: 'api/check_updates.php',
+            pollInterval: 5000,
+            soundEnabled: true
+        };
     </script>
 </body>
 </html>
