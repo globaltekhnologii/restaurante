@@ -1,0 +1,161 @@
+<!-- Auto-Refresh Integration for Chef Panel -->
+<!-- Add this before </head> -->
+<link rel="stylesheet" href="css/auto_refresh.css">
+
+<!-- Add this after navbar -->
+<div id="refresh-indicator" class="refresh-indicator"></div>
+<div class="auto-refresh-controls">
+    <button id="btn-toggle-refresh" class="btn-auto-refresh active" onclick="toggleAutoRefresh()">
+        <span id="refresh-icon">▶️</span>
+        <span id="refresh-text">Auto-actualización activa</span>
+    </button>
+    <button id="btn-toggle-sound" class="btn-sound-toggle" onclick="toggleSound()" title="Activar/Desactivar sonido">
+        🔔
+    </button>
+</div>
+
+<!-- Add this before </body> -->
+<script src="js/auto_refresh.js"></script>
+<script>
+    let pedidosRefresh;
+    let lastPedidosCount = 0;
+    
+    // Función para renderizar pedidos del chef
+    function renderPedidosChef(data) {
+        if (!data.pedidos || data.pedidos.length === 0) {
+            return `<div class="empty-state">
+                <div class="emoji">😴</div>
+                <h3>No hay pedidos pendientes</h3>
+                <p>Todos los pedidos están listos</p>
+            </div>`;
+        }
+        
+        let html = '';
+        data.pedidos.forEach(pedido => {
+            const estadoClass = pedido.estado;
+            const badgeClass = `badge-${estadoClass}`;
+            const tiempoColor = pedido.tiempo_espera > 20 ? 'red' : (pedido.tiempo_espera > 10 ? 'orange' : 'green');
+            
+            html += `<div class="pedido-card ${estadoClass}">
+                <div class="pedido-header">
+                    <div>
+                        <div class="pedido-numero">${pedido.numero_pedido}</div>
+                        <div class="pedido-mesa">${pedido.mesa}</div>
+                    </div>
+                    <span class="badge ${badgeClass}">${capitalize(pedido.estado)}</span>
+                </div>
+                
+                <div class="pedido-info">
+                    <div>👤 Mesero: ${pedido.mesero}</div>
+                    <div>⏰ ${pedido.hora} (${pedido.tiempo_espera} min)</div>
+                </div>
+                
+                <div class="pedido-items">`;
+            
+            pedido.items.forEach(item => {
+                html += `<div class="pedido-item">
+                    <span class="item-cantidad">${item.cantidad}x</span>
+                    <span class="item-nombre">${item.nombre}</span>
+                    ${item.notas ? `<div style="font-size:0.85em;color:#666;">📝 ${item.notas}</div>` : ''}
+                </div>`;
+            });
+            
+            html += `</div>`;
+            
+            if (pedido.notas) {
+                html += `<div class="pedido-notas">📝 ${pedido.notas}</div>`;
+            }
+            
+            html += `<div class="pedido-actions">`;
+            
+            if (pedido.estado === 'confirmado') {
+                html += `<a href="cambiar_estado.php?pedido_id=${pedido.id}&nuevo_estado=preparando" class="btn btn-primary">
+                    🔥 Iniciar Preparación
+                </a>`;
+            } else if (pedido.estado === 'preparando') {
+                html += `<a href="cambiar_estado.php?pedido_id=${pedido.id}&nuevo_estado=listo" class="btn btn-success">
+                    ✅ Marcar como Listo
+                </a>`;
+            }
+            
+            html += `</div></div>`;
+        });
+        
+        return html;
+    }
+    
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // Inicializar auto-refresh
+    document.addEventListener('DOMContentLoaded', function() {
+        pedidosRefresh = new AutoRefresh({
+            endpoint: 'api/get_pedidos_chef.php',
+            targetElement: '.pedidos-grid',
+            interval: 5000, // 5 segundos para chef (más rápido)
+            renderFunction: renderPedidosChef,
+            onNewItems: function(newItems) {
+                ToastNotification.show(
+                    `🔥 ${newItems.length} nuevo(s) pedido(s) para preparar`,
+                    'new',
+                    5000
+                );
+                NotificationSound.play('new_order');
+                
+                // Actualizar badge
+                const badge = document.getElementById('badge-new_orders');
+                if (badge) {
+                    badge.textContent = newItems.length;
+                    badge.style.display = 'inline-block';
+                    setTimeout(() => badge.style.display = 'none', 10000);
+                }
+            },
+            onUpdate: function(data) {
+                if (data.total !== lastPedidosCount) {
+                    lastPedidosCount = data.total;
+                }
+            }
+        });
+        
+        pedidosRefresh.start();
+        console.log('✅ Auto-refresh iniciado para panel de chef');
+    });
+    
+    // Funciones de control
+    function toggleAutoRefresh() {
+        if (pedidosRefresh.isPaused) {
+            pedidosRefresh.resume();
+            document.getElementById('btn-toggle-refresh').classList.add('active');
+            document.getElementById('btn-toggle-refresh').classList.remove('paused');
+            document.getElementById('refresh-icon').textContent = '▶️';
+            document.getElementById('refresh-text').textContent = 'Auto-actualización activa';
+        } else {
+            pedidosRefresh.pause();
+            document.getElementById('btn-toggle-refresh').classList.remove('active');
+            document.getElementById('btn-toggle-refresh').classList.add('paused');
+            document.getElementById('refresh-icon').textContent = '⏸️';
+            document.getElementById('refresh-text').textContent = 'Auto-actualización pausada';
+        }
+    }
+    
+    function toggleSound() {
+        const enabled = NotificationSound.toggle();
+        const btn = document.getElementById('btn-toggle-sound');
+        if (enabled) {
+            btn.classList.remove('muted');
+            btn.textContent = '🔔';
+            ToastNotification.show('Sonido activado', 'success', 2000);
+        } else {
+            btn.classList.add('muted');
+            btn.textContent = '🔕';
+            ToastNotification.show('Sonido desactivado', 'info', 2000);
+        }
+    }
+    
+    // Inicializar estado del botón de sonido
+    if (!NotificationSound.isEnabled()) {
+        document.getElementById('btn-toggle-sound').classList.add('muted');
+        document.getElementById('btn-toggle-sound').textContent = '🔕';
+    }
+</script>

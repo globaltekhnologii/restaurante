@@ -1,0 +1,240 @@
+/* css/auto_refresh.css - Estilos para sistema de auto-actualización */
+
+/* Indicador de actualización */
+.refresh-indicator {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 0.9em;
+    font-weight: 600;
+    z-index: 1000;
+    display: none;
+    animation: slideInRight 0.3s ease;
+}
+
+.refresh-indicator.cargando {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-left: 4px solid #1976d2;
+}
+
+.refresh-indicator.activo {
+    background: #e8f5e9;
+    color: #388e3c;
+    border-left: 4px solid #388e3c;
+}
+
+.refresh-indicator.pausado {
+    background: #fff3e0;
+    color: #f57c00;
+    border-left: 4px solid #f57c00;
+}
+
+.refresh-indicator.error {
+    background: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #c62828;
+}
+
+/* Notificaciones Toast */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    max-width: 400px;
+    z-index: 1001;
+    transform: translateX(500px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-notification .toast-icon {
+    font-size: 1.5em;
+}
+
+.toast-notification .toast-message {
+    flex: 1;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.toast-success {
+    border-left: 4px solid #4caf50;
+}
+
+.toast-info {
+    border-left: 4px solid #2196f3;
+}
+
+.toast-warning {
+    border-left: 4px solid #ff9800;
+}
+
+.toast-error {
+    border-left: 4px solid #f44336;
+}
+
+.toast-new {
+    border-left: 4px solid #9c27b0;
+    background: linear-gradient(135deg, #f3e5f5 0%, #ffffff 100%);
+}
+
+/* Botón de control de auto-refresh */
+.auto-refresh-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 999;
+}
+
+.btn-auto-refresh {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-auto-refresh:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-auto-refresh.paused {
+    background: #fff3e0;
+    border-color: #f57c00;
+    color: #f57c00;
+}
+
+.btn-auto-refresh.active {
+    background: #e8f5e9;
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.btn-sound-toggle {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-sound-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-sound-toggle.muted {
+    opacity: 0.5;
+}
+
+/* Badge de contador de nuevos pedidos */
+.new-items-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #f44336;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+    font-weight: bold;
+    animation: pulse 1s infinite;
+}
+
+/* Resaltado de nuevos items */
+.new-item-highlight {
+    animation: highlightFade 3s ease;
+    background: #fff9c4 !important;
+}
+
+/* Animaciones */
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes highlightFade {
+    0% {
+        background: #fff9c4;
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .refresh-indicator {
+        top: 60px;
+        right: 10px;
+        font-size: 0.8em;
+        padding: 8px 12px;
+    }
+    
+    .toast-notification {
+        bottom: 10px;
+        right: 10px;
+        min-width: 250px;
+        max-width: calc(100vw - 20px);
+    }
+    
+    .auto-refresh-controls {
+        bottom: 10px;
+        left: 10px;
+    }
+    
+    .btn-auto-refresh {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+}

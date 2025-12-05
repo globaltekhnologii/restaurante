@@ -420,6 +420,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
             color: #92400e;
         }
     </style>
+    <link rel="stylesheet" href="css/auto_refresh.css">
 </head>
 <body>
     <!-- Navbar -->
@@ -430,6 +431,20 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <a href="logout.php">🚪 Salir</a>
         </div>
+    </div>
+
+    <!-- Indicador de actualización -->
+    <div id="refresh-indicator" class="refresh-indicator"></div>
+    
+    <!-- Controles de auto-refresh -->
+    <div class="auto-refresh-controls">
+        <button id="btn-toggle-refresh" class="btn-auto-refresh active" onclick="toggleAutoRefresh()">
+            <span id="refresh-icon">▶️</span>
+            <span id="refresh-text">Auto-actualización activa</span>
+        </button>
+        <button id="btn-toggle-sound" class="btn-sound-toggle" onclick="toggleSound()" title="Activar/Desactivar sonido">
+            🔔
+        </button>
     </div>
 
     <div class="container">
@@ -630,6 +645,166 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                 setTimeout(() => msg.remove(), 500);
             });
         }, 5000);
+    </script>
+    
+    <!-- Auto-Refresh System -->
+    <script src="js/auto_refresh.js"></script>
+    <script>
+        let pedidosRefresh, mesasRefresh;
+        let lastPedidosCount = 0;
+        
+        // Función para renderizar pedidos
+        function renderPedidos(data) {
+            if (!data.pedidos || data.pedidos.length === 0) {
+                return '<tr><td colspan="8" style="text-align: center; color: #999; padding: 40px;">No tienes pedidos activos en este momento.</td></tr>';
+            }
+            
+            let html = '';
+            data.pedidos.forEach(pedido => {
+                const badgeClass = `badge-${pedido.estado}`;
+                const pagadoBadge = pedido.pagado 
+                    ? '<span class="badge badge-success">✓ Pagado</span>'
+                    : '<span class="badge badge-warning">Pendiente</span>';
+                
+                html += `<tr class="${isNewPedido(pedido.id) ? 'new-item-highlight' : ''}">
+                    <td><strong>${pedido.numero_pedido}</strong></td>
+                    <td>${pedido.mesa}</td>
+                    <td>${pedido.nombre_cliente}</td>
+                    <td><strong>$${formatNumber(pedido.total)}</strong></td>
+                    <td><span class="badge ${badgeClass}">${capitalize(pedido.estado)}</span></td>
+                    <td>${pagadoBadge}</td>
+                    <td>${pedido.hora}</td>
+                    <td>
+                        <a href="ver_pedido.php?id=${pedido.id}" class="btn btn-small btn-primary">👁️ Ver</a> `;
+                
+                if (!pedido.pagado) {
+                    html += `<a href="registrar_pago.php?pedido_id=${pedido.id}" class="btn btn-small btn-success">💰 Pagar</a> `;
+                }
+                
+                html += `<a href="ver_factura.php?id=${pedido.id}" target="_blank" class="btn btn-small btn-info">📄 Factura</a>
+                    </td>
+                </tr>`;
+            });
+            
+            return html;
+        }
+        
+        // Función para renderizar mesas
+        function renderMesas(data) {
+            if (!data.mesas || data.mesas.length === 0) {
+                return '<p style="text-align: center; color: #999;">No hay mesas disponibles.</p>';
+            }
+            
+            let html = '';
+            data.mesas.forEach(mesa => {
+                const estadoClass = mesa.estado === 'disponible' ? 'disponible' : 'ocupada';
+                html += `<div class="mesa-card ${estadoClass}">
+                    <div class="mesa-numero">${mesa.numero_mesa}</div>
+                    <div class="mesa-estado ${estadoClass}">${capitalize(mesa.estado)}</div>
+                    <div class="mesa-capacidad">👥 ${mesa.capacidad} personas</div>
+                    ${mesa.estado === 'disponible' ? 
+                        `<button onclick="ocuparMesa(${mesa.id})" class="btn btn-small btn-primary">Ocupar</button>` :
+                        `<button onclick="liberarMesa(${mesa.id})" class="btn btn-small">Liberar</button>`
+                    }
+                </div>`;
+            });
+            
+            return html;
+        }
+        
+        // Utilidades
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('es-CO');
+        }
+        
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        let knownPedidoIds = new Set();
+        function isNewPedido(id) {
+            if (knownPedidoIds.has(id)) return false;
+            knownPedidoIds.add(id);
+            return knownPedidoIds.size > 1; // No marcar los primeros como nuevos
+        }
+        
+        // Inicializar auto-refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh de pedidos
+            pedidosRefresh = new AutoRefresh({
+                endpoint: 'api/get_pedidos_mesero.php',
+                targetElement: '#tab-pedidos tbody',
+                interval: 10000, // 10 segundos
+                renderFunction: renderPedidos,
+                onNewItems: function(newItems) {
+                    ToastNotification.show(
+                        `${newItems.length} nuevo(s) pedido(s)`,
+                        'new',
+                        4000
+                    );
+                    NotificationSound.play('new_order');
+                },
+                onUpdate: function(data) {
+                    // Actualizar contador si cambió
+                    if (data.total !== lastPedidosCount) {
+                        lastPedidosCount = data.total;
+                    }
+                }
+            });
+            
+            // Auto-refresh de mesas
+            mesasRefresh = new AutoRefresh({
+                endpoint: 'api/get_mesas.php',
+                targetElement: '.mesas-grid',
+                interval: 15000, // 15 segundos
+                renderFunction: renderMesas
+            });
+            
+            // Iniciar ambos
+            pedidosRefresh.start();
+            mesasRefresh.start();
+            
+            console.log('✅ Auto-refresh iniciado para panel de mesero');
+        });
+        
+        // Funciones de control
+        function toggleAutoRefresh() {
+            if (pedidosRefresh.isPaused) {
+                pedidosRefresh.resume();
+                mesasRefresh.resume();
+                document.getElementById('btn-toggle-refresh').classList.add('active');
+                document.getElementById('btn-toggle-refresh').classList.remove('paused');
+                document.getElementById('refresh-icon').textContent = '▶️';
+                document.getElementById('refresh-text').textContent = 'Auto-actualización activa';
+            } else {
+                pedidosRefresh.pause();
+                mesasRefresh.pause();
+                document.getElementById('btn-toggle-refresh').classList.remove('active');
+                document.getElementById('btn-toggle-refresh').classList.add('paused');
+                document.getElementById('refresh-icon').textContent = '⏸️';
+                document.getElementById('refresh-text').textContent = 'Auto-actualización pausada';
+            }
+        }
+        
+        function toggleSound() {
+            const enabled = NotificationSound.toggle();
+            const btn = document.getElementById('btn-toggle-sound');
+            if (enabled) {
+                btn.classList.remove('muted');
+                btn.textContent = '🔔';
+                ToastNotification.show('Sonido activado', 'success', 2000);
+            } else {
+                btn.classList.add('muted');
+                btn.textContent = '🔕';
+                ToastNotification.show('Sonido desactivado', 'info', 2000);
+            }
+        }
+        
+        // Inicializar estado del botón de sonido
+        if (!NotificationSound.isEnabled()) {
+            document.getElementById('btn-toggle-sound').classList.add('muted');
+            document.getElementById('btn-toggle-sound').textContent = '🔕';
+        }
     </script>
 </body>
 </html>
