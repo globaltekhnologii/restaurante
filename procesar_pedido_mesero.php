@@ -70,7 +70,7 @@ $conn->begin_transaction();
 
 try {
     // Insertar pedido
-    $estado = 'pendiente';
+    $estado = 'confirmado';
     $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
     $stmt->bind_param("sssssdsii", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id);
     $stmt->execute();
