@@ -52,12 +52,27 @@ Sistema completo de administración de menú para restaurante con panel de admin
 - ✅ **NUEVO:** Configuración del negocio (Logo, Nombre, Contacto)
 
 ### 👥 Sistema Multi-Usuario
-- ✅ 4 Roles definidos: Admin, Mesero, Chef, Domiciliario
+- ✅ **5 Roles definidos:** Admin, Mesero, Chef, Domiciliario, **Cajero**
 - ✅ Paneles personalizados por rol
-- ✅ Mesero: Toma de pedidos, gestión de mesas
-- ✅ Chef: Visualización de comandas en cocina
-- ✅ Domiciliario: Gestión de entregas y rutas
-- ✅ Admin: Control total del sistema
+- ✅ **Mesero:** Toma de pedidos, gestión de mesas
+- ✅ **Chef:** Visualización de comandas en cocina, alertas sonoras
+- ✅ **Domiciliario:** Gestión de entregas y rutas optimizado
+- ✅ **Cajero:** Módulo financiero, cobros, cierres de caja y reportes
+- ✅ **Admin:** Control total del sistema
+
+### 🔄 Sistema en Tiempo Real (Auto-Refresh)
+- ✅ Actualización automática sin recargar (AJAX)
+- ✅ Notificaciones visuales (Toast)
+- ✅ Alertas sonoras configurables (MP3)
+- ✅ Sincronización instantánea entre Cocina, Caja y Meseros
+- ✅ Indicadores de estado de conexión
+
+### 💸 Módulo Financiero y Caja
+- ✅ Dashboard exclusivo para Cajeros
+- ✅ Vista global de pedidos por cobrar
+- ✅ Cierre de caja con reportes diarios
+- ✅ Estadísticas de ventas en tiempo real
+- ✅ Soporte para control de efectivo, tarjetas y transferencias
 
 ### 📦 Gestión de Pedidos
 - ✅ Carrito de compras dinámico
@@ -152,9 +167,23 @@ CREATE TABLE usuarios (
     clave VARCHAR(255) NOT NULL,
     nombre VARCHAR(100),
     email VARCHAR(100),
-    rol ENUM('admin', 'mesero', 'chef', 'domiciliario') DEFAULT 'admin',
+    rol ENUM('admin', 'mesero', 'chef', 'domiciliario', 'cajero') DEFAULT 'mesero',
     activo TINYINT(1) DEFAULT 1,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de pagos
+CREATE TABLE pagos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT,
+    numero_transaccion VARCHAR(50),
+    metodo_pago VARCHAR(50),
+    referencia_pago VARCHAR(100),
+    monto DECIMAL(10,2),
+    usuario_id INT, -- Cajero que procesa
+    fecha_pago DATETIME DEFAULT CURRENT_TIMESTAMP,
+    notas TEXT,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id)
 );
 
 -- Tabla de mesas
@@ -245,6 +274,18 @@ En Windows, asegúrate de que la carpeta tenga permisos de escritura.
 ```
 restaurante/
 │
+├── 📂 api/                           # API Endpoints (JSON)
+│   ├── get_pedidos_cajero.php
+│   ├── get_pedidos_mesero.php
+│   └── ...
+│
+├── 📂 sounds/                        # Sonidos de notificación (MP3)
+│   ├── new_order.mp3
+│   └── alert.mp3
+│
+├── 📂 js/                            # JavaScripts modulares
+│   └── auto_refresh.js               # Lógica de actualización AJAX
+│
 ├── 📄 index.php                      # Página principal - Menú público
 ├── 🔐 login.php                      # Página de inicio de sesión
 ├── 🚪 logout.php                     # Cerrar sesión
@@ -254,8 +295,11 @@ restaurante/
 ├── 🍽️ mesero.php                      # Panel de mesero
 ├── 👨‍🍳 chef.php                        # Panel de chef
 ├── 🏍️ domiciliario.php                # Panel de domiciliario
+├── 💵 cajero.php                      # Panel de cajero (NUEVO)
+│
 ├── 📝 tomar_pedido_mesero.php         # Interfaz de toma de pedidos
 ├── 👁️ ver_pedido.php                  # Vista detallada de pedidos
+├── 📊 cierre_caja.php                 # Reporte diario de caja (NUEVO)
 ├── 📦 admin_pedidos.php               # Gestión de pedidos (Admin)
 ├── 👥 admin_usuarios.php              # Gestión de usuarios (Admin)
 │
@@ -356,16 +400,19 @@ Usa emojis para identificar el tipo de commit:
 - ✅ Flujo mejorado para meseros
 - ✅ Validación de pagos anticipados
 
-### Versión 2.6 (Actual)
-- ✅ Personalización completa del negocio
-- ✅ Carga dinámica de logo e información
-- ✅ Panel de configuración administrativa
+### Versión 2.7 (Actual)
+- ✅ **NUEVO:** Módulo de Cajero y Finanzas
+- ✅ **NUEVO:** Sistema Auto-Refresh (AJAX Polling)
+- ✅ **NUEVO:** Notificaciones sonoras y visuales (Toast)
+- ✅ **NUEVO:** Reporte diario de Cierre de Caja
+- ✅ Seguridad mejorada (Hashing de contraseñas)
+- ✅ Redirección inteligente por roles
 
-### Versión 3.0 (Planeado)
-- ⬜ Exportar/Importar menú
-- ⬜ API REST
+### Versión 3.0 (Próximamente)
+- ⬜ Exportar/Importar menú (Excel/CSV)
+- ⬜ API REST completa
 - ⬜ Modo oscuro
-- ⬜ Notificaciones en tiempo real (WebSockets)
+- ⬜ WebSockets para tiempo real (vs AJAX)
 
 ## 📄 Licencia
 
