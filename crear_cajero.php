@@ -27,7 +27,7 @@ try {
         $nombre = 'Cajero Principal';
         $rol = 'cajero';
         
-        $stmt = $conn->prepare("INSERT INTO usuarios (usuario, password, nombre, rol, activo) VALUES (?, ?, ?, ?, 1)");
+        $stmt = $conn->prepare("INSERT INTO usuarios (usuario, clave, nombre, rol, activo) VALUES (?, ?, ?, ?, 1)");
         $stmt->bind_param("ssss", $usuario, $password, $nombre, $rol);
         
         if ($stmt->execute()) {
