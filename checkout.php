@@ -422,6 +422,9 @@
             return true;
         }
     </script>
+    
+    <!-- Autocomplete de Clientes -->
+    <script src="js/cliente_autocomplete.js"></script>
 
 </body>
 </html>

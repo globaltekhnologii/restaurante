@@ -40,15 +40,51 @@ if (empty($carrito) || !is_array($carrito)) {
 // Generar número de pedido único
 $numero_pedido = 'PED-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
 
+// ============================================
+// INTEGRACIÓN DE CLIENTES
+// ============================================
+require_once 'includes/clientes_helper.php';
+
+$cliente_id = null;
+$cliente_id_form = isset($_POST['cliente_id']) ? (int)$_POST['cliente_id'] : null;
+
+// Si viene un cliente_id del formulario, usarlo
+if ($cliente_id_form > 0) {
+    $cliente_id = $cliente_id_form;
+} 
+// Si no, intentar buscar por teléfono o crear nuevo
+elseif (!empty($telefono)) {
+    // Buscar cliente existente por teléfono
+    $cliente_existente = buscarClientePorTelefono($conn, $telefono);
+    
+    if ($cliente_existente) {
+        $cliente_id = $cliente_existente['id'];
+    } else {
+        // Crear nuevo cliente automáticamente
+        $datos_cliente = [
+            'nombre' => $nombre_cliente,
+            'apellido' => '',
+            'telefono' => $telefono,
+            'email' => $email,
+            'direccion' => $direccion,
+            'ciudad' => ''
+        ];
+        
+        $cliente_id = crearClienteAutomatico($conn, $datos_cliente);
+    }
+}
+// ============================================
+
 // Iniciar transacción
 $conn->begin_transaction();
 
 try {
     // Insertar el pedido principal
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, email, total, estado, notas) VALUES (?, ?, ?, ?, ?, ?, 'confirmado', ?)");
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?)");
     
-    $stmt->bind_param("sssssds", 
+    $stmt->bind_param("sissssds", 
         $numero_pedido,
+        $cliente_id,
         $nombre_cliente,
         $telefono,
         $direccion,
@@ -102,6 +138,12 @@ try {
     
     // Confirmar transacción
     $conn->commit();
+    
+    // Actualizar estadísticas del cliente si existe
+    if ($cliente_id) {
+        actualizarEstadisticasCliente($conn, $cliente_id);
+    }
+    
     $conn->close();
     
     // Redirigir a página de confirmación con el número de pedido
