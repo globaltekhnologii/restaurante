@@ -59,7 +59,8 @@ try {
     
     // NUEVO: Liberar mesa si el pedido es de tipo mesa
     if ($pedido['mesa_id']) {
-        $stmt_mesa = $conn->prepare("UPDATE mesas SET ocupada = 0 WHERE id = ?");
+        // En lugar de 'ocupada = 0', cambiamos 'estado = disponible'
+        $stmt_mesa = $conn->prepare("UPDATE mesas SET estado = 'disponible' WHERE id = ?");
         $stmt_mesa->bind_param("i", $pedido['mesa_id']);
         $stmt_mesa->execute();
         $stmt_mesa->close();

@@ -258,6 +258,26 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
             box-shadow: 0 4px 12px rgba(72,187,120,0.4);
         }
         
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72,187,120,0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,153,225,0.4);
+        }
+        
         .btn-small {
             padding: 6px 12px;
             font-size: 0.9em;
@@ -354,6 +374,50 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
         
         .tab-content.active {
             display: block;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-pendiente {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-confirmado {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-preparando {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+        
+        .badge-listo {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-entregado {
+            background: #d1d5db;
+            color: #374151;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
         }
     </style>
 </head>
@@ -461,7 +525,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                 $sql = "SELECT p.*, m.numero_mesa 
                         FROM pedidos p 
                         LEFT JOIN mesas m ON p.mesa_id = m.id 
-                        WHERE p.usuario_id = ? AND p.estado IN ('pendiente', 'confirmado', 'preparando') 
+                        WHERE p.usuario_id = ? AND (p.estado IN ('pendiente', 'confirmado', 'preparando', 'listo', 'entregado') OR (p.estado = 'entregado' AND p.pagado = 0))
                         ORDER BY p.fecha_pedido DESC";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("i", $mesero_id);
@@ -471,20 +535,41 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                 if ($result->num_rows > 0) {
                     echo '<table>';
                     echo '<thead><tr>';
-                    echo '<th>Número</th><th>Mesa</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Hora</th><th>Acciones</th>';
+                    echo '<th>Número</th><th>Mesa</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Pago</th><th>Hora</th><th>Acciones</th>';
                     echo '</tr></thead><tbody>';
                     
                     while($pedido = $result->fetch_assoc()) {
                         $badge_class = 'badge-' . strtolower($pedido['estado']);
+                        $pagado = $pedido['pagado'] ?? 0;
+                        
                         echo '<tr>';
                         echo '<td><strong>' . htmlspecialchars($pedido['numero_pedido']) . '</strong></td>';
                         echo '<td>' . ($pedido['numero_mesa'] ? htmlspecialchars($pedido['numero_mesa']) : 'Domicilio') . '</td>';
                         echo '<td>' . htmlspecialchars($pedido['nombre_cliente']) . '</td>';
-                        echo '<td><strong>$' . number_format($pedido['total'], 2) . '</strong></td>';
+                        echo '<td><strong>$' . number_format($pedido['total'], 0) . '</strong></td>';
                         echo '<td><span class="badge ' . $badge_class . '">' . ucfirst($pedido['estado']) . '</span></td>';
+                        
+                        // Estado de pago
+                        echo '<td>';
+                        if ($pagado) {
+                            echo '<span class="badge badge-success">✓ Pagado</span>';
+                        } else {
+                            echo '<span class="badge badge-warning">Pendiente</span>';
+                        }
+                        echo '</td>';
+                        
                         echo '<td>' . date('H:i', strtotime($pedido['fecha_pedido'])) . '</td>';
                         echo '<td>';
-                        echo '<a href="ver_pedido.php?id=' . $pedido['id'] . '" class="btn btn-small btn-primary">👁️ Ver</a>';
+                        echo '<a href="ver_pedido.php?id=' . $pedido['id'] . '" class="btn btn-small btn-primary">👁️ Ver</a> ';
+                        
+                        // Botón de pago si no está pagado
+                        if (!$pagado) {
+                            echo '<a href="registrar_pago.php?pedido_id=' . $pedido['id'] . '" class="btn btn-small btn-success">💰 Pagar</a> ';
+                        }
+                        
+                        // Botón de factura siempre disponible
+                        echo '<a href="ver_factura.php?id=' . $pedido['id'] . '" target="_blank" class="btn btn-small btn-info">📄 Factura</a>';
+                        
                         echo '</td>';
                         echo '</tr>';
                     }
