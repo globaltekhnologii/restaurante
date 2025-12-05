@@ -471,6 +471,16 @@ require_once 'includes/info_negocio.php';
 
                 <button type="submit" class="btn-login" id="btnLogin">
                     Iniciar Sesión
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="index.php">← Volver al Menú</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
         // Función para mostrar/ocultar contraseña
         function togglePassword() {
             const passwordInput = document.getElementById('clave');
