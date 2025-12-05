@@ -68,6 +68,9 @@ if ($result->num_rows === 1) {
             case 'domiciliario':
                 header("Location: domiciliario.php");
                 break;
+            case 'cajero':
+                header("Location: cajero.php");
+                break;
             default:
                 // Si el rol no es reconocido, redirigir a admin por defecto
                 header("Location: admin.php");
