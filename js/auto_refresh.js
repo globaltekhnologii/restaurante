@@ -221,12 +221,18 @@ class NotificationSound {
         if (!this.isEnabled()) return;
 
         const sounds = {
-            'default': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+ltryxnMpBSuBzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEAKFF606+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXRgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs6Z9NEAxQp+PwtmMcBjiS1/LMeSwFJHfH8N2QQQoUXbTr66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BcGAg+ltryxnMpBSuDzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEEKFF206+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXBgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs6Z9NEAxQp+PwtmMcBjiS1/LMeSwFJHfH8N2QQQoUXbTr66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BcGAg+ltryxnMpBSuDzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEEKFF206+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXBgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs',
-            'new_order': 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+ltryxnMpBSuBzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEAKFF606+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXRgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs6Z9NEAxQp+PwtmMcBjiS1/LMeSwFJHfH8N2QQQoUXbTr66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BcGAg+ltryxnMpBSuDzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEEKFF206+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXBgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs6Z9NEAxQp+PwtmMcBjiS1/LMeSwFJHfH8N2QQQoUXbTr66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BcGAg+ltryxnMpBSuDzvLZiTYIGWi77OmfTRAMUKfj8LZjHAY4ktfyzHksBSR3x/DdkEEKFF206+uoVRQKRp/g8r5sIQUxh9Hz04IzBh5uwO/jmUgND1as5++wXBgIPpba8sZzKQUrg87y2Yk2CBlou+zpn00QDFCn4/C2YxwGOJLX8sx5LAUkd8fw3ZBBChRdtOvrqFUUCkaf4PK+bCEFMYfR89OCMwYebsDv45lIDQ9WrOfvsFwYCD6W2vLGcykFK4PO8tmJNggZaLvs'
+            'new_order': 'sounds/new_order.mp3',
+            'order_ready': 'sounds/order_ready.mp3',
+            'alert': 'sounds/alert.mp3',
+            'default': 'sounds/alert.mp3'
         };
 
-        const audio = new Audio(sounds[type] || sounds.default);
-        audio.volume = 0.3;
+        const audioPath = sounds[type] || sounds.default;
+
+        // Agregar timestamp para evitar caché
+        const audio = new Audio(audioPath + '?t=' + new Date().getTime());
+        audio.volume = 0.7; // Volumen al 70% según README
+
         audio.play().catch(e => console.log('No se pudo reproducir sonido:', e));
     }
 
