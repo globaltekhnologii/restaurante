@@ -460,10 +460,12 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                             echo '<div class="entrega-total">💰 Total: $' . number_format($entrega['total'], 2) . '</div>';
                             
                             if ($entrega['estado'] === 'preparando') {
-                                echo '<a href="salir_entrega.php?id=' . $entrega['id'] . '" class="btn btn-primary">🚗 Salir a Entregar</a>';
+                                echo '<a href="salir_entrega.php?id=' . $entrega['id'] . '" class="btn btn-primary" style="margin-bottom: 5px;">🚗 Salir a Entregar</a>';
                             } else if ($entrega['estado'] === 'en_camino') {
-                                echo '<a href="confirmar_entrega.php?id=' . $entrega['id'] . '" class="btn btn-success">✅ Confirmar Entrega</a>';
+                                echo '<a href="confirmar_entrega.php?id=' . $entrega['id'] . '" class="btn btn-success" style="margin-bottom: 5px;">✅ Confirmar Entrega</a>';
                             }
+                            
+                            echo '<a href="ver_factura.php?id=' . $entrega['id'] . '&print=true" target="_blank" class="btn" style="background: #2b6cb0; color: white; font-size: 0.9em;">📄 Imprimir Factura</a>';
                             
                             echo '</div>';
                             echo '</div>';

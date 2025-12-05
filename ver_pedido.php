@@ -341,6 +341,16 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
             </div>
         </div>
 
+        <!-- Acciones de Impresión -->
+        <div class="section" style="padding: 15px; display: flex; gap: 15px; justify-content: flex-end;">
+            <a href="ver_ticket.php?id=<?php echo $pedido['id']; ?>&print=true" target="_blank" class="btn" style="background: #333; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
+                🖨️ Ticket Cocina
+            </a>
+            <a href="ver_factura.php?id=<?php echo $pedido['id']; ?>&print=true" target="_blank" class="btn" style="background: #2b6cb0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
+                📄 Imprimir Factura
+            </a>
+        </div>
+
         <!-- Información del Cliente -->
         <div class="section">
             <h2>👤 Información del Cliente</h2>

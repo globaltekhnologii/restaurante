@@ -369,14 +369,12 @@ verificarRolORedirect(['admin'], 'login.php');
     <div class="admin-navbar">
         <h1>🍽️ Panel de Administración</h1>
         <div class="navbar-actions">
+            <a href="admin_pedidos.php">📦 Pedidos</a>
+            <a href="admin_usuarios.php">👥 Usuarios</a>
+            <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <a href="logout.php">🚪 Cerrar Sesión</a>
         </div>
-    </div>
-    <div class="navbar-actions">
-    <a href="admin_pedidos.php">📦 Pedidos</a>  <!-- NUEVO -->
-    <a href="index.php" target="_blank">👁️ Ver Menú</a>
-    <a href="logout.php">🚪 Cerrar Sesión</a>
     </div>
 
     <div class="admin-container">

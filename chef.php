@@ -397,10 +397,12 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
                         echo '</div>';
                         
                         if ($pedido['estado'] === 'confirmado') {
-                            echo '<a href="iniciar_preparacion.php?id=' . $pedido['id'] . '" class="btn btn-primary">🍳 Comenzar Preparación</a>';
+                            echo '<a href="iniciar_preparacion.php?id=' . $pedido['id'] . '" class="btn btn-primary" style="margin-bottom: 5px;">🍳 Comenzar Preparación</a>';
                         } else if ($pedido['estado'] === 'preparando') {
-                            echo '<a href="marcar_listo.php?id=' . $pedido['id'] . '" class="btn btn-success">✅ Marcar como Listo</a>';
+                            echo '<a href="marcar_listo.php?id=' . $pedido['id'] . '" class="btn btn-success" style="margin-bottom: 5px;">✅ Marcar como Listo</a>';
                         }
+                        
+                        echo '<a href="ver_ticket.php?id=' . $pedido['id'] . '&print=true" target="_blank" class="btn" style="background: #333; color: white; font-size: 0.9em;">🖨️ Imprimir Comanda</a>';
                         
                         echo '</div>';
                         echo '</div>';
