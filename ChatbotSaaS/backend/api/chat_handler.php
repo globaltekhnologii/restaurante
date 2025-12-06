@@ -69,6 +69,26 @@ $history = getConversationHistory($conn, $conversation['id']);
 try {
     $ai_response = callAIProvider($config, $menu_context, $history, $user_message);
     
+    // Detectar y procesar orden
+    if (preg_match('/\{"ORDER_CONFIRMATION":.*\}/s', $ai_response, $matches)) {
+        $json_str = $matches[0];
+        $json_data = json_decode($json_str, true);
+        
+        if (isset($json_data['ORDER_CONFIRMATION'])) {
+            $order_data = $json_data['ORDER_CONFIRMATION'];
+            $order_res = processChatbotOrder($conn, $tenant_id, $conversation['id'], $order_data);
+            
+            // Remover JSON de la respuesta visible
+            $ai_response = str_replace($json_str, "", $ai_response);
+            
+            if ($order_res['success']) {
+                $ai_response .= "\n\n✅ *¡Pedido #{$order_res['order_id']} confirmado!* Tu orden ha sido enviada a la cocina.";
+            } else {
+                $ai_response .= "\n\n❌ Hubo un error técnico registrando el pedido. Por favor llama al restaurante.";
+            }
+        }
+    }
+
     // Guardar respuesta del asistente
     saveMessage($conn, $conversation['id'], 'assistant', $ai_response);
     
@@ -131,6 +151,9 @@ function buildMenuContext($menu_items, $config) {
     
     $context .= "- Si el cliente pide algo que NO está en el menú, ofrece alternativas similares\n";
     $context .= "- Al final del pedido, solicita dirección de entrega y método de pago\n";
+    $context .= "\n";
+    $context .= "IMPORTANTE: Cuando el cliente confirme el pedido (después de dar dirección), incluye este JSON al final:\n";
+    $context .= '{\"ORDER_CONFIRMATION\": {\"customer\": {\"name\": \"Nombre\", \"phone\": \"Tel\", \"address\": \"Dir\"}, \"items\": [{\"name\": \"Plato\", \"quantity\": 1, \"price\": 10000}], \"total\": 10000}}' . "\n";
     
     return $context;
 }
@@ -302,5 +325,52 @@ function callOpenAIAPI($api_key, $system_prompt, $history, $user_message) {
     
     $result = json_decode($response, true);
     return $result['choices'][0]['message']['content'];
+}
+
+function processChatbotOrder($conn, $tenant_id, $conversation_id, $data) {
+    $customer = $data['customer'];
+    $items = $data['items'];
+    $total = $data['total'];
+    
+    // Generar número de pedido
+    $numero_pedido = 'BOT-' . date('ymd') . '-' . rand(100, 999);
+
+    // Insertar en tabla `pedidos` (BD Principal)
+    $stmt = $conn->prepare("INSERT INTO pedidos (nombre_cliente, telefono, direccion, total, estado, tipo_pedido, origen, conversation_id, fecha_pedido, numero_pedido) VALUES (?, ?, ?, ?, 'pendiente', 'domicilio', 'chatbot', ?, NOW(), ?)");
+    
+    $stmt->bind_param("sssdis", 
+        $customer['name'], 
+        $customer['phone'], 
+        $customer['address'], 
+        $total,
+        $conversation_id,
+        $numero_pedido
+    );
+    
+    if ($stmt->execute()) {
+        $pedido_id = $conn->insert_id;
+        
+        // Insertar items
+        $stmt_item = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)");
+        
+        foreach ($items as $item) {
+            $subtotal = $item['price'] * $item['quantity'];
+            $stmt_item->bind_param("isidd", 
+                $pedido_id, 
+                $item['name'], 
+                $item['quantity'], 
+                $item['price'], 
+                $subtotal
+            );
+            $stmt_item->execute();
+        }
+        
+        // Marcar conversación
+        $conn->query("UPDATE saas_conversations SET order_placed = 1, status = 'completed' WHERE id = $conversation_id");
+        
+        return ['success' => true, 'order_id' => $pedido_id];
+    }
+    
+    return ['success' => false, 'error' => $conn->error];
 }
 ?>

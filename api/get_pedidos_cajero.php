@@ -57,7 +57,8 @@ try {
             'domiciliario' => $row['domiciliario_nombre'] ?: 'N/A',
             'hora' => date('H:i', strtotime($row['fecha_pedido'])),
             'fecha_pedido' => $row['fecha_pedido'],
-            'notas' => $row['notas']
+            'notas' => $row['notas'],
+            'origen' => $row['origen'] // Nuevo campo included
         ];
         
         $pedidos[] = $pedido;

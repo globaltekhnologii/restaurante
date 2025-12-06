@@ -1,0 +1,16 @@
+# Ignorar archivos del sistema y entorno local
+node_modules/
+vendor/
+.env
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Ignorar configuración local específica
+backend/config.php
+# Mantener un ejemplo de config
+!backend/config.example.php
+
+# Ignorar logs
+*.log

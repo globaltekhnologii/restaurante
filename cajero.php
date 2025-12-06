@@ -409,8 +409,21 @@ $stmt->close();
                     if ($result->num_rows > 0) {
                         while($pedido = $result->fetch_assoc()) {
                             $estado_class = 'badge-' . strtolower($pedido['estado']);
-                            $tipo = $pedido['tipo_pedido'] == 'domicilio' ? '🏍️ Domicilio' : '🪑 Mesa ' . $pedido['numero_mesa'];
+                            
+                            // Lógica para tipo de pedido
+                            if ($pedido['origen'] === 'chatbot') {
+                                $tipo = '🤖 Chatbot';
+                            } elseif ($pedido['tipo_pedido'] == 'domicilio') {
+                                $tipo = '🏍️ Domicilio';
+                            } else {
+                                $tipo = '🪑 Mesa ' . $pedido['numero_mesa'];
+                            }
+                            
                             $responsable = $pedido['tipo_pedido'] == 'domicilio' ? $pedido['domiciliario_nombre'] : $pedido['mesero_nombre'];
+                            
+                            if ($pedido['origen'] === 'chatbot') {
+                                $responsable = '🤖 IA';
+                            }
                             
                             echo "<tr>";
                             echo "<td><strong>" . htmlspecialchars($pedido['numero_pedido']) . "</strong></td>";
@@ -472,8 +485,16 @@ $stmt->close();
             let html = '';
             data.pedidos.forEach(pedido => {
                 const estadoClass = `badge-${pedido.estado}`;
-                const tipo = pedido.tipo_pedido === 'domicilio' ? '🏍️ Domicilio' : `🪑 Mesa ${pedido.mesa}`;
-                const responsable = pedido.tipo_pedido === 'domicilio' ? pedido.domiciliario : pedido.mesero;
+                
+                let tipo = '';
+                if (pedido.origen === 'chatbot') {
+                    tipo = '🤖 Chatbot';
+                } else {
+                    tipo = pedido.tipo_pedido === 'domicilio' ? '🏍️ Domicilio' : `🪑 Mesa ${pedido.mesa}`;
+                }
+                
+                let responsable = pedido.tipo_pedido === 'domicilio' ? pedido.domiciliario : pedido.mesero;
+                if (pedido.origen === 'chatbot') responsable = '🤖 IA';
                 
                 html += `<tr>
                     <td><strong>${pedido.numero_pedido}</strong></td>
