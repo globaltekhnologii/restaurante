@@ -954,5 +954,12 @@ try {
         </div>
     </footer>
 
+<?php
+// Integración del Chatbot SaaS
+if (file_exists(__DIR__ . '/includes/chatbot_widget.php')) {
+    include __DIR__ . '/includes/chatbot_widget.php';
+}
+?>
+
 </body>
 </html>

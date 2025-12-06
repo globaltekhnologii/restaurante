@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Widget Demo</title>
+    <style>
+        /* Estilos para la demo - Los clientes solo necesitan el widget */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .demo-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .demo-header p {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .demo-content {
+            min-height: 400px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .code-block {
+            background: #282c34;
+            color: #61dafb;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* ============================================
+           WIDGET DEL CHATBOT - INICIO
+           Esto es lo que tus clientes embeben
+           ============================================ */
+        
+        #restaurant-chatbot-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Botón flotante */
+        .chatbot-toggle-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .chatbot-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(239, 68, 68, 0.6);
+        }
+        
+        .chatbot-toggle-btn svg {
+            width: 30px;
+            height: 30px;
+            color: white;
+        }
+        
+        /* Badge de notificación */
+        .chatbot-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #10b981;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 3px solid white;
+        }
+        
+        /* Ventana del chat */
+        .chatbot-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .chatbot-window.open {
+            display: flex;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Header del chat */
+        .chatbot-header {
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chatbot-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .chatbot-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .chatbot-status {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chatbot-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .chatbot-online {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .chatbot-online::before {
+            content: '●';
+            color: #10b981;
+            margin-right: 5px;
+        }
+        
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            opacity: 0.8;
+        }
+        
+        .chatbot-close:hover {
+            opacity: 1;
+        }
+        
+        /* Mensajes */
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9fafb;
+        }
+        
+        .chatbot-message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chatbot-message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .chatbot-message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+        
+        .chatbot-message.bot .chatbot-message-avatar {
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+        }
+        
+        .chatbot-message.user .chatbot-message-avatar {
+            background: #3b82f6;
+        }
+        
+        .chatbot-message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .chatbot-message.bot .chatbot-message-content {
+            background: white;
+            color: #374151;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .chatbot-message.user .chatbot-message-content {
+            background: #3b82f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        /* Loading dots */
+        .chatbot-typing {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 16px;
+            width: fit-content;
+        }
+        
+        .chatbot-typing.show {
+            display: flex;
+        }
+        
+        .chatbot-typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .chatbot-typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .chatbot-typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        /* Input */
+        .chatbot-input-area {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .chatbot-input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chatbot-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .chatbot-input:focus {
+            border-color: #f97316;
+        }
+        
+        .chatbot-send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .chatbot-send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .chatbot-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Quick replies */
+        .chatbot-quick-replies {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 16px;
+            overflow-x: auto;
+        }
+        
+        .chatbot-quick-reply {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .chatbot-quick-reply:hover {
+            border-color: #f97316;
+            color: #f97316;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chatbot-window {
+                width: calc(100vw - 40px);
+                height: calc(100vh - 100px);
+            }
+        }
+        
+        /* ============================================
+           WIDGET DEL CHATBOT - FIN
+           ============================================ */
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🤖 Chatbot Widget Demo</h1>
+            <p>Mira cómo se ve el chatbot en tu sitio web</p>
+            <div>
+                <button class="button" onclick="openChat()">Abrir Chat</button>
+                <button class="button" onclick="showCode()">Ver Código</button>
+            </div>
+        </div>
+        
+        <div class="demo-content">
+            <h2>👋 ¡Bienvenido!</h2>
+            <p style="margin: 20px 0;">Este es el sitio web de ejemplo de un restaurante.</p>
+            <p>Haz clic en el botón naranja en la esquina inferior derecha para probar el chatbot.</p>
+            
+            <div class="code-block" id="embedCode" style="display:none;">
+                <pre>&lt;!-- RestaurantBot Widget --&gt;
+&lt;script&gt;
+  window.chatbotConfig = {
+    restaurantId: 'TU_RESTAURANT_ID',
+    apiEndpoint: 'https://api.tu-dominio.com',
+    primaryColor: '#f97316',
+    chatbotName: 'RestauBot',
+    welcomeMessage: '¡Hola! ¿En qué puedo ayudarte?'
+  };
+&lt;/script&gt;
+&lt;script src="https://cdn.tu-dominio.com/chatbot-widget.js"&gt;&lt;/script&gt;
+&lt;!-- Fin RestaurantBot Widget --&gt;</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         WIDGET DEL CHATBOT
+         Esto es lo que se embebe en sitios de clientes
+         ============================================ -->
+    <div id="restaurant-chatbot-widget">
+        <!-- Botón flotante -->
+        <button class="chatbot-toggle-btn" id="chatbotToggle" onclick="toggleChat()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <span class="chatbot-badge" id="chatbotBadge">1</span>
+        </button>
+
+        <!-- Ventana del chat -->
+        <div class="chatbot-window" id="chatbotWindow">
+            <!-- Header -->
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <div class="chatbot-avatar">🤖</div>
+                    <div class="chatbot-status">
+                        <div class="chatbot-name" id="chatbotName">RestauBot</div>
+                        <div class="chatbot-online">En línea</div>
+                    </div>
+                </div>
+                <button class="chatbot-close" onclick="toggleChat()">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mensajes -->
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="chatbot-message bot">
+                    <div class="chatbot-message-avatar">🤖</div>
+                    <div class="chatbot-message-content">
+                        ¡Hola! 👋 Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
+                    </div>
+                </div>
+                
+                <!-- Typing indicator -->
+                <div class="chatbot-message bot">
+                    <div class="chatbot-message-avatar">🤖</div>
+                    <div class="chatbot-typing" id="typingIndicator">
+                        <div class="chatbot-typing-dot"></div>
+                        <div class="chatbot-typing-dot"></div>
+                        <div class="chatbot-typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick replies -->
+            <div class="chatbot-quick-replies" id="quickReplies">
+                <button class="chatbot-quick-reply" onclick="sendQuickReply('Ver menú')">📋 Ver menú</button>
+                <button class="chatbot-quick-reply" onclick="sendQuickReply('Hacer pedido')">🍕 Hacer pedido</button>
+                <button class="chatbot-quick-reply" onclick="sendQuickReply('Reservar mesa')">📅 Reservar</button>
+            </div>
+
+            <!-- Input -->
+            <div class="chatbot-input-area">
+                <div class="chatbot-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="chatbot-input" 
+                        id="chatbotInput"
+                        placeholder="Escribe tu mensaje..."
+                        onkeypress="handleKeyPress(event)"
+                    />
+                    <button class="chatbot-send-btn" id="sendBtn" onclick="sendMessage()">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración (esto vendría de window.chatbotConfig)
+        const config = {
+            restaurantId: 'demo-restaurant',
+            apiEndpoint: 'http://localhost:5000/api',
+            primaryColor: '#f97316',
+            chatbotName: 'RestauBot',
+            welcomeMessage: '¡Hola! ¿En qué puedo ayudarte?'
+        };
+
+        // Estado del chat
+        let isOpen = false;
+        let sessionId = generateSessionId();
+
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function toggleChat() {
+            isOpen = !isOpen;
+            const window = document.getElementById('chatbotWindow');
+            const badge = document.getElementById('chatbotBadge');
+            
+            if (isOpen) {
+                window.classList.add('open');
+                badge.style.display = 'none';
+                document.getElementById('chatbotInput').focus();
+            } else {
+                window.classList.remove('open');
+            }
+        }
+
+        function openChat() {
+            if (!isOpen) toggleChat();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendQuickReply(text) {
+            document.getElementById('chatbotInput').value = text;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Limpiar input
+            input.value = '';
+
+            // Agregar mensaje del usuario
+            addMessage('user', message);
+
+            // Mostrar typing indicator
+            showTyping();
+
+            // Simular respuesta (en producción, llamar a la API)
+            setTimeout(() => {
+                hideTyping();
+                const responses = [
+                    '¡Claro! Tenemos pizza, hamburguesas, ensaladas y más. ¿Qué te gustaría ordenar?',
+                    'Perfecto, estamos ubicados en Calle 123 #45-67. ¿Necesitas direcciones?',
+                    'Nuestro horario es de 9:00 AM a 10:00 PM todos los días.',
+                    'Con gusto te ayudo con tu pedido. ¿Qué te gustaría ordenar?',
+                    'Para hacer una reservación necesito tu nombre y número de personas.'
+                ];
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addMessage('bot', randomResponse);
+            }, 1500);
+
+            // En producción, usar esto:
+            /*
+            try {
+                const response = await fetch(`${config.apiEndpoint}/chatbot/message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        restaurantId: config.restaurantId,
+                        sessionId: sessionId,
+                        message: message
+                    })
+                });
+                const data = await response.json();
+                hideTyping();
+                addMessage('bot', data.message);
+            } catch (error) {
+                console.error('Error:', error);
+                hideTyping();
+                addMessage('bot', 'Lo siento, hubo un error. ¿Puedes intentarlo de nuevo?');
+            }
+            */
+        }
+
+        function addMessage(type, content) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chatbot-message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <div class="chatbot-message-avatar">${type === 'bot' ? '🤖' : '👤'}</div>
+                <div class="chatbot-message-content">${content}</div>
+            `;
+            
+            // Insertar antes del typing indicator
+            const typingDiv = messagesContainer.querySelector('.chatbot-message.bot:last-child');
+            messagesContainer.insertBefore(messageDiv, typingDiv);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            document.getElementById('typingIndicator').classList.add('show');
+            const messagesContainer = document.getElementById('chatbotMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            document.getElementById('typingIndicator').classList.remove('show');
+        }
+
+        function showCode() {
+            const codeBlock = document.getElementById('embedCode');
+            codeBlock.style.display = codeBlock.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Auto-hide badge after 5 seconds
+        setTimeout(() => {
+            document.getElementById('chatbotBadge').style.display = 'none';
+        }, 5000);
+    </script>
+</body>
+</html>

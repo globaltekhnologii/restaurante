@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestaurantBot - Chatbot IA para tu Restaurante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .float { animation: float 3s ease-in-out infinite; }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl">
+                        RB
+                    </div>
+                    <span class="ml-3 text-xl font-bold text-gray-800">RestaurantBot</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-600 hover:text-orange-500 transition">Características</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-orange-500 transition">Precios</a>
+                    <a href="#demo" class="text-gray-600 hover:text-orange-500 transition">Demo</a>
+                    <a href="#contact" class="text-gray-600 hover:text-orange-500 transition">Contacto</a>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="showLogin()" class="text-gray-600 hover:text-orange-500 font-semibold transition">
+                        Iniciar Sesión
+                    </button>
+                    <button onclick="showSignup()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-2 rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold">
+                        Comenzar Gratis
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 bg-gradient-to-br from-orange-50 via-red-50 to-yellow-50 gradient-animate">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-block bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+                        🚀 IA para Restaurantes
+                    </div>
+                    <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                        Automatiza tus pedidos con
+                        <span class="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                            Inteligencia Artificial
+                        </span>
+                    </h1>
+                    <p class="text-xl text-gray-600 mb-8">
+                        ChatBot inteligente que atiende a tus clientes 24/7, toma pedidos a domicilio y reservaciones automáticamente. Sin instalaciones complicadas.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button onclick="showSignup()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-xl hover:from-orange-600 hover:to-red-600 transition font-semibold text-lg shadow-lg">
+                            Prueba Gratis 14 Días
+                        </button>
+                        <button onclick="scrollToDemo()" class="bg-white text-gray-800 px-8 py-4 rounded-xl hover:bg-gray-100 transition font-semibold text-lg border-2 border-gray-200">
+                            Ver Demo
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4">
+                        ✓ Sin tarjeta de crédito  ✓ Configuración en 5 minutos  ✓ Soporte en español
+                    </p>
+                </div>
+                <div class="float">
+                    <div class="bg-white rounded-2xl shadow-2xl p-6 border border-gray-200">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4 rounded-t-xl -m-6 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-2xl">
+                                    🤖
+                                </div>
+                                <div>
+                                    <p class="font-bold">Restaurante La Delicia</p>
+                                    <p class="text-sm text-orange-100">En línea</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white">
+                                    🤖
+                                </div>
+                                <div class="bg-gray-100 p-3 rounded-2xl rounded-tl-none max-w-[80%]">
+                                    <p class="text-sm">¡Hola! ¿Qué te gustaría ordenar hoy?</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 flex-row-reverse">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white">
+                                    👤
+                                </div>
+                                <div class="bg-blue-500 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%]">
+                                    <p class="text-sm">Quiero 2 pizzas grandes</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white">
+                                    🤖
+                                </div>
+                                <div class="bg-gray-100 p-3 rounded-2xl rounded-tl-none max-w-[80%]">
+                                    <p class="text-sm">¡Perfecto! Tenemos Margarita, Pepperoni y Hawaiana. ¿Cuál prefieres?</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-gray-200 flex gap-2">
+                            <input type="text" placeholder="Escribe tu mensaje..." class="flex-1 p-3 border border-gray-300 rounded-lg text-sm" disabled>
+                            <button class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 rounded-lg">
+                                ➤
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white border-y border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div>
+                    <p class="text-4xl font-bold text-orange-500">500+</p>
+                    <p class="text-gray-600 mt-2">Restaurantes activos</p>
+                </div>
+                <div>
+                    <p class="text-4xl font-bold text-orange-500">50K+</p>
+                    <p class="text-gray-600 mt-2">Pedidos procesados</p>
+                </div>
+                <div>
+                    <p class="text-4xl font-bold text-orange-500">24/7</p>
+                    <p class="text-gray-600 mt-2">Disponibilidad</p>
+                </div>
+                <div>
+                    <p class="text-4xl font-bold text-orange-500">98%</p>
+                    <p class="text-gray-600 mt-2">Satisfacción</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                    Todo lo que necesitas en un solo lugar
+                </h2>
+                <p class="text-xl text-gray-600">
+                    Potencia tu restaurante con tecnología de última generación
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        🧠
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">IA Conversacional</h3>
+                    <p class="text-gray-600 mb-4">
+                        Chatbot inteligente que entiende lenguaje natural y responde como un humano. Powered by Claude AI.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Respuestas naturales</li>
+                        <li>✓ Entiende contexto</li>
+                        <li>✓ Aprende de interacciones</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        🛠️
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Panel Administrativo</h3>
+                    <p class="text-gray-600 mb-4">
+                        Configura todo desde un panel intuitivo. Sin código, sin complicaciones.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Gestión de menú</li>
+                        <li>✓ Personalización completa</li>
+                        <li>✓ Análisis en tiempo real</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        📱
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Multi-Canal</h3>
+                    <p class="text-gray-600 mb-4">
+                        Integra el chatbot en tu web, WhatsApp, Facebook Messenger y más.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Widget para web</li>
+                        <li>✓ WhatsApp Business</li>
+                        <li>✓ Redes sociales</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        🍕
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Gestión de Menú</h3>
+                    <p class="text-gray-600 mb-4">
+                        Actualiza tu menú, precios y disponibilidad en segundos.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Editor visual</li>
+                        <li>✓ Categorías ilimitadas</li>
+                        <li>✓ Fotos y descripciones</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-pink-100 to-red-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        📊
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Análisis & Reportes</h3>
+                    <p class="text-gray-600 mb-4">
+                        Métricas detalladas de ventas, clientes y conversaciones.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Dashboard en tiempo real</li>
+                        <li>✓ Exportar reportes</li>
+                        <li>✓ Insights de clientes</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition border border-gray-100">
+                    <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-2xl flex items-center justify-center text-3xl mb-4">
+                        📅
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Reservaciones</h3>
+                    <p class="text-gray-600 mb-4">
+                        Sistema automático de reservas integrado con tu chatbot.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li>✓ Calendario inteligente</li>
+                        <li>✓ Confirmaciones automáticas</li>
+                        <li>✓ Recordatorios SMS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                    Precios transparentes y accesibles
+                </h2>
+                <p class="text-xl text-gray-600">
+                    Elige el plan perfecto para tu restaurante
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Plan Básico -->
+                <div class="bg-gray-50 p-8 rounded-2xl border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Básico</h3>
+                    <p class="text-gray-600 mb-6">Para emprendedores</p>
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold text-gray-900">$29</span>
+                        <span class="text-gray-600">/mes</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Hasta 500 conversaciones/mes
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            1 canal de comunicación
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Menú hasta 50 items
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Soporte por email
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-800 text-white py-3 rounded-lg hover:bg-gray-900 transition font-semibold">
+                        Comenzar
+                    </button>
+                </div>
+
+                <!-- Plan Profesional (Destacado) -->
+                <div class="bg-gradient-to-br from-orange-500 to-red-500 p-8 rounded-2xl shadow-2xl transform scale-105 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-gray-900 px-4 py-1 rounded-full text-sm font-bold">
+                        MÁS POPULAR
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Profesional</h3>
+                    <p class="text-orange-100 mb-6">Para restaurantes establecidos</p>
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold text-white">$79</span>
+                        <span class="text-orange-100">/mes</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-white">
+                            <span class="text-yellow-300 mr-2">✓</span>
+                            Conversaciones ilimitadas
+                        </li>
+                        <li class="flex items-center text-white">
+                            <span class="text-yellow-300 mr-2">✓</span>
+                            Todos los canales
+                        </li>
+                        <li class="flex items-center text-white">
+                            <span class="text-yellow-300 mr-2">✓</span>
+                            Menú ilimitado
+                        </li>
+                        <li class="flex items-center text-white">
+                            <span class="text-yellow-300 mr-2">✓</span>
+                            Análisis avanzados
+                        </li>
+                        <li class="flex items-center text-white">
+                            <span class="text-yellow-300 mr-2">✓</span>
+                            Soporte prioritario
+                        </li>
+                    </ul>
+                    <button class="w-full bg-white text-orange-600 py-3 rounded-lg hover:bg-gray-100 transition font-semibold">
+                        Comenzar
+                    </button>
+                </div>
+
+                <!-- Plan Enterprise -->
+                <div class="bg-gray-50 p-8 rounded-2xl border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
+                    <p class="text-gray-600 mb-6">Para cadenas y franquicias</p>
+                    <div class="mb-6">
+                        <span class="text-5xl font-bold text-gray-900">$199</span>
+                        <span class="text-gray-600">/mes</span>
+                    </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Todo de Profesional
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Multi-sucursal
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            API personalizada
+                        </li>
+                        <li class="flex items-center text-gray-700">
+                            <span class="text-green-500 mr-2">✓</span>
+                            Gerente de cuenta dedicado
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-800 text-white py-3 rounded-lg hover:bg-gray-900 transition font-semibold">
+                        Contactar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-20 bg-gradient-to-br from-orange-50 to-red-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-gray-900 mb-6">
+                ¿Listo para probarlo?
+            </h2>
+            <p class="text-xl text-gray-600 mb-12">
+                Comienza tu prueba gratuita de 14 días. Sin tarjeta de crédito.
+            </p>
+            <button onclick="showSignup()" class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-12 py-5 rounded-xl hover:from-orange-600 hover:to-red-600 transition font-bold text-xl shadow-2xl">
+                Crear mi cuenta gratis
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white w-10 h-10 rounded-lg flex items-center justify-center font-bold">
+                            RB
+                        </div>
+                        <span class="ml-3 text-xl font-bold text-white">RestaurantBot</span>
+                    </div>
+                    <p class="text-sm">
+                        Automatiza tu restaurante con IA. La mejor solución para pedidos y reservaciones.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4">Producto</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#features" class="hover:text-orange-400 transition">Características</a></li>
+                        <li><a href="#pricing" class="hover:text-orange-400 transition">Precios</a></li>
+                        <li><a href="#" class="hover:text-orange-400 transition">Documentación</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4">Empresa</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-orange-400 transition">Sobre nosotros</a></li>
+                        <li><a href="#" class="hover:text-orange-400 transition">Blog</a></li>
+                        <li><a href="#" class="hover:text-orange-400 transition">Contacto</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white mb-4">Legal</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-orange-400 transition">Privacidad</a></li>
+                        <li><a href="#" class="hover:text-orange-400 transition">Términos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                <p>&copy; 2024 RestaurantBot. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function scrollToDemo() {
+            document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showLogin() {
+            alert('Panel de login - Conectar con tu backend de autenticación');
+        }
+
+        function showSignup() {
+            alert('Formulario de registro - Conectar con tu backend para crear cuentas');
+        }
+    </script>
+</body>
+</html>
