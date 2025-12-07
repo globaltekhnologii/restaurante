@@ -48,6 +48,10 @@ $stmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/admin-modern.css">
     <title>Panel de Caja - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -322,6 +326,7 @@ $stmt->close();
             <a href="reportes.php">📊 Reportes</a>
             <a href="cierre_caja.php">📊 Cierre de Caja</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
+            <div class="theme-switcher-container"></div>
             <a href="logout.php">🚪 Salir</a>
         </div>
     </div>
@@ -588,6 +593,9 @@ $stmt->close();
             document.getElementById('btn-toggle-sound').textContent = '🔕';
         }
     </script>
+    
+    <!-- Theme Manager -->
+    <script src="js/theme-manager.js"></script>
 </body>
 </html>
 <?php $conn->close(); ?>

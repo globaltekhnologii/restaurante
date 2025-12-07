@@ -12,6 +12,7 @@ require_once 'includes/info_negocio.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/admin-modern.css">
     <title>Reportes y Estadísticas - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -431,5 +432,8 @@ require_once 'includes/info_negocio.php';
     </div>
 
     <script src="js/reportes.js"></script>
+    
+    <!-- Theme Manager -->
+    <script src="js/theme-manager.js"></script>
 </body>
 </html>
