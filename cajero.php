@@ -319,6 +319,7 @@ $stmt->close();
         <h1>💰 Panel de Caja</h1>
         <div class="navbar-actions">
             <span>👤 <?php echo htmlspecialchars($cajero_nombre); ?></span>
+            <a href="reportes.php">📊 Reportes</a>
             <a href="cierre_caja.php">📊 Cierre de Caja</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <a href="logout.php">🚪 Salir</a>

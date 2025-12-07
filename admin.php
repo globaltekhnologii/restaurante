@@ -373,6 +373,7 @@ require_once 'includes/info_negocio.php';
             <a href="admin_pedidos.php">📦 Pedidos</a>
             <a href="admin_usuarios.php">👥 Usuarios</a>
             <a href="admin_clientes.php">👤 Clientes</a>
+            <a href="reportes.php">📊 Reportes</a>
             <a href="config_pagos.php">💳 Configurar Pagos</a>
             <a href="admin_configuracion.php">⚙️ Configuración</a>
             <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
