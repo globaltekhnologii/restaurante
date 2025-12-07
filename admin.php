@@ -22,192 +22,164 @@ require_once 'includes/info_negocio.php';
         
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--background-solid);
+            background: var(--background);
             color: var(--text-primary);
             min-height: 100vh;
         }
         
-        /* Background animado */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--gradient-primary);
-            opacity: 0.08;
-            z-index: -1;
-            animation: gradient-shift 15s ease infinite;
-        }
-        
-        @keyframes gradient-shift {
-            0%, 100% { opacity: 0.08; }
-            50% { opacity: 0.12; }
-        }
-        
-        /* Navbar VIBRANTE */
+        /* Navbar LIMPIO */
         .admin-navbar {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border-bottom: 1px solid var(--glass-border);
-            color: var(--text-inverse);
-            padding: 20px 30px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow-xl);
+            box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
             z-index: 100;
-            position: relative;
-        }
-        
-        .admin-navbar::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--gradient-primary);
-            z-index: -1;
         }
         
         .admin-navbar h1 {
-            font-size: 1.8em;
-            font-weight: 700;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            animation: fadeInDown 0.6s ease-out;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .navbar-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
         }
         
         .navbar-actions a {
-            color: white;
+            color: var(--text-secondary);
             text-decoration: none;
-            padding: 10px 18px;
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            background: transparent;
             border-radius: var(--radius-md);
             transition: all var(--transition-base);
             font-weight: 500;
-            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9em;
         }
         
         .navbar-actions a:hover {
-            background: rgba(255,255,255,0.25);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            background: var(--background);
+            color: var(--primary);
         }
         
         /* Contenedor Principal */
         .admin-container {
             max-width: 1400px;
-            margin: 40px auto;
-            padding: 0 30px;
-            animation: fadeInUp 0.8s ease-out;
+            margin: 32px auto;
+            padding: 0 32px;
         }
         
-        /* Estadísticas Cards VIBRANTES */
+        /* Estadísticas Cards LIMPIAS */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
         
         .stat-card {
             background: var(--surface);
-            padding: 30px;
+            padding: 24px;
             border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
+            box-shadow: var(--shadow);
             transition: all var(--transition-base);
-            position: relative;
-            overflow: hidden;
             border: 1px solid var(--border);
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--gradient-primary);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .stat-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: var(--shadow-xl);
-            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
         }
         
         .stat-card h3 {
-            font-size: 0.85em;
+            font-size: 0.8em;
             color: var(--text-secondary);
-            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 0.5px;
             font-weight: 600;
         }
         
         .stat-card .number {
-            font-size: 3em;
-            font-weight: 800;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.2;
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
         }
         
-        /* Formulario MODERNO */
+        /* Colores pastel para stats */
+        .stat-card:nth-child(1) {
+            background: var(--pastel-blue);
+            border-color: var(--pastel-blue-dark);
+        }
+        
+        .stat-card:nth-child(1) .number {
+            color: var(--pastel-blue-dark);
+        }
+        
+        .stat-card:nth-child(2) {
+            background: var(--pastel-yellow);
+            border-color: var(--pastel-yellow-dark);
+        }
+        
+        .stat-card:nth-child(2) .number {
+            color: var(--pastel-yellow-dark);
+        }
+        
+        .stat-card:nth-child(3) {
+            background: var(--pastel-green);
+            border-color: var(--pastel-green-dark);
+        }
+        
+        .stat-card:nth-child(3) .number {
+            color: var(--pastel-green-dark);
+        }
+        
+        .stat-card:nth-child(4) {
+            background: var(--pastel-pink);
+            border-color: var(--pastel-pink-dark);
+        }
+        
+        .stat-card:nth-child(4) .number {
+            color: var(--pastel-pink-dark);
+        }
+        
+        /* Formulario LIMPIO */
         .form-section {
             background: var(--surface);
-            padding: 40px;
+            padding: 32px;
             border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+            margin-bottom: 32px;
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .form-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: var(--gradient-secondary);
         }
         
         .form-section h2 {
             color: var(--text-primary);
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border);
-            font-size: 1.8em;
-            font-weight: 700;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 1.5em;
+            font-weight: 600;
         }
         
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            gap: 20px;
         }
         
         .form-group {
@@ -216,17 +188,17 @@ require_once 'includes/info_negocio.php';
         }
         
         .form-group label {
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 10px;
-            font-size: 0.95em;
+            margin-bottom: 8px;
+            font-size: 0.9em;
         }
         
         .form-group input,
         .form-group select,
         .form-group textarea {
-            padding: 14px 18px;
-            border: 2px solid var(--border);
+            padding: 12px 16px;
+            border: 1px solid var(--border);
             border-radius: var(--radius-md);
             font-size: 1em;
             transition: all var(--transition-base);
@@ -239,83 +211,54 @@ require_once 'includes/info_negocio.php';
         .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 3px var(--primary-lighter);
         }
         
         .form-group textarea {
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
         }
         
         .checkbox-group {
             display: flex;
-            gap: 25px;
-            margin-top: 15px;
+            gap: 20px;
+            margin-top: 12px;
             flex-wrap: wrap;
         }
         
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 15px;
-            background: var(--background-secondary);
-            border-radius: var(--radius-md);
-            transition: all var(--transition-base);
-        }
-        
-        .checkbox-item:hover {
-            background: var(--surface-hover);
-            transform: translateY(-2px);
+            gap: 8px;
         }
         
         .checkbox-item input[type="checkbox"] {
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
             accent-color: var(--primary);
         }
         
         .btn {
-            padding: 16px 36px;
+            padding: 12px 24px;
             border: none;
             border-radius: var(--radius-md);
-            font-size: 1.1em;
-            font-weight: 600;
+            font-size: 1em;
+            font-weight: 500;
             cursor: pointer;
             transition: all var(--transition-base);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .btn:active::before {
-            width: 300px;
-            height: 300px;
         }
         
         .btn-primary {
-            background: var(--gradient-primary);
+            background: var(--primary);
             color: white;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
         }
         
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-xl);
+            background: var(--primary-light);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         }
         
