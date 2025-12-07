@@ -16,6 +16,7 @@ require_once 'includes/info_negocio.php';
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/admin-modern.css">
     <link rel="stylesheet" href="style.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
