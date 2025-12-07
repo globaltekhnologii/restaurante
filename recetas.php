@@ -39,19 +39,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Obtener platos
-$platos = $conn->query("SELECT id, nombre, precio FROM platos WHERE activo = 1 ORDER BY nombre");
+$platos = $conn->query("SELECT id, nombre, precio FROM platos ORDER BY nombre");
 
 // Obtener ingredientes
 $ingredientes = $conn->query("SELECT id, nombre, unidad_medida, stock_actual FROM ingredientes WHERE activo = 1 ORDER BY nombre");
 
 // Obtener plato seleccionado
 $plato_seleccionado = isset($_GET['plato']) ? $_GET['plato'] : '';
-$receta_actual = [];
+$receta_actual = null;
 if (!empty($plato_seleccionado)) {
+    $plato_id_safe = intval($plato_seleccionado);
     $sql = "SELECT r.*, i.nombre as ingrediente_nombre, i.stock_actual, i.unidad_medida as unidad_stock 
             FROM recetas r 
             JOIN ingredientes i ON r.ingrediente_id = i.id 
-            WHERE r.plato_id = $plato_seleccionado";
+            WHERE r.plato_id = $plato_id_safe";
     $receta_actual = $conn->query($sql);
 }
 ?>
@@ -162,7 +163,12 @@ if (!empty($plato_seleccionado)) {
                     <tbody>
                         <?php if ($receta_actual && $receta_actual->num_rows > 0): ?>
                             <?php while ($rec = $receta_actual->fetch_assoc()): ?>
-                            <?php $porciones = floor($rec['stock_actual'] / $rec['cantidad_necesaria']); ?>
+                            <?php 
+                                $porciones = 0;
+                                if ($rec['cantidad_necesaria'] > 0) {
+                                    $porciones = floor($rec['stock_actual'] / $rec['cantidad_necesaria']); 
+                                }
+                            ?>
                             <tr>
                                 <td><strong><?php echo htmlspecialchars($rec['ingrediente_nombre']); ?></strong></td>
                                 <td><?php echo number_format($rec['cantidad_necesaria'], 2); ?> <?php echo $rec['unidad_medida']; ?></td>
