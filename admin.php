@@ -13,24 +13,28 @@ require_once 'includes/info_negocio.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="style.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
+            background: var(--background);
+            color: var(--text-primary);
         }
         
         /* Navbar Superior */
         .admin-navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--gradient-primary);
+            color: var(--text-inverse);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -378,6 +382,7 @@ require_once 'includes/info_negocio.php';
             <a href="admin_configuracion.php">⚙️ Configuración</a>
             <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
+            <div class="theme-switcher-container"></div>
             <a href="logout.php">🚪 Cerrar Sesión</a>
         </div>
     </div>
@@ -646,5 +651,8 @@ require_once 'includes/info_negocio.php';
             });
         }, 5000);
     </script>
+    
+    <!-- Theme Manager -->
+    <script src="js/theme-manager.js"></script>
 </body>
 </html>
