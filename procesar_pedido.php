@@ -8,6 +8,8 @@ error_reporting(E_ALL);
 
 // Usar configuración centralizada
 require_once 'config.php';
+require_once 'config.php';
+require_once 'includes/functions_inventario.php';
 $conn = getDatabaseConnection();
 
 // Verificar que se recibieron los datos por POST
@@ -76,7 +78,31 @@ elseif (!empty($telefono)) {
 // ============================================
 
 // Iniciar transacción
+// Iniciar transacción
 $conn->begin_transaction();
+
+// Validar STOCK y obtener IDs de platos
+$items_validacion = [];
+foreach ($carrito as $item) {
+    // Buscar ID del plato
+    $stmt_plato = $conn->prepare("SELECT id FROM platos WHERE nombre = ? LIMIT 1");
+    $stmt_plato->bind_param("s", $item['nombre']);
+    $stmt_plato->execute();
+    $result = $stmt_plato->get_result();
+    $plato_id = ($result->num_rows > 0) ? $result->fetch_assoc()['id'] : 0;
+    
+    if ($plato_id > 0) {
+        $items_validacion[] = ['plato_id' => $plato_id, 'cantidad' => (isset($item['cantidad']) ? $item['cantidad'] : 1)];
+    }
+}
+
+$validacion = validarStockPedido($conn, $items_validacion);
+
+if (!$validacion['valido']) {
+    $conn->rollback();
+    header("Location: checkout.php?error=" . urlencode($validacion['mensaje']));
+    exit;
+}
 
 try {
     // Insertar el pedido principal
@@ -136,6 +162,15 @@ try {
     
     $stmt_items->close();
     
+    
+    // Fin del bucle foreach ya cerrado en línea 161
+
+    
+    // Descontar STOCK
+    // Usar usuario ID 1 (admin) o NULL si no hay sesión para pedidos online
+    $usuario_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1; 
+    descontarStockPedido($conn, $pedido_id, $items_validacion, $usuario_id);
+
     // Confirmar transacción
     $conn->commit();
     

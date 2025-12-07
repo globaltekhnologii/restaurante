@@ -7,6 +7,7 @@ verificarSesion();
 verificarRolORedirect(['mesero'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/functions_inventario.php';
 
 // Validar que se recibieron los datos
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -68,6 +69,19 @@ foreach ($items as $item) {
 // Iniciar transacción
 $conn->begin_transaction();
 
+// Validar STOCK antes de procesar
+$items_validacion = array_map(function($item) {
+    return ['plato_id' => $item['id'], 'cantidad' => $item['cantidad']];
+}, $items);
+
+$validacion = validarStockPedido($conn, $items_validacion);
+
+if (!$validacion['valido']) {
+    $conn->rollback();
+    header("Location: tomar_pedido_mesero.php?mesa_id=$mesa_id&error=" . urlencode($validacion['mensaje']));
+    exit;
+}
+
 try {
     // Insertar pedido
     $estado = 'confirmado';
@@ -98,6 +112,9 @@ try {
         $stmt->execute();
         $stmt->close();
     }
+
+    // Descontar STOCK
+    descontarStockPedido($conn, $pedido_id, $items_validacion, $mesero_id);
     
     // Confirmar transacción
     $conn->commit();
