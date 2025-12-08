@@ -38,10 +38,26 @@ $tenant_id = (int)$input['tenant_id'];
 $user_message = trim($input['message']);
 $session_id = $input['session_id'];
 
-// Validar tenant
-$tenant_check = $conn->query("SELECT id FROM saas_tenants WHERE id = $tenant_id AND status = 'active'");
+// Validar tenant y suscripción
+$tenant_check = $conn->query("SELECT id, subscription_end, status FROM saas_tenants WHERE id = $tenant_id");
+
 if ($tenant_check->num_rows === 0) {
-    jsonError('Tenant no válido o inactivo', 404);
+    jsonError('Tenant no encontrado', 404);
+}
+
+$tenant_data = $tenant_check->fetch_assoc();
+
+// 1. Verificar estado manual
+if ($tenant_data['status'] !== 'active') {
+    jsonError('El servicio está suspendido o inactivo. Contacte a soporte.', 403);
+}
+
+// 2. Verificar fecha de suscripción
+if ($tenant_data['subscription_end']) {
+    $today = date('Y-m-d');
+    if ($today > $tenant_data['subscription_end']) {
+        jsonError('⏳ Su suscripción ha vencido. Por favor realice el pago para continuar usando el servicio.', 402);
+    }
 }
 
 // Obtener configuración del chatbot
@@ -328,49 +344,71 @@ function callOpenAIAPI($api_key, $system_prompt, $history, $user_message) {
 }
 
 function processChatbotOrder($conn, $tenant_id, $conversation_id, $data) {
-    $customer = $data['customer'];
-    $items = $data['items'];
-    $total = $data['total'];
-    
-    // Generar número de pedido
-    $numero_pedido = 'BOT-' . date('ymd') . '-' . rand(100, 999);
-
-    // Insertar en tabla `pedidos` (BD Principal)
-    $stmt = $conn->prepare("INSERT INTO pedidos (nombre_cliente, telefono, direccion, total, estado, tipo_pedido, origen, conversation_id, fecha_pedido, numero_pedido) VALUES (?, ?, ?, ?, 'pendiente', 'domicilio', 'chatbot', ?, NOW(), ?)");
-    
-    $stmt->bind_param("sssdis", 
-        $customer['name'], 
-        $customer['phone'], 
-        $customer['address'], 
-        $total,
-        $conversation_id,
-        $numero_pedido
-    );
-    
-    if ($stmt->execute()) {
-        $pedido_id = $conn->insert_id;
+    try {
+        $customer = $data['customer'];
+        $items = $data['items'];
+        $total = $data['total'];
         
-        // Insertar items
-        $stmt_item = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_nombre, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)");
+        // Generar número de pedido
+        $numero_pedido = 'BOT-' . date('ymd') . '-' . rand(100, 999);
+    
+        // Insertar en tabla `pedidos` (BD Principal)
+        $stmt = $conn->prepare("INSERT INTO pedidos (nombre_cliente, telefono, direccion, total, estado, tipo_pedido, origen, conversation_id, fecha_pedido, numero_pedido) VALUES (?, ?, ?, ?, 'pendiente', 'domicilio', 'chatbot', ?, NOW(), ?)");
         
-        foreach ($items as $item) {
-            $subtotal = $item['price'] * $item['quantity'];
-            $stmt_item->bind_param("isidd", 
-                $pedido_id, 
-                $item['name'], 
-                $item['quantity'], 
-                $item['price'], 
-                $subtotal
-            );
-            $stmt_item->execute();
+        if (!$stmt) {
+            error_log("Chatbot Order Error - Prepare failed: " . $conn->error);
+            return ['success' => false, 'error' => 'Database prepare error: ' . $conn->error];
         }
         
-        // Marcar conversación
-        $conn->query("UPDATE saas_conversations SET order_placed = 1, status = 'completed' WHERE id = $conversation_id");
+        $stmt->bind_param("sssdis", 
+            $customer['name'], 
+            $customer['phone'], 
+            $customer['address'], 
+            $total,
+            $conversation_id,
+            $numero_pedido
+        );
         
-        return ['success' => true, 'order_id' => $pedido_id];
+        if ($stmt->execute()) {
+            $pedido_id = $conn->insert_id;
+            
+            // Insertar items
+            $stmt_item = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_id, plato_nombre, precio_unitario, cantidad, subtotal) VALUES (?, ?, ?, ?, ?, ?)");
+            
+            if (!$stmt_item) {
+                error_log("Chatbot Order Error - Items prepare failed: " . $conn->error);
+                return ['success' => false, 'error' => 'Items prepare error'];
+            }
+            
+            foreach ($items as $item) {
+                $subtotal = $item['price'] * $item['quantity'];
+                $plato_id = null; // El chatbot no tiene plato_id, solo nombre
+                
+                $stmt_item->bind_param("iisdid", 
+                    $pedido_id,
+                    $plato_id,
+                    $item['name'], 
+                    $item['price'],
+                    $item['quantity'], 
+                    $subtotal
+                );
+                
+                if (!$stmt_item->execute()) {
+                    error_log("Chatbot Order Error - Item insert failed: " . $stmt_item->error);
+                }
+            }
+            
+            // Marcar conversación
+            $conn->query("UPDATE saas_conversations SET order_placed = 1, status = 'completed' WHERE id = $conversation_id");
+            
+            return ['success' => true, 'order_id' => $pedido_id];
+        } else {
+            error_log("Chatbot Order Error - Execute failed: " . $stmt->error);
+            return ['success' => false, 'error' => $stmt->error];
+        }
+    } catch (Exception $e) {
+        error_log("Chatbot Order Exception: " . $e->getMessage());
+        return ['success' => false, 'error' => $e->getMessage()];
     }
-    
-    return ['success' => false, 'error' => $conn->error];
 }
 ?>

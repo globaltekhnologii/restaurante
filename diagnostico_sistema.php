@@ -79,7 +79,7 @@ echo "</table>";
 // 5. Verificar query del chef
 echo "<h2>5. Simulación de Query del Chef</h2>";
 $sql = "SELECT p.*, 
-        GROUP_CONCAT(CONCAT(pi.cantidad, 'x ', pi.nombre_plato) SEPARATOR ', ') as items
+        GROUP_CONCAT(CONCAT(pi.cantidad, 'x ', pi.plato_nombre) SEPARATOR ', ') as items
         FROM pedidos p
         LEFT JOIN pedidos_items pi ON p.id = pi.pedido_id
         WHERE p.estado IN ('confirmado', 'preparando')

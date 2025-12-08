@@ -17,7 +17,7 @@ $limite = isset($_GET['limite']) ? (int)$_GET['limite'] : 10;
 try {
     // Top productos por cantidad vendida
     $sql_cantidad = "SELECT 
-                        pi.nombre_plato,
+                        pi.plato_nombre,
                         pi.plato_id,
                         p.categoria,
                         SUM(pi.cantidad) as cantidad_vendida,
@@ -29,7 +29,7 @@ try {
                     LEFT JOIN platos p ON pi.plato_id = p.id
                     WHERE DATE(ped.fecha_pedido) BETWEEN ? AND ?
                     AND ped.pagado = 1
-                    GROUP BY pi.nombre_plato, pi.plato_id, p.categoria
+                    GROUP BY pi.plato_nombre, pi.plato_id, p.categoria
                     ORDER BY cantidad_vendida DESC
                     LIMIT ?";
     
@@ -41,7 +41,7 @@ try {
     $top_cantidad = [];
     while ($row = $result->fetch_assoc()) {
         $top_cantidad[] = [
-            'nombre' => $row['nombre_plato'],
+            'nombre' => $row['plato_nombre'],
             'categoria' => $row['categoria'] ?: 'Sin categoría',
             'cantidad_vendida' => (int)$row['cantidad_vendida'],
             'ingresos_totales' => (float)$row['ingresos_totales'],
@@ -53,7 +53,7 @@ try {
     
     // Top productos por ingresos
     $sql_ingresos = "SELECT 
-                        pi.nombre_plato,
+                        pi.plato_nombre,
                         pi.plato_id,
                         p.categoria,
                         SUM(pi.cantidad) as cantidad_vendida,
@@ -64,7 +64,7 @@ try {
                     LEFT JOIN platos p ON pi.plato_id = p.id
                     WHERE DATE(ped.fecha_pedido) BETWEEN ? AND ?
                     AND ped.pagado = 1
-                    GROUP BY pi.nombre_plato, pi.plato_id, p.categoria
+                    GROUP BY pi.plato_nombre, pi.plato_id, p.categoria
                     ORDER BY ingresos_totales DESC
                     LIMIT ?";
     
@@ -76,7 +76,7 @@ try {
     $top_ingresos = [];
     while ($row = $result->fetch_assoc()) {
         $top_ingresos[] = [
-            'nombre' => $row['nombre_plato'],
+            'nombre' => $row['plato_nombre'],
             'categoria' => $row['categoria'] ?: 'Sin categoría',
             'cantidad_vendida' => (int)$row['cantidad_vendida'],
             'ingresos_totales' => (float)$row['ingresos_totales'],

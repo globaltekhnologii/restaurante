@@ -37,7 +37,7 @@ try {
         $items = [];
         while ($item = $items_result->fetch_assoc()) {
             $items[] = [
-                'nombre' => $item['nombre_plato'],
+                'nombre' => $item['plato_nombre'],
                 'cantidad' => (int)$item['cantidad'],
                 'notas' => $item['notas_item'] ?? ''
             ];
@@ -53,7 +53,7 @@ try {
             'items' => $items,
             'notas' => $row['notas'],
             'hora' => date('H:i', strtotime($row['fecha_pedido'])),
-            'tiempo_espera' => $this->calcularTiempoEspera($row['fecha_pedido'])
+            'tiempo_espera' => calcularTiempoEspera($row['fecha_pedido'])
         ];
     }
     

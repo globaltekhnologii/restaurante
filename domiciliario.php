@@ -7,7 +7,6 @@ verificarSesion();
 verificarRolORedirect(['domiciliario'], 'login.php');
 
 require_once 'config.php';
-require_once 'config.php';
 require_once 'includes/info_negocio.php';
 $conn = getDatabaseConnection();
 
@@ -34,7 +33,7 @@ $stats['completadas_hoy'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Entregas pendientes (asignadas pero no entregadas)
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado IN ('en_camino', 'preparando')");
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado IN ('listo', 'en_camino')");
 $stmt->bind_param("i", $domiciliario_id);
 $stmt->execute();
 $stats['pendientes'] = $stmt->get_result()->fetch_assoc()['count'];
@@ -48,7 +47,7 @@ $stats['en_camino'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Pedidos listos para recoger (sin asignar domiciliario)
-$stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id IS NULL AND estado = 'en_camino' AND direccion IS NOT NULL AND direccion != ''")->fetch_assoc()['count'];
+$stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id IS NULL AND estado = 'listo' AND tipo_pedido = 'domicilio'")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -444,7 +443,7 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                     <?php
                     $sql = "SELECT p.* 
                             FROM pedidos p 
-                            WHERE p.domiciliario_id = ? AND p.estado IN ('preparando', 'en_camino') 
+                            WHERE p.domiciliario_id = ? AND p.estado IN ('listo', 'en_camino') 
                             ORDER BY p.fecha_pedido ASC";
                     $stmt = $conn->prepare($sql);
                     $stmt->bind_param("i", $domiciliario_id);
@@ -483,7 +482,7 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                             echo '<div class="entrega-footer">';
                             echo '<div class="entrega-total">💰 Total: $' . number_format($entrega['total'], 2) . '</div>';
                             
-                            if ($entrega['estado'] === 'preparando') {
+                            if ($entrega['estado'] === 'listo') {
                                 echo '<a href="salir_entrega.php?id=' . $entrega['id'] . '" class="btn btn-primary" style="margin-bottom: 5px;">🚗 Salir a Entregar</a>';
                             } else if ($entrega['estado'] === 'en_camino') {
                                 echo '<a href="confirmar_entrega.php?id=' . $entrega['id'] . '" class="btn btn-success" style="margin-bottom: 5px;">✅ Confirmar Entrega</a>';
@@ -516,8 +515,8 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                     <?php
                     $sql = "SELECT p.* 
                             FROM pedidos p 
-                            WHERE p.domiciliario_id IS NULL AND p.estado = 'en_camino' 
-                            AND p.direccion IS NOT NULL AND p.direccion != ''
+                            WHERE p.domiciliario_id IS NULL AND p.estado = 'listo' 
+                            AND p.tipo_pedido = 'domicilio'
                             ORDER BY p.fecha_pedido ASC";
                     $result = $conn->query($sql);
                     

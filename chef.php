@@ -406,7 +406,7 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
                         while($item = $items_result->fetch_assoc()) {
                             echo '<div class="pedido-item">';
                             echo '<span class="item-cantidad">' . $item['cantidad'] . 'x</span> ';
-                            echo '<span class="item-nombre">' . htmlspecialchars($item['nombre_plato']) . '</span>';
+                            echo '<span class="item-nombre">' . htmlspecialchars($item['plato_nombre'] ?? $item['nombre_plato'] ?? 'Sin nombre') . '</span>';
                             echo '</div>';
                         }
                         echo '</div>';

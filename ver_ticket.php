@@ -164,7 +164,7 @@ $conn->close();
             <?php foreach ($items as $item): ?>
             <tr>
                 <td class="qty"><?php echo $item['cantidad']; ?></td>
-                <td class="name"><?php echo htmlspecialchars($item['nombre_plato']); ?></td>
+                <td class="name"><?php echo htmlspecialchars($item['plato_nombre']); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>

@@ -105,10 +105,13 @@ if (!$validacion['valido']) {
 }
 
 try {
-    // Insertar el pedido principal
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?)");
+    // Obtener tipo de pedido
+    $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'domicilio';
     
-    $stmt->bind_param("sissssds", 
+    // Insertar el pedido principal
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?)");
+    
+    $stmt->bind_param("sissssdss", 
         $numero_pedido,
         $cliente_id,
         $nombre_cliente,
@@ -116,7 +119,8 @@ try {
         $direccion,
         $email,
         $total,
-        $notas
+        $notas,
+        $tipo_pedido
     );
     
     if (!$stmt->execute()) {
@@ -127,7 +131,7 @@ try {
     $stmt->close();
     
     // Insertar los items del pedido
-    $stmt_items = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_id, nombre_plato, precio, cantidad, subtotal) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt_items = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_id, plato_nombre, precio_unitario, cantidad, subtotal) VALUES (?, ?, ?, ?, ?, ?)");
     
     foreach ($carrito as $item) {
         // Buscar el ID del plato por su nombre

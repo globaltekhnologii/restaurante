@@ -223,7 +223,7 @@ $conn->close();
                 <?php foreach ($items as $item): ?>
                 <div class="item">
                     <div style="display: flex; justify-content: space-between;">
-                        <span><?php echo htmlspecialchars($item['nombre_plato']); ?> x <?php echo $item['cantidad']; ?></span>
+                        <span><?php echo htmlspecialchars($item['plato_nombre']); ?> x <?php echo $item['cantidad']; ?></span>
                         <span>$<?php echo number_format($item['subtotal'], 2); ?></span>
                     </div>
                 </div>
