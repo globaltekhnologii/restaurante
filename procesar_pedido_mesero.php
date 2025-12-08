@@ -84,23 +84,25 @@ if (!$validacion['valido']) {
 
 try {
     // Insertar pedido
+    $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'mesa';
+    
     $estado = 'confirmado';
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("sssssdsii", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id);
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
+    $stmt->bind_param("sssssdsiis", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id, $tipo_pedido);
     $stmt->execute();
     $pedido_id = $conn->insert_id;
     $stmt->close();
     
     // Insertar items del pedido
-    $stmt = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_id, nombre_plato, precio, cantidad) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO pedidos_items (pedido_id, plato_id, plato_nombre, precio_unitario, cantidad) VALUES (?, ?, ?, ?, ?)");
     
     foreach ($items as $item) {
         $plato_id = $item['id'];
-        $nombre_plato = $item['nombre'];
-        $precio = $item['precio'];
+        $plato_nombre = $item['nombre'];
+        $precio_unitario = $item['precio'];
         $cantidad = $item['cantidad'];
         
-        $stmt->bind_param("iisdi", $pedido_id, $plato_id, $nombre_plato, $precio, $cantidad);
+        $stmt->bind_param("iisdi", $pedido_id, $plato_id, $plato_nombre, $precio_unitario, $cantidad);
         $stmt->execute();
     }
     $stmt->close();
