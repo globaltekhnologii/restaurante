@@ -212,11 +212,14 @@ $conn->close();
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($items as $item): ?>
+            <?php foreach ($items as $item): 
+                $nombre = $item['plato_nombre'] ?? $item['nombre_plato'] ?? 'Sin nombre';
+                $precio = $item['precio_unitario'] ?? $item['precio'] ?? 0;
+            ?>
             <tr>
                 <td><?php echo $item['cantidad']; ?></td>
-                <td><?php echo htmlspecialchars($item['nombre_plato']); ?></td>
-                <td class="price">$<?php echo number_format($item['precio'] * $item['cantidad'], 0); ?></td>
+                <td><?php echo htmlspecialchars($nombre); ?></td>
+                <td class="price">$<?php echo number_format($precio * $item['cantidad'], 0); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>
@@ -266,7 +269,7 @@ $conn->close();
             switch ($_SESSION['rol']) {
                 case 'cajero': $redirect_url = 'cajero.php'; break;
                 case 'mesero': $redirect_url = 'mesero.php'; break;
-                case 'admin': $redirect_url = 'admin.php'; break;
+                case 'admin': $redirect_url = 'admin_pedidos.php'; break;
                 case 'domiciliario': $redirect_url = 'domiciliario.php'; break;
             }
         }
