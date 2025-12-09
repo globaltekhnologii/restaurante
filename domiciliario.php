@@ -420,6 +420,14 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             </div>
         </div>
 
+        <!-- Botón Flotante para Activar GPS -->
+        <div id="gps-activator" style="position: fixed; bottom: 80px; right: 20px; z-index: 1000;">
+            <button onclick="if(navigator.geolocation){alert('🛰️ Buscando satélites GPS...\n\nEspera 30-60 segundos\nSal al aire libre para mejor señal');navigator.geolocation.getCurrentPosition(function(p){alert('✅ GPS Activado!\n\nPrecisión: ±'+p.coords.accuracy.toFixed(0)+'m\nLat:'+p.coords.latitude+'\nLng:'+p.coords.longitude);location.reload();},function(e){alert('❌ Error GPS ('+e.code+'): '+e.message+'\n\nAsegúrate de:\n• Estar al aire libre\n• GPS activado en el teléfono\n• Permisos dados al navegador');},{enableHighAccuracy:true,timeout:30000,maximumAge:0});}else{alert('❌ Tu navegador no soporta GPS');}" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-size: 1.1em; font-weight: 600; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4); cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.3em;">📍</span>
+                <span>Activar GPS</span>
+            </button>
+        </div>
+
         <!-- Mensajes -->
         <?php if(isset($_GET['success'])): ?>
         <div class="message message-success">
@@ -773,6 +781,195 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
     
     <!-- Theme Manager -->
     <script src="js/theme-manager.js"></script>
+
+    <!-- GEOLOCALIZACIÓN EN TIEMPO REAL -->
+    <script>
+        // Verificar si hay entregas "en camino" asignadas a este domiciliario
+        // Esta lógica se podría mejorar trayendo una flag desde PHP, pero lo haremos verificando el DOM por simplicidad
+        // o mejor, siempre intentar trackear si estamos en el panel, y el servidor decide si guardar o no 
+        // (pero para ahorrar batería, mejor solo si hay entregas activas).
+        
+        let trackingInterval;
+        let watchId;
+        const DO_TRACKING = <?php echo ($stats['en_camino'] > 0) ? 'true' : 'false'; ?>;
+        
+        // Función para solicitar permiso GPS manualmente
+        function solicitarPermisoGPS() {
+            if (!navigator.geolocation) {
+                alert("❌ Tu navegador no soporta geolocalización.\n\nUsa Chrome, Firefox o Safari actualizado.");
+                return;
+            }
+            
+            // Ocultar botón
+            const btn = document.getElementById('gps-activator');
+            if (btn) btn.style.display = 'none';
+            
+            // Solicitar ubicación una vez para forzar el permiso
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    alert("✅ ¡GPS Activado!\n\nAhora tu ubicación se compartirá automáticamente.");
+                    // Iniciar tracking automático
+                    if (DO_TRACKING && !watchId) {
+                        iniciarTracking();
+                    }
+                },
+                function(error) {
+                    // Mostrar botón de nuevo
+                    if (btn) btn.style.display = 'block';
+                    
+                    let mensaje = "";
+                    switch(error.code) {
+                        case 1:
+                            mensaje = "⚠️ PERMISO DENEGADO\n\nPara activar GPS:\n\n1. Toca el candado 🔒 junto a la URL\n2. Busca 'Ubicación'\n3. Selecciona 'Permitir'\n4. Toca este botón de nuevo";
+                            break;
+                        case 2:
+                            mensaje = "⚠️ No se puede obtener tu ubicación\n\nVerifica que:\n• GPS esté activado en tu teléfono\n• Tengas buena señal\n• Estés al aire libre o cerca de una ventana";
+                            break;
+                        case 3:
+                            mensaje = "⏱️ Tiempo agotado\n\nIntenta de nuevo en un momento.";
+                            break;
+                    }
+                    alert(mensaje);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+        
+        if (DO_TRACKING) {
+            iniciarTracking();
+        }
+
+        function iniciarTracking() {
+            if (!navigator.geolocation) {
+                console.error("Geolocalización no soportada por este navegador.");
+                alert("❌ Tu navegador no soporta geolocalización. Usa Chrome, Firefox o Safari.");
+                return;
+            }
+
+            console.log("📍 Iniciando rastreo de ubicación...");
+            
+            // Mostrar indicador visual
+            const navbar = document.querySelector('.domiciliario-navbar');
+            const trackingBadge = document.createElement('span');
+            trackingBadge.innerHTML = '📡 Tracking Activo';
+            trackingBadge.className = 'badge';
+            trackingBadge.id = 'tracking-badge';
+            trackingBadge.style.backgroundColor = '#48bb78';
+            trackingBadge.style.marginLeft = '10px';
+            trackingBadge.style.animation = 'pulse 2s infinite';
+            navbar.querySelector('h1').appendChild(trackingBadge);
+
+            // Solicitar permiso explícitamente primero
+            navigator.permissions.query({name: 'geolocation'}).then(function(result) {
+                console.log("Estado permiso GPS:", result.state);
+                
+                if (result.state === 'denied') {
+                    alert("⚠️ PERMISO DENEGADO\n\nPara compartir tu ubicación:\n1. Ve a Configuración del navegador\n2. Busca 'Permisos' o 'Ubicación'\n3. Permite el acceso para este sitio\n4. Recarga la página");
+                    document.getElementById('tracking-badge').style.backgroundColor = '#f44336';
+                    document.getElementById('tracking-badge').innerHTML = '❌ GPS Bloqueado';
+                    return;
+                }
+            }).catch(err => {
+                console.log("Permissions API no disponible, intentando directamente");
+            });
+
+            // Configuración optimizada para GPS real del teléfono
+            const gpsOptions = {
+                enableHighAccuracy: true,  // Fuerza GPS en lugar de WiFi/IP
+                timeout: 30000,             // 30 segundos para obtener señal GPS
+                maximumAge: 0               // No usar caché, siempre pedir ubicación fresca
+            };
+            
+            // Opción 1: watchPosition (tracking continuo)
+            watchId = navigator.geolocation.watchPosition(
+                enviarPosicion, 
+                errorPosicion, 
+                gpsOptions
+            );
+            
+            console.log("🛰️ Esperando señal GPS del satélite... (puede tardar 30-60 seg)");
+        }
+
+        function enviarPosicion(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+            
+            console.log(`📍 Ubicación: ${lat}, ${lng} (precisión: ${accuracy.toFixed(0)}m)`);
+            
+            // Actualizar badge con coordenadas
+            const badge = document.getElementById('tracking-badge');
+            if (badge) {
+                badge.innerHTML = `📡 GPS Activo (±${accuracy.toFixed(0)}m)`;
+                badge.style.backgroundColor = accuracy < 50 ? '#48bb78' : '#ed8936';
+            }
+
+            fetch('api/actualizar_ubicacion.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    latitud: lat,
+                    longitud: lng
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log("✅ Ubicación actualizada en servidor");
+                } else {
+                    console.warn("⚠️ Error actualizando servidor:", data.error);
+                }
+            })
+            .catch(error => console.error("Error red:", error));
+        }
+
+        function errorPosicion(err) {
+            console.warn(`ERROR GPS (${err.code}): ${err.message}`);
+            
+            const badge = document.getElementById('tracking-badge');
+            if (badge) {
+                badge.style.backgroundColor = '#f44336';
+                badge.innerHTML = '❌ Error GPS';
+            }
+            
+            let mensaje = "";
+            switch(err.code) {
+                case 1: // PERMISSION_DENIED
+                    mensaje = "⚠️ PERMISO DENEGADO\n\nDebes permitir el acceso a tu ubicación:\n1. Toca el ícono 🔒 o ⓘ en la barra de direcciones\n2. Activa 'Ubicación'\n3. Recarga la página";
+                    break;
+                case 2: // POSITION_UNAVAILABLE
+                    mensaje = "⚠️ No se puede obtener tu ubicación.\n\nAsegúrate de:\n- Tener GPS activado\n- Estar en un lugar con buena señal\n- Dar permiso al navegador";
+                    break;
+                case 3: // TIMEOUT
+                    mensaje = "⏱️ Tiempo agotado. Reintentando...";
+                    break;
+            }
+            
+            if (err.code === 1) {
+                alert(mensaje);
+            } else {
+                console.log(mensaje);
+            }
+        }
+        }
+        
+        // Estilo para pulse
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes pulse {
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.7; transform: scale(1.05); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
 <?php $conn->close(); ?>

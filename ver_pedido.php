@@ -1,45 +1,65 @@
 <?php
 session_start();
 
-// Verificar sesión
-require_once 'auth_helper.php';
-verificarSesion();
-
 require_once 'config.php';
 
 // Obtener ID del pedido
 if (!isset($_GET['id'])) {
+    // Si no hay sesión, redirigir a mis_pedidos
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: mis_pedidos.php");
+        exit;
+    }
     header("Location: " . ($_SESSION['rol'] === 'admin' ? 'admin_pedidos.php' : $_SESSION['rol'] . '.php'));
     exit;
 }
 
 $pedido_id = intval($_GET['id']);
-$user_id = $_SESSION['user_id'];
-$user_rol = $_SESSION['rol'];
-
 $conn = getDatabaseConnection();
 
-// Obtener pedido con validación de permisos
-$sql = "SELECT p.*, m.numero_mesa, u.nombre as mesero_nombre, d.nombre as domiciliario_nombre 
-        FROM pedidos p 
-        LEFT JOIN mesas m ON p.mesa_id = m.id 
-        LEFT JOIN usuarios u ON p.usuario_id = u.id 
-        LEFT JOIN usuarios d ON p.domiciliario_id = d.id 
-        WHERE p.id = ?";
+// Determinar si es acceso público o con sesión
+$es_acceso_publico = !isset($_SESSION['user_id']);
 
-// Si no es admin, agregar filtros de permiso
-if ($user_rol === 'mesero') {
-    $sql .= " AND p.usuario_id = ?";
-} elseif ($user_rol === 'domiciliario') {
-    $sql .= " AND p.domiciliario_id = ?";
-}
-
-$stmt = $conn->prepare($sql);
-
-if ($user_rol === 'mesero' || $user_rol === 'domiciliario') {
-    $stmt->bind_param("ii", $pedido_id, $user_id);
-} else {
+if ($es_acceso_publico) {
+    // Acceso público: solo obtener el pedido sin restricciones de usuario
+    $sql = "SELECT p.*, m.numero_mesa, u.nombre as mesero_nombre, d.nombre as domiciliario_nombre, d.telefono as domiciliario_telefono
+            FROM pedidos p 
+            LEFT JOIN mesas m ON p.mesa_id = m.id 
+            LEFT JOIN usuarios u ON p.usuario_id = u.id 
+            LEFT JOIN usuarios d ON p.domiciliario_id = d.id 
+            WHERE p.id = ?";
+    
+    $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $pedido_id);
+} else {
+    // Acceso con sesión: aplicar restricciones según rol
+    require_once 'auth_helper.php';
+    verificarSesion();
+    
+    $user_id = $_SESSION['user_id'];
+    $user_rol = $_SESSION['rol'];
+    
+    $sql = "SELECT p.*, m.numero_mesa, u.nombre as mesero_nombre, d.nombre as domiciliario_nombre, d.telefono as domiciliario_telefono
+            FROM pedidos p 
+            LEFT JOIN mesas m ON p.mesa_id = m.id 
+            LEFT JOIN usuarios u ON p.usuario_id = u.id 
+            LEFT JOIN usuarios d ON p.domiciliario_id = d.id 
+            WHERE p.id = ?";
+    
+    // Si no es admin, agregar filtros de permiso
+    if ($user_rol === 'mesero') {
+        $sql .= " AND p.usuario_id = ?";
+    } elseif ($user_rol === 'domiciliario') {
+        $sql .= " AND p.domiciliario_id = ?";
+    }
+    
+    $stmt = $conn->prepare($sql);
+    
+    if ($user_rol === 'mesero' || $user_rol === 'domiciliario') {
+        $stmt->bind_param("ii", $pedido_id, $user_id);
+    } else {
+        $stmt->bind_param("i", $pedido_id);
+    }
 }
 
 $stmt->execute();
@@ -48,7 +68,12 @@ $result = $stmt->get_result();
 if ($result->num_rows === 0) {
     $stmt->close();
     $conn->close();
-    header("Location: " . ($user_rol === 'admin' ? 'admin_pedidos.php' : $user_rol . '.php') . "?error=" . urlencode("Pedido no encontrado o sin permisos"));
+    
+    if ($es_acceso_publico) {
+        header("Location: mis_pedidos.php?error=" . urlencode("Pedido no encontrado"));
+    } else {
+        header("Location: " . ($user_rol === 'admin' ? 'admin_pedidos.php' : $user_rol . '.php') . "?error=" . urlencode("Pedido no encontrado o sin permisos"));
+    }
     exit;
 }
 
@@ -302,7 +327,7 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
 <body>
     <div class="navbar">
         <h1>📋 Detalle del Pedido</h1>
-        <a href="<?php echo $user_rol === 'admin' ? 'admin_pedidos.php' : $user_rol . '.php'; ?>">← Volver</a>
+        <a href="<?php echo $es_acceso_publico ? 'mis_pedidos.php?telefono=' . urlencode($pedido['telefono']) : ($user_rol === 'admin' ? 'admin_pedidos.php' : $user_rol . '.php'); ?>">← Volver</a>
     </div>
 
     <div class="container">
@@ -342,6 +367,7 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
         </div>
 
         <!-- Acciones de Impresión -->
+        <?php if (!$es_acceso_publico): ?>
         <div class="section" style="padding: 15px; display: flex; gap: 15px; justify-content: flex-end; flex-wrap: wrap;">
             <?php if ($pedido['estado'] === 'entregado' && !$pedido['pagado']): ?>
             <a href="registrar_pago.php?pedido_id=<?php echo $pedido['id']; ?>" class="btn" style="background: #48bb78; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: flex; align-items: center; gap: 8px;">
@@ -368,6 +394,7 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
                 📄 Imprimir Factura
             </a>
         </div>
+        <?php endif; ?>
 
         <!-- Información del Cliente -->
         <div class="section">
@@ -411,10 +438,10 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
                 <tbody>
                     <?php foreach ($items as $item): ?>
                     <tr>
-                        <td class="item-nombre"><?php echo htmlspecialchars($item['nombre_plato']); ?></td>
-                        <td>$<?php echo number_format($item['precio'], 2); ?></td>
+                        <td class="item-nombre"><?php echo htmlspecialchars($item['plato_nombre'] ?? $item['nombre_plato'] ?? 'Sin nombre'); ?></td>
+                        <td>$<?php echo number_format($item['precio_unitario'] ?? $item['precio'] ?? 0, 2); ?></td>
                         <td><?php echo $item['cantidad']; ?>x</td>
-                        <td><strong>$<?php echo number_format($item['precio'] * $item['cantidad'], 2); ?></strong></td>
+                        <td><strong>$<?php echo number_format(($item['precio_unitario'] ?? $item['precio'] ?? 0) * $item['cantidad'], 2); ?></strong></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -429,6 +456,26 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
         </div>
 
         <!-- Timeline -->
+        <!-- SECCIÓN DE SEGUIMIENTO EN TIEMPO REAL -->
+        <div id="tracking-section" class="section" style="display: none;">
+            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                <span>📍 Seguimiento en Vivo</span>
+                <span style="font-size: 0.6em; background: #e53e3e; color: white; padding: 4px 10px; border-radius: 12px; animation: pulse 2s infinite;">EN VIVO</span>
+            </h2>
+            
+            <div id="domiciliario-info" style="margin-bottom: 20px; padding: 15px; background: #ebf8ff; border-radius: 8px; border-left: 4px solid #4299e1;">
+                <div style="font-weight: bold; color: #2b6cb0; margin-bottom: 5px;">🏍️ Tu pedido está en camino</div>
+                <div id="domiciliario-detalle">
+                    <!-- Se llena con JS -->
+                </div>
+            </div>
+            
+            <div id="map" style="height: 400px; width: 100%; border-radius: 10px; border: 2px solid #e0e0e0; z-index: 1;"></div>
+            <div style="margin-top: 10px; font-size: 0.85em; color: #666; text-align: center;">
+                El mapa se actualiza automáticamente cada 10 segundos.
+            </div>
+        </div>
+
         <?php if ($pedido['hora_salida'] || $pedido['hora_entrega']): ?>
         <div class="section">
             <h2>⏱️ Historial</h2>
@@ -453,6 +500,181 @@ $estado_color = $estado_colors[$pedido['estado']] ?? '#999';
         </div>
         <?php endif; ?>
     </div>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        const PEDIDO_ID = <?php echo $pedido_id; ?>;
+        const ESTADO_PEDIDO = '<?php echo $pedido['estado']; ?>';
+        const DIRECCION_CLIENTE = '<?php echo addslashes($pedido['direccion'] ?? ''); ?>';
+        const CIUDAD_CLIENTE = '<?php echo addslashes($pedido['ciudad_entrega'] ?? 'Tuluá'); ?>';
+        
+        let map = null;
+        let marker = null;
+        let destinoMarker = null;
+        let routeLine = null;
+        let trackingInterval = null;
+        let destinoCoords = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (ESTADO_PEDIDO === 'en_camino') {
+                iniciarSeguimiento();
+            }
+        });
+
+        function iniciarSeguimiento() {
+            // Mostrar sección
+            document.getElementById('tracking-section').style.display = 'block';
+            
+            // Inicializar mapa (centro default por ahora)
+            map = L.map('map').setView([4.08466, -76.19536], 13); // Tuluá default
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Geocodificar dirección del cliente
+            geocodificarDestino();
+
+            actualizarUbicacion();
+            
+            // Polling cada 10 segundos
+            trackingInterval = setInterval(actualizarUbicacion, 10000);
+        }
+
+        async function geocodificarDestino() {
+            if (!DIRECCION_CLIENTE) return;
+            
+            const query = `${DIRECCION_CLIENTE}, ${CIUDAD_CLIENTE}, Colombia`;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    destinoCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    
+                    // Agregar marcador de destino
+                    const homeIcon = L.divIcon({
+                        html: '<div style="font-size: 28px;">🏠</div>',
+                        className: 'marker-home',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30]
+                    });
+                    
+                    destinoMarker = L.marker(destinoCoords, {icon: homeIcon}).addTo(map);
+                    destinoMarker.bindPopup('<b>Destino</b><br>' + DIRECCION_CLIENTE);
+                }
+            } catch (err) {
+                console.error('Error geocodificando destino:', err);
+            }
+        }
+
+        async function trazarRuta(origenLat, origenLng) {
+            if (!destinoCoords) return;
+            
+            const url = `https://router.project-osrm.org/route/v1/driving/${origenLng},${origenLat};${destinoCoords[1]},${destinoCoords[0]}?overview=full&geometries=geojson`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                    
+                    // Remover ruta anterior si existe
+                    if (routeLine) {
+                        map.removeLayer(routeLine);
+                    }
+                    
+                    // Dibujar nueva ruta
+                    routeLine = L.polyline(coords, {
+                        color: '#4299e1',
+                        weight: 4,
+                        opacity: 0.7
+                    }).addTo(map);
+                    
+                    // Ajustar vista para mostrar toda la ruta
+                    const bounds = L.latLngBounds([origenLat, origenLng], destinoCoords);
+                    map.fitBounds(bounds, {padding: [50, 50]});
+                }
+            } catch (err) {
+                console.error('Error trazando ruta:', err);
+            }
+        }
+
+        function actualizarUbicacion() {
+            fetch(`api/obtener_ubicacion_pedido.php?pedido_id=${PEDIDO_ID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Actualizar info domiciliario
+                        if (data.domiciliario) {
+                            const domInfo = document.getElementById('domiciliario-detalle');
+                            let phoneHtml = data.domiciliario.telefono 
+                                ? `<a href="tel:${data.domiciliario.telefono}" style="color: #2b6cb0; text-decoration: none;">📞 ${data.domiciliario.telefono}</a>`
+                                : '<span style="color: #666;">Sin teléfono</span>';
+                                
+                            domInfo.innerHTML = `
+                                <div><strong>Domiciliario:</strong> ${data.domiciliario.nombre}</div>
+                                <div style="margin-top: 5px;"><strong>Contacto:</strong> ${phoneHtml}</div>
+                            `;
+                        }
+
+                        // Actualizar mapa si hay tracking activo
+                        if (data.tracking_activo && data.ubicacion) {
+                            const lat = data.ubicacion.lat;
+                            const lng = data.ubicacion.lng;
+                            const pos = [lat, lng];
+
+                            if (!marker) {
+                                // Icono de moto
+                                const motoIcon = L.divIcon({
+                                    html: '<div style="font-size: 24px;">🏍️</div>',
+                                    className: 'marker-moto',
+                                    iconSize: [30, 30],
+                                    iconAnchor: [15, 15]
+                                });
+                                marker = L.marker(pos, {icon: motoIcon}).addTo(map);
+                                map.setView(pos, 15);
+                                
+                                // Trazar ruta inicial
+                                trazarRuta(lat, lng);
+                            } else {
+                                marker.setLatLng(pos);
+                                map.panTo(pos);
+                                
+                                // Actualizar ruta
+                                trazarRuta(lat, lng);
+                            }
+                        } else if (!data.tracking_activo && data.estado === 'en_camino') {
+                            // Está en camino pero sin GPS reciente
+                            // Podríamos mostrar un mensaje o dejar el último punto
+                        } else if (data.estado !== 'en_camino') {
+                            // Ya no está en camino (entregado?)
+                            clearInterval(trackingInterval);
+                            location.reload(); // Recargar para ver nuevo estado
+                        }
+                    }
+                })
+                .catch(err => console.error('Error tracking:', err));
+        }
+
+        // Estilos extra
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes pulse {
+                0% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.7; transform: scale(1.05); }
+                100% { opacity: 1; transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
 <?php $conn->close(); ?>

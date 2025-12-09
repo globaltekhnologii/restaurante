@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $usuario = trim($_POST['usuario']);
 $nombre = trim($_POST['nombre']);
 $email = trim($_POST['email']);
+$telefono = trim($_POST['telefono'] ?? '');
 $rol = $_POST['rol'];
 $clave = $_POST['clave'];
 $clave_confirm = $_POST['clave_confirm'];
@@ -39,7 +40,7 @@ if (strlen($clave) < 6) {
 }
 
 // Validar rol
-$roles_validos = ['admin', 'mesero', 'chef', 'domiciliario'];
+$roles_validos = ['admin', 'mesero', 'chef', 'cajero', 'domiciliario'];
 if (!in_array($rol, $roles_validos)) {
     header("Location: admin_usuarios.php?error=" . urlencode("Rol no válido"));
     exit;
@@ -65,8 +66,8 @@ $stmt->close();
 $clave_hash = password_hash($clave, PASSWORD_DEFAULT);
 
 // Insertar usuario
-$stmt = $conn->prepare("INSERT INTO usuarios (usuario, clave, nombre, email, rol, activo) VALUES (?, ?, ?, ?, ?, 1)");
-$stmt->bind_param("sssss", $usuario, $clave_hash, $nombre, $email, $rol);
+$stmt = $conn->prepare("INSERT INTO usuarios (usuario, clave, nombre, email, telefono, rol, activo) VALUES (?, ?, ?, ?, ?, ?, 1)");
+$stmt->bind_param("ssssss", $usuario, $clave_hash, $nombre, $email, $telefono, $rol);
 
 if ($stmt->execute()) {
     $stmt->close();

@@ -15,6 +15,7 @@ $stats['total'] = $conn->query("SELECT COUNT(*) as count FROM usuarios")->fetch_
 $stats['admins'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'admin'")->fetch_assoc()['count'];
 $stats['meseros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'mesero'")->fetch_assoc()['count'];
 $stats['chefs'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'chef'")->fetch_assoc()['count'];
+$stats['cajeros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'cajero'")->fetch_assoc()['count'];
 $stats['domiciliarios'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'domiciliario'")->fetch_assoc()['count'];
 $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE activo = 1")->fetch_assoc()['count'];
 ?>
@@ -209,6 +210,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
         .badge-admin { background: #667eea; color: white; }
         .badge-mesero { background: #48bb78; color: white; }
         .badge-chef { background: #ed8936; color: white; }
+        .badge-cajero { background: #9F7AEA; color: white; } /* Purple for Cajero */
         .badge-domiciliario { background: #4299e1; color: white; }
         .badge-activo { background: #51cf66; color: white; }
         .badge-inactivo { background: #868e96; color: white; }
@@ -298,6 +300,10 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                 <div class="number"><?php echo $stats['chefs']; ?></div>
             </div>
             <div class="stat-card">
+                <h3>💰 Cajeros</h3>
+                <div class="number"><?php echo $stats['cajeros']; ?></div>
+            </div>
+            <div class="stat-card">
                 <h3>🏍️ Domiciliarios</h3>
                 <div class="number"><?php echo $stats['domiciliarios']; ?></div>
             </div>
@@ -343,10 +349,15 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                         <input type="email" name="email" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
                     </div>
                     <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Teléfono</label>
+                        <input type="tel" name="telefono" placeholder="Para domiciliarios" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    </div>
+                    <div>
                         <label style="display: block; margin-bottom: 8px; font-weight: 600;">Rol *</label>
                         <select name="rol" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px;">
                             <option value="mesero">🍽️ Mesero</option>
                             <option value="chef">👨‍🍳 Chef</option>
+                            <option value="cajero">💰 Cajero</option>
                             <option value="domiciliario">🏍️ Domiciliario</option>
                             <option value="admin">👨‍💼 Administrador</option>
                         </select>
@@ -379,6 +390,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                     <option value="admin">Administrador</option>
                     <option value="mesero">Mesero</option>
                     <option value="chef">Chef</option>
+                    <option value="cajero">Cajero</option>
                     <option value="domiciliario">Domiciliario</option>
                 </select>
                 <select id="filterEstado" onchange="filtrarTabla()">
@@ -390,7 +402,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
 
             <?php
             // Obtener todos los usuarios
-            $sql = "SELECT id, usuario, nombre, email, rol, activo, fecha_creacion, ultimo_acceso 
+            $sql = "SELECT id, usuario, nombre, email, telefono, rol, activo, fecha_creacion, ultimo_acceso 
                     FROM usuarios 
                     ORDER BY rol ASC, nombre ASC";
             $result = $conn->query($sql);
@@ -402,6 +414,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                 echo '<th>Usuario</th>';
                 echo '<th>Nombre</th>';
                 echo '<th>Email</th>';
+                echo '<th>Teléfono</th>';
                 echo '<th>Rol</th>';
                 echo '<th>Estado</th>';
                 echo '<th>Último Acceso</th>';
@@ -421,6 +434,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                     echo '<td><strong>' . htmlspecialchars($row['usuario']) . '</strong></td>';
                     echo '<td>' . htmlspecialchars($row['nombre']) . '</td>';
                     echo '<td>' . htmlspecialchars($row['email']) . '</td>';
+                    echo '<td>' . htmlspecialchars($row['telefono'] ?? '-') . '</td>';
                     echo '<td><span class="badge ' . $rolClass . '">' . $rolIcono . ' ' . $rolNombre . '</span></td>';
                     echo '<td><span class="badge ' . $estadoClass . '">' . $estadoTexto . '</span></td>';
                     echo '<td>' . ($row['ultimo_acceso'] ? date('d/m/Y H:i', strtotime($row['ultimo_acceso'])) : 'Nunca') . '</td>';

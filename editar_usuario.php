@@ -19,7 +19,7 @@ $id = intval($_GET['id']);
 $conn = getDatabaseConnection();
 
 // Obtener datos del usuario
-$stmt = $conn->prepare("SELECT id, usuario, nombre, email, rol, activo FROM usuarios WHERE id = ?");
+$stmt = $conn->prepare("SELECT id, usuario, nombre, email, telefono, rol, activo FROM usuarios WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -181,10 +181,16 @@ $stmt->close();
                     </div>
                     
                     <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" name="telefono" value="<?php echo htmlspecialchars($usuario['telefono'] ?? ''); ?>" placeholder="Para domiciliarios">
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Rol *</label>
                         <select name="rol" required>
                             <option value="mesero" <?php echo $usuario['rol'] === 'mesero' ? 'selected' : ''; ?>>🍽️ Mesero</option>
                             <option value="chef" <?php echo $usuario['rol'] === 'chef' ? 'selected' : ''; ?>>👨‍🍳 Chef</option>
+                            <option value="cajero" <?php echo $usuario['rol'] === 'cajero' ? 'selected' : ''; ?>>💰 Cajero</option>
                             <option value="domiciliario" <?php echo $usuario['rol'] === 'domiciliario' ? 'selected' : ''; ?>>🏍️ Domiciliario</option>
                             <option value="admin" <?php echo $usuario['rol'] === 'admin' ? 'selected' : ''; ?>>👨‍💼 Administrador</option>
                         </select>

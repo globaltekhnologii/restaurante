@@ -307,8 +307,20 @@ $conn->close();
                 </div>
                 <?php endif; ?>
                 
+                
                 <div class="pedido-total">
                     Total: $<?php echo number_format($pedido['total'], 2); ?>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: right;">
+                    <a href="ver_pedido.php?id=<?php echo $pedido['id']; ?>" 
+                       style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.3s;">
+                        <?php if ($pedido['estado'] === 'en_camino'): ?>
+                            📍 Ver Ubicación en Vivo
+                        <?php else: ?>
+                            📋 Ver Detalles
+                        <?php endif; ?>
+                    </a>
                 </div>
             </div>
             

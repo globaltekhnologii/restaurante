@@ -19,6 +19,7 @@ $id = intval($_POST['id']);
 $usuario = trim($_POST['usuario']);
 $nombre = trim($_POST['nombre']);
 $email = trim($_POST['email']);
+$telefono = trim($_POST['telefono'] ?? '');
 $rol = $_POST['rol'];
 $clave = isset($_POST['clave']) ? trim($_POST['clave']) : '';
 $clave_confirm = isset($_POST['clave_confirm']) ? trim($_POST['clave_confirm']) : '';
@@ -30,7 +31,7 @@ if (empty($usuario) || empty($nombre) || empty($rol)) {
 }
 
 // Validar rol
-$roles_validos = ['admin', 'mesero', 'chef', 'domiciliario'];
+$roles_validos = ['admin', 'mesero', 'chef', 'cajero', 'domiciliario'];
 if (!in_array($rol, $roles_validos)) {
     header("Location: editar_usuario.php?id=$id&error=" . urlencode("Rol no válido"));
     exit;
@@ -96,12 +97,12 @@ if ($usuario_actual['rol'] === 'admin' && $rol !== 'admin') {
 if (!empty($clave)) {
     // Actualizar con nueva contraseña
     $clave_hash = password_hash($clave, PASSWORD_DEFAULT);
-    $stmt = $conn->prepare("UPDATE usuarios SET usuario = ?, nombre = ?, email = ?, rol = ?, clave = ? WHERE id = ?");
-    $stmt->bind_param("sssssi", $usuario, $nombre, $email, $rol, $clave_hash, $id);
+    $stmt = $conn->prepare("UPDATE usuarios SET usuario = ?, nombre = ?, email = ?, telefono = ?, rol = ?, clave = ? WHERE id = ?");
+    $stmt->bind_param("ssssssi", $usuario, $nombre, $email, $telefono, $rol, $clave_hash, $id);
 } else {
     // Actualizar sin cambiar contraseña
-    $stmt = $conn->prepare("UPDATE usuarios SET usuario = ?, nombre = ?, email = ?, rol = ? WHERE id = ?");
-    $stmt->bind_param("ssssi", $usuario, $nombre, $email, $rol, $id);
+    $stmt = $conn->prepare("UPDATE usuarios SET usuario = ?, nombre = ?, email = ?, telefono = ?, rol = ? WHERE id = ?");
+    $stmt->bind_param("sssssi", $usuario, $nombre, $email, $telefono, $rol, $id);
 }
 
 if ($stmt->execute()) {
