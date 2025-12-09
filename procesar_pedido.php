@@ -22,11 +22,18 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
 $nombre_cliente = trim($_POST['nombre']);
 $telefono = trim($_POST['telefono']);
 $direccion = trim($_POST['direccion']);
+$ciudad_entrega = isset($_POST['ciudad_entrega']) ? trim($_POST['ciudad_entrega']) : '';
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
 $notas = isset($_POST['notas']) ? trim($_POST['notas']) : '';
 $total = floatval($_POST['total']);
 $carrito_json = $_POST['carrito'];
 $carrito = json_decode($carrito_json, true);
+
+// Datos GPS del domicilio (si existen)
+$latitud_cliente = isset($_POST['latitud_cliente']) && !empty($_POST['latitud_cliente']) ? floatval($_POST['latitud_cliente']) : null;
+$longitud_cliente = isset($_POST['longitud_cliente']) && !empty($_POST['longitud_cliente']) ? floatval($_POST['longitud_cliente']) : null;
+$distancia_km = isset($_POST['distancia_km']) && !empty($_POST['distancia_km']) ? floatval($_POST['distancia_km']) : null;
+$costo_domicilio = isset($_POST['costo_domicilio']) && !empty($_POST['costo_domicilio']) ? floatval($_POST['costo_domicilio']) : null;
 
 // Validaciones básicas
 if (empty($nombre_cliente) || empty($telefono) || empty($direccion)) {
@@ -109,9 +116,10 @@ try {
     $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'domicilio';
     
     // Insertar el pedido principal
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?)");
+    // Insertar pedido con datos GPS si están disponibles
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas, tipo_pedido, latitud_cliente, longitud_cliente, distancia_km, costo_domicilio) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?, ?, ?, ?, ?)");
     
-    $stmt->bind_param("sissssdss", 
+    $stmt->bind_param("sissssdssdddd", 
         $numero_pedido,
         $cliente_id,
         $nombre_cliente,
@@ -120,7 +128,11 @@ try {
         $email,
         $total,
         $notas,
-        $tipo_pedido
+        $tipo_pedido,
+        $latitud_cliente,
+        $longitud_cliente,
+        $distancia_km,
+        $costo_domicilio
     );
     
     if (!$stmt->execute()) {

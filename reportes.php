@@ -314,10 +314,10 @@ require_once 'includes/info_negocio.php';
             <h2>🔍 Filtros de Búsqueda</h2>
             
             <div class="quick-filters" style="margin-bottom: 20px;">
-                <div class="quick-filter active" onclick="setQuickFilter('hoy')">Hoy</div>
-                <div class="quick-filter" onclick="setQuickFilter('semana')">Esta Semana</div>
-                <div class="quick-filter" onclick="setQuickFilter('mes')">Este Mes</div>
-                <div class="quick-filter" onclick="setQuickFilter('personalizado')">Personalizado</div>
+                <div class="quick-filter active" onclick="setQuickFilter(event, 'hoy')">Hoy</div>
+                <div class="quick-filter" onclick="setQuickFilter(event, 'semana')">Esta Semana</div>
+                <div class="quick-filter" onclick="setQuickFilter(event, 'mes')">Este Mes</div>
+                <div class="quick-filter" onclick="setQuickFilter(event, 'personalizado')">Personalizado</div>
             </div>
             
             <div class="filter-row" id="customFilters" style="display: none;">

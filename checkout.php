@@ -281,11 +281,38 @@
                         ?>
                     </select>
                 </div>
+                
+                <!-- Campo de Ciudad -->
+                <div class="form-group" id="ciudad_container">
+                    <label for="ciudad_entrega">Ciudad <span class="required">*</span></label>
+                    <input type="text" id="ciudad_entrega" name="ciudad_entrega" value="Tuluá" required placeholder="Ej: Tuluá, Cali, Bogotá">
+                    <small style="color: #666; font-size: 0.9em;">Importante: Especifica tu ciudad para calcular correctamente la distancia</small>
+                </div>
 
                 <div class="form-group" id="direccion_container">
                     <label for="direccion">Dirección Completa <span class="required">*</span></label>
                     <textarea id="direccion" name="direccion" required placeholder="Calle, número, apartamento, referencias..."></textarea>
                 </div>
+                
+                <!-- Información de Distancia y Costo -->
+                <div id="delivery_info" class="delivery-info" style="display:none; background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <span style="font-size: 1.2em;">📍</span>
+                            <strong>Distancia:</strong> <span id="distancia_display" style="color: #1976d2; font-weight: 600;">-</span> km
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <span style="font-size: 1.2em;">💰</span>
+                            <strong>Costo domicilio:</strong> <span id="costo_domicilio_display" style="color: #2e7d32; font-weight: 600; font-size: 1.1em;">$0</span>
+                        </div>
+                    </div>
+                    <div id="delivery_detail" style="margin-top: 10px; font-size: 0.9em; color: #555;"></div>
+                </div>
+                
+                <input type="hidden" id="latitud_cliente" name="latitud_cliente">
+                <input type="hidden" id="longitud_cliente" name="longitud_cliente">
+                <input type="hidden" id="distancia_km" name="distancia_km">
+                <input type="hidden" id="costo_domicilio" name="costo_domicilio">
                 
                 <div class="form-group">
                     <label for="notas">Notas Adicionales (Opcional)</label>
@@ -317,6 +344,11 @@
     </div>
 
     <script>
+        // Variables globales
+        let costoDomicilioActual = 0;
+        let calculandoCosto = false;
+        let timeoutCalcular = null;
+        
         // Cargar resumen del pedido
         function cargarResumen() {
             const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
@@ -327,8 +359,14 @@
                 return;
             }
             
+            actualizarResumen();
+        }
+        
+        // Actualizar resumen con costo de domicilio actual
+        function actualizarResumen() {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
             const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-            const envio = 5.00;
+            const envio = costoDomicilioActual;
             const total = subtotal + envio;
             
             // Mostrar resumen
@@ -337,21 +375,21 @@
                     ${carrito.map(item => `
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                             <span>${item.nombre} x ${item.cantidad}</span>
-                            <span>$${(item.precio * item.cantidad).toFixed(2)}</span>
+                            <span>$${formatearNumero(item.precio * item.cantidad)}</span>
                         </div>
                     `).join('')}
                 </div>
                 <div class="summary-item">
                     <span>Subtotal:</span>
-                    <span>$${subtotal.toFixed(2)}</span>
+                    <span>$${formatearNumero(subtotal)}</span>
                 </div>
                 <div class="summary-item">
                     <span>Envío:</span>
-                    <span>$${envio.toFixed(2)}</span>
+                    <span id="envio_display">${envio > 0 ? '$' + formatearNumero(envio) : 'Calculando...'}</span>
                 </div>
                 <div class="summary-item">
                     <span>Total a Pagar:</span>
-                    <span>$${total.toFixed(2)}</span>
+                    <span>$${formatearNumero(total)}</span>
                 </div>
             `;
             
@@ -361,6 +399,107 @@
             document.getElementById('carritoData').value = JSON.stringify(carrito);
             document.getElementById('totalData').value = total.toFixed(2);
         }
+        
+        // Calcular costo de domicilio basado en dirección
+        async function calcularCostoDomicilio() {
+            const tipoPedido = document.getElementById('tipo_pedido').value;
+            
+            // Solo calcular para domicilios
+            if (tipoPedido !== 'domicilio') {
+                costoDomicilioActual = 0;
+                document.getElementById('delivery_info').style.display = 'none';
+                actualizarResumen();
+                return;
+            }
+            
+            const direccion = document.getElementById('direccion').value.trim();
+            const ciudad = document.getElementById('ciudad_entrega').value.trim();
+            
+            if (direccion.length < 10) {
+                // Dirección muy corta, no calcular aún
+                return;
+            }
+            
+            if (ciudad.length < 3) {
+                // Ciudad no especificada
+                document.getElementById('delivery_info').style.display = 'block';
+                document.getElementById('delivery_detail').innerHTML = '<em style="color: #f57c00;">Por favor especifica la ciudad</em>';
+                return;
+            }
+            
+            if (calculandoCosto) {
+                return; // Ya hay un cálculo en progreso
+            }
+            
+            calculandoCosto = true;
+            document.getElementById('delivery_info').style.display = 'block';
+            document.getElementById('delivery_detail').innerHTML = '<em>Calculando distancia...</em>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('direccion', direccion);
+                formData.append('ciudad', ciudad);
+                formData.append('pais', 'Colombia');
+                
+                const response = await fetch('api/calcular_costo_domicilio.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Actualizar UI con resultados
+                    document.getElementById('distancia_display').textContent = data.distancia_km;
+                    document.getElementById('costo_domicilio_display').textContent = data.costo_formateado;
+                    document.getElementById('delivery_detail').innerHTML = `<em>${data.detalle}</em>`;
+                    
+                    // Guardar en campos ocultos
+                    document.getElementById('latitud_cliente').value = data.latitud_cliente;
+                    document.getElementById('longitud_cliente').value = data.longitud_cliente;
+                    document.getElementById('distancia_km').value = data.distancia_km;
+                    document.getElementById('costo_domicilio').value = data.costo_domicilio;
+                    
+                    // Actualizar costo actual
+                    costoDomicilioActual = parseFloat(data.costo_domicilio);
+                    actualizarResumen();
+                    
+                } else if (data.fuera_de_rango) {
+                    document.getElementById('delivery_detail').innerHTML = `<strong style="color: #d32f2f;">${data.error}</strong>`;
+                    costoDomicilioActual = 0;
+                    actualizarResumen();
+                    
+                } else if (data.usar_tarifa_fija) {
+                    // Fallback a tarifa fija
+                    document.getElementById('delivery_detail').innerHTML = `<em>Usando tarifa fija: ${data.error}</em>`;
+                    costoDomicilioActual = parseFloat(data.tarifa_fija);
+                    document.getElementById('costo_domicilio').value = data.tarifa_fija;
+                    actualizarResumen();
+                    
+                } else {
+                    document.getElementById('delivery_detail').innerHTML = `<em style="color: #f57c00;">${data.error}</em>`;
+                    costoDomicilioActual = 5000; // Tarifa por defecto
+                    actualizarResumen();
+                }
+                
+            } catch (error) {
+                console.error('Error calculando costo:', error);
+                document.getElementById('delivery_detail').innerHTML = '<em style="color: #d32f2f;">Error al calcular. Usando tarifa fija.</em>';
+                costoDomicilioActual = 5000;
+                actualizarResumen();
+            } finally {
+                calculandoCosto = false;
+            }
+        }
+        
+        // Formatear número para mostrar
+        function formatearNumero(num) {
+            return parseFloat(num).toLocaleString('es-CO', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+        
         
         // Validar y enviar formulario
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
@@ -375,6 +514,27 @@
         
         // Cargar al inicio
         cargarResumen();
+        
+        // Event listener para calcular costo cuando cambia la dirección
+        document.getElementById('direccion').addEventListener('input', function() {
+            // Usar debouncing para no hacer demasiadas peticiones
+            clearTimeout(timeoutCalcular);
+            timeoutCalcular = setTimeout(() => {
+                calcularCostoDomicilio();
+            }, 1500); // Esperar 1.5 segundos después de que el usuario deje de escribir
+        });
+        
+        // Event listener para ciudad
+        document.getElementById('ciudad_entrega').addEventListener('change', function() {
+            clearTimeout(timeoutCalcular);
+            calcularCostoDomicilio();
+        });
+        
+        // Calcular también cuando pierde el foco
+        document.getElementById('direccion').addEventListener('blur', function() {
+            clearTimeout(timeoutCalcular);
+            calcularCostoDomicilio();
+        });
 
         // Lógica para selector de tipo de pedido
         document.querySelectorAll('input[name="tipo_pedido_visual"]').forEach(radio => {
@@ -384,24 +544,31 @@
                 
                 const mesaSection = document.getElementById('mesa_section');
                 const direccionContainer = document.getElementById('direccion_container');
+                const ciudadContainer = document.getElementById('ciudad_container');
                 const direccionInput = document.getElementById('direccion');
                 
                 if (tipo === 'mesa') {
                     mesaSection.classList.remove('hidden');
                     direccionContainer.classList.add('hidden');
+                    ciudadContainer.classList.add('hidden');
                     // Llenar dirección con valor dummy para pasar validación HTML5
                     direccionInput.value = 'Mesa ' + (document.getElementById('mesa_visual').options[document.getElementById('mesa_visual').selectedIndex]?.text || '');
                 } else if (tipo === 'para_llevar') {
                     mesaSection.classList.add('hidden');
                     direccionContainer.classList.add('hidden');
+                    ciudadContainer.classList.add('hidden');
                     direccionInput.value = 'Para Llevar - Recogida en local';
                 } else {
                     mesaSection.classList.add('hidden');
                     direccionContainer.classList.remove('hidden');
+                    ciudadContainer.classList.remove('hidden');
                     if (direccionInput.value.startsWith('Mesa') || direccionInput.value.startsWith('Para Llevar')) {
                         direccionInput.value = '';
                     }
                 }
+                
+                // Recalcular costo de domicilio
+                calcularCostoDomicilio();
             });
         });
 

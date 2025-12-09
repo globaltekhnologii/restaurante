@@ -5,7 +5,11 @@ let currentFilter = 'hoy';
 
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function () {
-    setQuickFilter('hoy');
+    // Simular clic en "Hoy" al cargar
+    const hoyBtn = document.querySelector('.quick-filter.active');
+    if (hoyBtn) {
+        setQuickFilter({ target: hoyBtn }, 'hoy');
+    }
 });
 
 // Cambiar entre tabs
@@ -20,12 +24,12 @@ function switchTab(tabName) {
 }
 
 // Establecer filtro rápido
-function setQuickFilter(filter) {
+function setQuickFilter(e, filter) {
     currentFilter = filter;
 
     // Actualizar UI
     document.querySelectorAll('.quick-filter').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    e.target.classList.add('active');
 
     const customFilters = document.getElementById('customFilters');
     const fechaInicio = document.getElementById('fecha_inicio');
@@ -60,6 +64,11 @@ function setQuickFilter(filter) {
         fechaInicio.value = inicio;
         fechaFin.value = fin;
         cargarReportes();
+    } else {
+        // Si es personalizado, aseguramos que los inputs tengan algo lógico por defecto (ej: hoy)
+        // pero NO llamamos a cargarReportes() automáticamente.
+        if (!fechaInicio.value) fechaInicio.value = formatDate(new Date());
+        if (!fechaFin.value) fechaFin.value = formatDate(new Date());
     }
 }
 
@@ -80,8 +89,14 @@ async function cargarReportes() {
             cargarDashboard()
         ]);
     } catch (error) {
-        console.error('Error cargando reportes:', error);
-        alert('Error al cargar los reportes. Por favor, intenta nuevamente.');
+
+        console.error('Error detallado en cargarReportes:', error);
+        // Intentar mostrar algo más descriptivo si el error es de JSON
+        let msg = 'Error al cargar los reportes.';
+        if (error.message.includes('JSON')) {
+            msg += ' Respuesta del servidor inválida.';
+        }
+        alert(msg + ' Revisa la consola para más detalles.');
     }
 }
 

@@ -60,10 +60,10 @@ try {
     // Resumen del período
     $sql_resumen = "SELECT 
                         COUNT(DISTINCT p.id) as total_pedidos,
-                        SUM(p.total) as total_ventas,
-                        AVG(p.total) as ticket_promedio,
-                        MIN(p.total) as venta_minima,
-                        MAX(p.total) as venta_maxima
+                        COALESCE(SUM(p.total), 0) as total_ventas,
+                        COALESCE(AVG(p.total), 0) as ticket_promedio,
+                        COALESCE(MIN(p.total), 0) as venta_minima,
+                        COALESCE(MAX(p.total), 0) as venta_maxima
                     FROM pedidos p
                     WHERE DATE(p.fecha_pedido) BETWEEN ? AND ?
                     AND p.pagado = 1";
@@ -99,19 +99,22 @@ try {
     }
     $stmt->close();
     
+    // Asegurar valores por defecto si no hay datos
+    $resumen_final = [
+        'total_pedidos' => (int)($resumen['total_pedidos'] ?? 0),
+        'total_ventas' => (float)($resumen['total_ventas'] ?? 0),
+        'ticket_promedio' => (float)($resumen['ticket_promedio'] ?? 0),
+        'venta_minima' => (float)($resumen['venta_minima'] ?? 0),
+        'venta_maxima' => (float)($resumen['venta_maxima'] ?? 0)
+    ];
+
     echo json_encode([
         'success' => true,
         'periodo' => [
             'inicio' => $fecha_inicio,
             'fin' => $fecha_fin
         ],
-        'resumen' => [
-            'total_pedidos' => (int)$resumen['total_pedidos'],
-            'total_ventas' => (float)$resumen['total_ventas'],
-            'ticket_promedio' => (float)$resumen['ticket_promedio'],
-            'venta_minima' => (float)$resumen['venta_minima'],
-            'venta_maxima' => (float)$resumen['venta_maxima']
-        ],
+        'resumen' => $resumen_final,
         'ventas_por_dia' => $ventas_por_dia,
         'por_tipo_pedido' => $por_tipo
     ]);

@@ -21,8 +21,8 @@ try {
                         pi.plato_id,
                         p.categoria,
                         SUM(pi.cantidad) as cantidad_vendida,
-                        SUM(pi.precio * pi.cantidad) as ingresos_totales,
-                        AVG(pi.precio) as precio_promedio,
+                        COALESCE(SUM(pi.precio * pi.cantidad), 0) as ingresos_totales,
+                        COALESCE(AVG(pi.precio), 0) as precio_promedio,
                         COUNT(DISTINCT pi.pedido_id) as pedidos_distintos
                     FROM pedidos_items pi
                     JOIN pedidos ped ON pi.pedido_id = ped.id
@@ -57,8 +57,8 @@ try {
                         pi.plato_id,
                         p.categoria,
                         SUM(pi.cantidad) as cantidad_vendida,
-                        SUM(pi.precio * pi.cantidad) as ingresos_totales,
-                        AVG(pi.precio) as precio_promedio
+                        COALESCE(SUM(pi.precio * pi.cantidad), 0) as ingresos_totales,
+                        COALESCE(AVG(pi.precio), 0) as precio_promedio
                     FROM pedidos_items pi
                     JOIN pedidos ped ON pi.pedido_id = ped.id
                     LEFT JOIN platos p ON pi.plato_id = p.id
@@ -90,7 +90,7 @@ try {
                         COALESCE(p.categoria, 'Sin categoría') as categoria,
                         COUNT(DISTINCT pi.pedido_id) as pedidos,
                         SUM(pi.cantidad) as cantidad_vendida,
-                        SUM(pi.precio * pi.cantidad) as ingresos_totales
+                        COALESCE(SUM(pi.precio * pi.cantidad), 0) as ingresos_totales
                     FROM pedidos_items pi
                     JOIN pedidos ped ON pi.pedido_id = ped.id
                     LEFT JOIN platos p ON pi.plato_id = p.id
