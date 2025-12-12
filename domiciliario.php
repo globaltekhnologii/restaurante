@@ -58,6 +58,14 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/admin-modern.css">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/Restaurante/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/Restaurante/assets/icon-192.png">
     <title>Panel Domiciliario - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -426,6 +434,19 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                 <span style="font-size: 1.3em;">📍</span>
                 <span>Activar GPS</span>
             </button>
+        </div>
+
+        <!-- Banner de Instalación PWA -->
+        <div id="pwa-install-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; margin: 20px 0; border-radius: 10px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 1.1em;">📱 Instalar como App</h3>
+                    <p style="margin: 0; font-size: 0.9em; opacity: 0.9;">Mejor GPS y acceso rápido desde tu pantalla de inicio</p>
+                </div>
+                <button id="pwa-install-btn" style="background: white; color: #667eea; border: none; padding: 10px 20px; border-radius: 5px; font-weight: 600; cursor: pointer;">
+                    Instalar
+                </button>
+            </div>
         </div>
 
         <!-- Mensajes -->
@@ -969,6 +990,49 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             }
         `;
         document.head.appendChild(style);
+    </script>
+
+    <!-- Register Service Worker for PWA -->
+    <script>
+        let deferredPrompt;
+        
+        // Capturar evento de instalación
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostrar banner
+            document.getElementById('pwa-install-banner').style.display = 'block';
+        });
+        
+        // Manejar click en botón instalar
+        document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                alert('Para instalar:\n\n1. Toca el menú (⋮) del navegador\n2. Selecciona "Agregar a pantalla de inicio"\n3. Confirma la instalación');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('✅ PWA instalada');
+                document.getElementById('pwa-install-banner').style.display = 'none';
+            }
+            
+            deferredPrompt = null;
+        });
+        
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/Restaurante/sw.js')
+                    .then(function(registration) {
+                        console.log('✅ ServiceWorker registrado con scope:', registration.scope);
+                    }, function(err) {
+                        console.log('❌ ServiceWorker falló:', err);
+                    });
+            });
+        }
     </script>
 </body>
 </html>

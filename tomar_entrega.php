@@ -19,8 +19,8 @@ $domiciliario_id = $_SESSION['user_id'];
 
 $conn = getDatabaseConnection();
 
-// Verificar que el pedido existe y está disponible
-$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id IS NULL AND estado = 'en_camino'");
+// Verificar que el pedido existe y está disponible (listo para recoger)
+$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id IS NULL AND estado = 'listo'");
 $stmt->bind_param("i", $pedido_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -34,8 +34,8 @@ if ($result->num_rows === 0) {
 
 $stmt->close();
 
-// Asignar el pedido al domiciliario y cambiar estado a preparando
-$stmt = $conn->prepare("UPDATE pedidos SET domiciliario_id = ?, estado = 'preparando' WHERE id = ?");
+// Asignar el pedido al domiciliario (mantener en listo hasta que salga)
+$stmt = $conn->prepare("UPDATE pedidos SET domiciliario_id = ? WHERE id = ?");
 $stmt->bind_param("ii", $domiciliario_id, $pedido_id);
 
 if ($stmt->execute()) {

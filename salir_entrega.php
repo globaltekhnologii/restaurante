@@ -19,8 +19,8 @@ $domiciliario_id = $_SESSION['user_id'];
 
 $conn = getDatabaseConnection();
 
-// Verificar que el pedido está asignado al domiciliario y en estado preparando
-$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id = ? AND estado = 'preparando'");
+// Verificar que el pedido está asignado al domiciliario y listo para salir
+$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND domiciliario_id = ? AND estado = 'listo'");
 $stmt->bind_param("ii", $pedido_id, $domiciliario_id);
 $stmt->execute();
 $result = $stmt->get_result();

@@ -37,6 +37,10 @@ $result = $stmt->get_result();
 if ($result->num_rows === 0) {
     $stmt->close();
     $conn->close();
+    
+    // Log para diagnóstico
+    error_log("CONFIRMAR_ENTREGA: Pedido no encontrado. ID: $pedido_id, User: $user_id, Rol: $user_rol");
+    
     $redirect = ($_SESSION['rol'] === 'admin') ? 'admin_pedidos.php' : 'domiciliario.php';
     header("Location: $redirect?error=" . urlencode("Pedido no encontrado o no está en camino"));
     exit;

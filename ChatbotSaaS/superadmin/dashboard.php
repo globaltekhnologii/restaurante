@@ -77,42 +77,7 @@ $current_admin = getCurrentSuperAdmin();
             color: #1f2937;
         }
         
-        .navbar {
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #3b82f6;
-        }
-        
-        .navbar-menu {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .navbar-menu a {
-            text-decoration: none;
-            color: #6b7280;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        
-        .navbar-menu a:hover {
-            color: #3b82f6;
-        }
-        
-        .navbar-menu a.active {
-            color: #3b82f6;
-        }
-        
+    <?php include 'includes/navbar.php'; ?>        
         .user-info {
             display: flex;
             align-items: center;
@@ -269,18 +234,6 @@ $current_admin = getCurrentSuperAdmin();
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">👑 Super Admin</div>
-        <div class="navbar-menu">
-            <a href="dashboard.php" class="active">Dashboard</a>
-            <a href="tenants.php">Restaurantes</a>
-            <a href="subscriptions.php">Suscripciones</a>
-            <div class="user-info">
-                <span><?php echo htmlspecialchars($current_admin['name'] ?? 'Admin'); ?></span>
-                <a href="logout.php">Salir</a>
-            </div>
-        </div>
-    </nav>
 
     <div class="container">
         <h1 style="margin-bottom: 2rem;">Dashboard</h1>

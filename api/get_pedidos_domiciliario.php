@@ -16,12 +16,18 @@ $domiciliario_id = $_SESSION['user_id'];
 $conn = getDatabaseConnection();
 
 try {
-    // Obtener pedidos del domiciliario (listos y en camino)
+    // Obtener pedidos del domiciliario:
+    // 1. Pedidos 'listo' SIN domiciliario asignado (disponibles para tomar)
+    // 2. Pedidos 'en_camino' asignados a este domiciliario
     $sql = "SELECT p.*, u.nombre as mesero_nombre
             FROM pedidos p 
             LEFT JOIN usuarios u ON p.usuario_id = u.id
             WHERE p.tipo_pedido = 'domicilio' 
-            AND (p.estado = 'listo' OR (p.estado = 'en_camino' AND p.domiciliario_id = ?))
+            AND (
+                (p.estado = 'listo' AND p.domiciliario_id IS NULL) 
+                OR 
+                (p.estado = 'en_camino' AND p.domiciliario_id = ?)
+            )
             ORDER BY p.fecha_pedido ASC";
     
     $stmt = $conn->prepare($sql);

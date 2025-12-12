@@ -135,6 +135,7 @@ function getNombreRol($rol) {
         'admin' => 'Administrador',
         'mesero' => 'Mesero',
         'chef' => 'Chef',
+        'cajero' => 'Cajero',
         'domiciliario' => 'Domiciliario'
     ];
     
@@ -151,6 +152,7 @@ function getIconoRol($rol) {
         'admin' => '👨‍💼',
         'mesero' => '🍽️',
         'chef' => '👨‍🍳',
+        'cajero' => '💰',
         'domiciliario' => '🏍️'
     ];
     
@@ -167,6 +169,7 @@ function getColorRol($rol) {
         'admin' => '#667eea',
         'mesero' => '#48bb78',
         'chef' => '#ed8936',
+        'cajero' => '#9F7AEA',
         'domiciliario' => '#4299e1'
     ];
     

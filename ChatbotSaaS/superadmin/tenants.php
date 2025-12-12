@@ -153,42 +153,7 @@ $current_admin = getCurrentSuperAdmin();
             color: #1f2937;
         }
         
-        .navbar {
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #3b82f6;
-        }
-        
-        .navbar-menu {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .navbar-menu a {
-            text-decoration: none;
-            color: #6b7280;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        
-        .navbar-menu a:hover {
-            color: #3b82f6;
-        }
-        
-        .navbar-menu a.active {
-            color: #3b82f6;
-        }
-        
+    <?php include 'includes/navbar.php'; ?>        
         .container {
             max-width: 1400px;
             margin: 2rem auto;
@@ -412,25 +377,18 @@ $current_admin = getCurrentSuperAdmin();
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">👑 Super Admin</div>
-        <div class="navbar-menu">
-            <a href="dashboard.php">Dashboard</a>
-            <a href="tenants.php" class="active">Restaurantes</a>
-            <a href="subscriptions.php">Suscripciones</a>
-            <div class="user-info">
-                <span><?php echo htmlspecialchars($current_admin['name'] ?? 'Admin'); ?></span>
-                <a href="logout.php">Salir</a>
-            </div>
-        </div>
-    </nav>
 
     <div class="container">
         <div class="header">
             <h1>Gestión de Restaurantes</h1>
-            <button class="btn btn-primary" onclick="openModal('createModal')">
-                ➕ Nuevo Restaurante
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <a href="export_data.php?type=tenants" class="btn btn-success">
+                    📥 Exportar CSV
+                </a>
+                <button class="btn btn-primary" onclick="openModal('createModal')">
+                    ➕ Nuevo Restaurante
+                </button>
+            </div>
         </div>
 
         <?php if ($message): ?>

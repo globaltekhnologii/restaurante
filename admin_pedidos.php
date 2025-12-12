@@ -48,7 +48,7 @@ $pedidos = $result->fetch_all(MYSQLI_ASSOC);
 $stats = [];
 $stats['total'] = $conn->query("SELECT COUNT(*) as count FROM pedidos")->fetch_assoc()['count'];
 $stats['pendientes'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'pendiente'")->fetch_assoc()['count'];
-$stats['en_proceso'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado IN ('confirmado', 'preparando', 'en_camino')")->fetch_assoc()['count'];
+$stats['en_proceso'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado IN ('confirmado', 'preparando', 'listo', 'en_camino')")->fetch_assoc()['count'];
 $stats['entregados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'entregado'")->fetch_assoc()['count'];
 $stats['hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE DATE(fecha_pedido) = CURDATE()")->fetch_assoc()['count'];
 $stats['total_ventas'] = $conn->query("SELECT SUM(total) as sum FROM pedidos WHERE estado = 'entregado'")->fetch_assoc()['sum'] ?? 0;
@@ -202,6 +202,7 @@ $conn->close();
         .estado-pendiente { background: #fff3cd; color: #856404; }
         .estado-confirmado { background: #d1ecf1; color: #0c5460; }
         .estado-preparando { background: #d4edda; color: #155724; }
+        .estado-listo { background: #b8daff; color: #004085; }
         .estado-en_camino { background: #cce5ff; color: #004085; }
         .estado-entregado { background: #d4edda; color: #155724; }
         .estado-cancelado { background: #f8d7da; color: #721c24; }
@@ -277,6 +278,7 @@ $conn->close();
                     <option value="pendiente" <?php echo $filtro_estado == 'pendiente' ? 'selected' : ''; ?>>Pendiente</option>
                     <option value="confirmado" <?php echo $filtro_estado == 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
                     <option value="preparando" <?php echo $filtro_estado == 'preparando' ? 'selected' : ''; ?>>Preparando</option>
+                    <option value="listo" <?php echo $filtro_estado == 'listo' ? 'selected' : ''; ?>>Listo</option>
                     <option value="en_camino" <?php echo $filtro_estado == 'en_camino' ? 'selected' : ''; ?>>En Camino</option>
                     <option value="entregado" <?php echo $filtro_estado == 'entregado' ? 'selected' : ''; ?>>Entregado</option>
                     <option value="cancelado" <?php echo $filtro_estado == 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
@@ -320,6 +322,7 @@ $conn->close();
                             <option value="pendiente" <?php echo $pedido['estado'] == 'pendiente' ? 'selected' : ''; ?>>⏳ Pendiente</option>
                             <option value="confirmado" <?php echo $pedido['estado'] == 'confirmado' ? 'selected' : ''; ?>>✅ Confirmado</option>
                             <option value="preparando" <?php echo $pedido['estado'] == 'preparando' ? 'selected' : ''; ?>>👨‍🍳 Preparando</option>
+                            <option value="listo" <?php echo $pedido['estado'] == 'listo' ? 'selected' : ''; ?>>🍽️ Listo</option>
                             <option value="en_camino" <?php echo $pedido['estado'] == 'en_camino' ? 'selected' : ''; ?>>🚚 En Camino</option>
                             <option value="entregado" <?php echo $pedido['estado'] == 'entregado' ? 'selected' : ''; ?>>✅ Entregado</option>
                             <option value="cancelado" <?php echo $pedido['estado'] == 'cancelado' ? 'selected' : ''; ?>>❌ Cancelado</option>
