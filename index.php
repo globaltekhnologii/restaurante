@@ -498,6 +498,7 @@
     transform: translateY(0);
 }
     </style>
+    <link rel="stylesheet" href="css/publicidad.css">
 </head>
 <body>
 <div id="toastContainer" class="toast-container"></div>
@@ -601,6 +602,22 @@ try {
         <h1>Bienvenidos a <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></h1>
         <p>Menú cargado automáticamente desde la Base de Datos</p>
     </header>
+
+    <!-- Carrusel de Publicidad -->
+    <div class="ad-carousel-container">
+        <div class="ad-carousel">
+            <div class="ad-carousel-track">
+                <!-- Slides generados por JS -->
+            </div>
+            
+            <button class="ad-nav-btn ad-prev">❮</button>
+            <button class="ad-nav-btn ad-next">❯</button>
+            
+            <div class="ad-indicators">
+                <!-- Indicadores generados por JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Sección de Búsqueda y Filtros -->
     <div class="search-filter-section">
@@ -916,6 +933,7 @@ try {
 
     </script>
 
+
     <!-- Footer con Información del Negocio -->
     <footer style="background: #333; color: white; padding: 40px 20px; margin-top: 60px;">
         <div class="menu-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; background: transparent; box-shadow: none; margin-top: 0;">
@@ -961,5 +979,6 @@ if (file_exists(__DIR__ . '/includes/chatbot_widget.php')) {
 }
 ?>
 
+<script src="js/publicidad.js"></script>
 </body>
 </html>

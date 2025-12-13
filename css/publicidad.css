@@ -1,0 +1,105 @@
+/* Carrusel de Publicidad */
+.ad-carousel-container {
+    max-width: 1200px;
+    margin: 30px auto 10px;
+    padding: 0 20px;
+    position: relative;
+    overflow: hidden;
+    display: none; /* Se muestra con JS si hay anuncios */
+}
+
+.ad-carousel {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    background: #000;
+    aspect-ratio: 16/5; /* Responsive Banner */
+}
+
+.ad-slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.ad-slide.active {
+    display: block;
+}
+
+.ad-slide img,
+.ad-slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+.ad-slide video {
+    object-fit: cover;
+}
+
+/* Controles de Navegación */
+.ad-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    padding: 15px 10px;
+    cursor: pointer;
+    font-size: 1.5em;
+    z-index: 10;
+    transition: background 0.3s;
+    user-select: none;
+}
+
+.ad-nav-btn:hover {
+    background: rgba(0,0,0,0.8);
+}
+
+.ad-prev { left: 20px; border-radius: 0 5px 5px 0; }
+.ad-next { right: 20px; border-radius: 5px 0 0 5px; }
+
+/* Indicadores (Puntos) */
+.ad-indicators {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.ad-dot {
+    width: 10px;
+    height: 10px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ad-dot.active {
+    background: white;
+    transform: scale(1.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ad-carousel {
+        aspect-ratio: 16/9; /* Más alto en móviles */
+    }
+    
+    .ad-nav-btn {
+        padding: 10px 5px;
+        font-size: 1.2em;
+    }
+}
