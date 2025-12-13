@@ -65,7 +65,8 @@ $sql = "UPDATE configuracion_sistema SET
         horario_atencion = ?,
         horario_apertura_domicilios = ?,
         horario_cierre_domicilios = ?,
-        domicilios_habilitados = ?";
+        domicilios_habilitados = ?,
+        dias_laborales = ?";
 
 $params = [
     $nombre_restaurante, $pais, $departamento, $ciudad, $direccion, 
@@ -73,7 +74,12 @@ $params = [
     $nit, $mensaje_pie_factura, $horario_atencion,
     $horario_apertura_domicilios, $horario_cierre_domicilios, $domicilios_habilitados
 ];
-$types = "sssssssssssssssi";
+
+// Procesar Días Laborales
+$dias_laborales = isset($_POST['dias']) ? json_encode($_POST['dias']) : json_encode([]);
+$params[] = $dias_laborales;
+
+$types = "sssssssssssssssis"; // Agregado 's' al final para dias_laborales
 
 if ($logo_url) {
     $sql .= ", logo_url = ?";

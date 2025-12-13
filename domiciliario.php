@@ -660,15 +660,8 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
         }, 5000);
     </script>
     
-    <!-- Sistema de notificaciones -->
-    <script src="js/notifications.js"></script>
-    <script>
-        const notificationConfig = {
-            apiUrl: 'api/check_updates.php',
-            pollInterval: 5000,
-            soundEnabled: true
-        };
-    </script>
+    <!-- Gestor de Notificaciones (Unificado) -->
+    <script src="js/notification_manager.js"></script>
     
     <!-- Auto-Refresh System -->
     <script src="js/auto_refresh.js"></script>

@@ -25,23 +25,41 @@ $fecha_corte = date('Y-m-d H:i:s', $last_check);
 // Lógica según ROL
 $rol = $_SESSION['rol'];
 
-if ($rol === 'admin' || $rol === 'cajero' || $rol === 'chef') {
-    // Buscar NUEVOS pedidos (para cocina/admin) creado RECIENTEMENTE
-    // Usamos fecha_pedido > fecha_corte
-    $sql = "SELECT COUNT(*) as count FROM pedidos WHERE estado = 'pendiente' AND fecha_pedido > ?";
-    $stmt = $conn->prepare($sql);
+if ($rol === 'admin' || $rol === 'cajero') {
+    // Buscar NUEVOS pedidos pendientes (para aceptar)
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'pendiente' AND fecha_pedido > ?");
     $stmt->bind_param("s", $fecha_corte);
     $stmt->execute();
     $result = $stmt->get_result();
-    $response['nuevos_pedidos'] = $result->fetch_assoc()['count'];
+    $response['nuevos_pedidos'] += $result->fetch_assoc()['count'];
     $stmt->close();
 }
 
-if ($rol === 'mesero' || $rol === 'admin') {
-    // Buscar pedidos LISTOS (para meseros) actualizados RECIENTEMENTE
+if ($rol === 'chef' || $rol === 'admin') {
+    // Buscar pedidos CONFIRMADOS (que entran a cocina)
+    // Para el chef, un pedido "nuevo" es uno que acaba de ser confirmado
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'confirmado' AND fecha_actualizacion > ?");
+    $stmt->bind_param("s", $fecha_corte);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    // Sumamos a nuevos_pedidos para activar la misma alerta sonora/visual
+    $response['nuevos_pedidos'] += $result->fetch_assoc()['count'];
+    $stmt->close();
+}
+
+if ($rol === 'mesero' || $rol === 'domiciliario' || $rol === 'admin') {
+    // Buscar pedidos LISTOS (para entegar) actualizados RECIENTEMENTE
     // Usamos fecha_actualizacion > fecha_corte Y estado = listo
-    $sql = "SELECT COUNT(*) as count FROM pedidos WHERE estado = 'listo' AND fecha_actualizacion > ?";
-    $stmt = $conn->prepare($sql);
+    // Filtro adicional: Si es domiciliario, SOLO domicilio. Si es mesero, solo Mesa (opcional, pero por ahora general)
+    
+    $query = "SELECT COUNT(*) as count FROM pedidos WHERE estado = 'listo' AND fecha_actualizacion > ?";
+    
+    // Opcional: Refinar por tipo.
+    if ($rol === 'domiciliario') {
+        $query .= " AND tipo_pedido = 'domicilio'";
+    }
+    
+    $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $fecha_corte);
     $stmt->execute();
     $result = $stmt->get_result();

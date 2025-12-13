@@ -610,6 +610,9 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
         }
     </script>
     
+    <!-- Gestor de Notificaciones (Web Push) -->
+    <script src="js/notification_manager.js"></script>
+    
     <!-- Theme Manager -->
     <script src="js/theme-manager.js"></script>
 </body>

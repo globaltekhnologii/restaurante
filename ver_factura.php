@@ -176,7 +176,7 @@ $conn->close();
             <tr>
                 <td><?php echo $item['cantidad']; ?></td>
                 <td><?php echo htmlspecialchars($item['plato_nombre']); ?></td>
-                <td class="price">$<?php echo number_format($item['precio'] * $item['cantidad'], 0); ?></td>
+                <td class="price">$<?php echo number_format($item['precio_unitario'] * $item['cantidad'], 0); ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>

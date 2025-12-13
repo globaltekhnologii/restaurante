@@ -168,6 +168,85 @@ require_once 'includes/info_negocio.php';
                     <label>Horario de Atención General</label>
                     <textarea name="horario_atencion" rows="3"><?php echo htmlspecialchars($info_negocio['horario_atencion']); ?></textarea>
                 </div>
+                
+                <div class="form-group">
+                    <style>
+                        .day-selector-group {
+                            display: flex;
+                            flex-wrap: wrap;
+                            gap: 10px;
+                            margin-top: 10px;
+                        }
+                        .day-selector-item {
+                            position: relative;
+                        }
+                        .day-selector-item input[type="checkbox"] {
+                            position: absolute;
+                            opacity: 0;
+                            cursor: pointer;
+                            height: 0;
+                            width: 0;
+                        }
+                        .day-selector-item label {
+                            display: inline-block;
+                            padding: 8px 16px;
+                            background-color: #f1f3f5;
+                            border-radius: 50px;
+                            cursor: pointer;
+                            font-weight: 500;
+                            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                            user-select: none;
+                            border: 1px solid #dee2e6;
+                            color: #495057;
+                            font-size: 0.9em;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                        }
+                        .day-selector-item input[type="checkbox"]:checked + label {
+                            background-color: #2ecc71;
+                            color: white;
+                            border-color: #2ecc71;
+                            box-shadow: 0 2px 4px rgba(46, 204, 113, 0.25);
+                        }
+                        .day-selector-item input[type="checkbox"]:checked + label::before {
+                            content: '✓';
+                            font-weight: bold;
+                        }
+                        .day-selector-item label:hover {
+                            background-color: #e9ecef;
+                            transform: translateY(-1px);
+                        }
+                        .day-selector-item input[type="checkbox"]:checked + label:hover {
+                            background-color: #27ae60;
+                        }
+                    </style>
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #2c3e50;">📅 Días de Atención (Seleccione los días que abre)</label>
+                    <div class="day-selector-group">
+                        <?php 
+                        $dias_semana = [
+                            1 => 'Lunes', 
+                            2 => 'Martes', 
+                            3 => 'Miércoles', 
+                            4 => 'Jueves', 
+                            5 => 'Viernes', 
+                            6 => 'Sábado', 
+                            7 => 'Domingo'
+                        ];
+                        // Decodificar JSON de días (o usar array vacío si fallo)
+                        $dias_activos = json_decode($info_negocio['dias_laborales'] ?? '[]', true);
+                        if (!is_array($dias_activos)) $dias_activos = ["1","2","3","4","5","6","7"]; // Fallback
+                        
+                        foreach ($dias_semana as $num => $nombre): 
+                            $checked = in_array((string)$num, $dias_activos) ? 'checked' : '';
+                        ?>
+                            <div class="day-selector-item">
+                                <input type="checkbox" id="dia_<?php echo $num; ?>" name="dias[]" value="<?php echo $num; ?>" <?php echo $checked; ?>>
+                                <label for="dia_<?php echo $num; ?>"><?php echo $nombre; ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
             </div>
 
             <div class="card">

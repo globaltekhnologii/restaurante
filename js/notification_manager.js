@@ -109,7 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Desbloqueo de audio con el primer clic en cualquier parte
     document.body.addEventListener('click', function () {
-        // Reproducir y pausar inmediatamente para "calentar" el motor de audio
-        console.log('Audio Context Unlocked');
+        // Reproducir y pausar inmediatamente para "calentar" el motor de audio y desbloquear Autoplay
+        const unlockAudio = (audioObj) => {
+            if (audioObj) {
+                audioObj.play().then(() => {
+                    audioObj.pause();
+                    audioObj.currentTime = 0;
+                }).catch(e => console.warn('No se pudo desbloquear audio (posiblemente ya desbloqueado o error):', e));
+            }
+        };
+
+        unlockAudio(NotificationManager.sounds.new_order);
+        unlockAudio(NotificationManager.sounds.order_ready);
+
+        console.log('🔊 Sistema de Audio Inicializado por usuario');
     }, { once: true });
 });
