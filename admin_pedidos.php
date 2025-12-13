@@ -172,7 +172,7 @@ $conn->close();
             padding: 20px;
             border-bottom: 1px solid #e0e0e0;
             display: grid;
-            grid-template-columns: 150px 1fr 150px 150px 200px;
+            grid-template-columns: 150px 1fr 150px 150px 100px 150px;
             gap: 20px;
             align-items: center;
         }
@@ -328,6 +328,15 @@ $conn->close();
                             <option value="cancelado" <?php echo $pedido['estado'] == 'cancelado' ? 'selected' : ''; ?>>❌ Cancelado</option>
                         </select>
                     </div>
+
+                    <!-- Nueva Columna: WhatsApp Actions -->
+                    <div>
+                         <!-- Botón Principal -->
+                         <button onclick="mostrarOpcionesWhatsApp('<?php echo $pedido['id']; ?>', '<?php echo htmlspecialchars($pedido['telefono']); ?>', '<?php echo htmlspecialchars($pedido['nombre_cliente']); ?>')" 
+                            style="background: #25D366; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; color: white; font-size: 1.2em; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            📱
+                        </button>
+                    </div>
                     
                     <div>
                         <a href="ver_pedido.php?id=<?php echo $pedido['id']; ?>" class="btn-details">
@@ -350,6 +359,43 @@ $conn->close();
         
         // Auto-refresh cada 30 segundos para ver nuevos pedidos
         setTimeout(() => location.reload(), 30000);
+        // Auto-refresh cada 30 segundos para ver nuevos pedidos
+        setTimeout(() => location.reload(), 30000);
+
+        function mostrarOpcionesWhatsApp(id, telefono, nombre) {
+            // Limpiar numero (solo digitos)
+            const numero = telefono.replace(/\D/g, '');
+            if(numero.length < 10) {
+                alert('Número de teléfono inválido: ' + telefono);
+                return;
+            }
+
+            // Textos predefinidos
+            const mensajes = {
+                confirmado: `Hola ${nombre}, tu pedido #${id} ha sido confirmado y se está preparando. 👨‍🍳`,
+                en_camino: `¡Buenas noticias ${nombre}! Tu pedido #${id} va en camino con nuestro domiciliario. 🛵`,
+                listo: `Hola ${nombre}, tu pedido #${id} ya está listo para recoger. ¡Te esperamos! 🍽️`
+            };
+
+            // Preguntar qué mensaje enviar
+            const opcion = prompt(
+                "Enviar mensaje por WhatsApp:\n\n" +
+                "1. Pedido Confirmado 👨‍🍳\n" +
+                "2. En Camino 🛵\n" +
+                "3. Listo para Recoger 🍽️\n\n" +
+                "Escribe el número de la opción (1, 2 o 3):"
+            );
+
+            let texto = "";
+            if(opcion === "1") texto = mensajes.confirmado;
+            else if(opcion === "2") texto = mensajes.en_camino;
+            else if(opcion === "3") texto = mensajes.listo;
+            else return; // Cancelado
+
+            // Abrir WhatsApp Web
+            const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
+        }
     </script>
 
 </body>
