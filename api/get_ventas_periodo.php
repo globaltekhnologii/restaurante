@@ -29,8 +29,8 @@ try {
                 SUM(p.total) as total_ventas,
                 AVG(p.total) as ticket_promedio,
                 SUM(CASE WHEN pag.metodo_pago = 'efectivo' THEN pag.monto ELSE 0 END) as efectivo,
-                SUM(CASE WHEN pag.metodo_pago = 'tarjeta' THEN pag.monto ELSE 0 END) as tarjeta,
-                SUM(CASE WHEN pag.metodo_pago = 'transferencia' THEN pag.monto ELSE 0 END) as transferencia
+                SUM(CASE WHEN pag.metodo_pago IN ('nequi', 'daviplata', 'dale', 'bancolombia', 'otro') THEN pag.monto ELSE 0 END) as transferencia,
+                0 as tarjeta
             FROM pedidos p
             LEFT JOIN pagos pag ON p.id = pag.pedido_id
             WHERE DATE(p.fecha_pedido) BETWEEN ? AND ?

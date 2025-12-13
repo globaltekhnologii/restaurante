@@ -104,6 +104,12 @@ async function cargarReportes() {
 async function cargarVentas(fechaInicio, fechaFin) {
     try {
         const response = await fetch(`api/get_ventas_periodo.php?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`);
+
+        // Verificar si la respuesta es OK
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (!data.success) {

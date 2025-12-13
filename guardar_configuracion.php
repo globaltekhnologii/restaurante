@@ -24,6 +24,8 @@ $email = trim($_POST['email']);
 $sitio_web = trim($_POST['sitio_web']);
 $facebook = trim($_POST['facebook']);
 $instagram = trim($_POST['instagram']);
+$nit = trim($_POST['nit']);
+$mensaje_pie_factura = trim($_POST['mensaje_pie_factura']);
 $horario_atencion = trim($_POST['horario_atencion']);
 $horario_apertura_domicilios = trim($_POST['horario_apertura_domicilios']);
 $horario_cierre_domicilios = trim($_POST['horario_cierre_domicilios']);
@@ -58,6 +60,8 @@ $sql = "UPDATE configuracion_sistema SET
         sitio_web = ?, 
         facebook = ?, 
         instagram = ?, 
+        nit = ?,
+        mensaje_pie_factura = ?,
         horario_atencion = ?,
         horario_apertura_domicilios = ?,
         horario_cierre_domicilios = ?,
@@ -65,10 +69,11 @@ $sql = "UPDATE configuracion_sistema SET
 
 $params = [
     $nombre_restaurante, $pais, $departamento, $ciudad, $direccion, 
-    $telefono, $email, $sitio_web, $facebook, $instagram, $horario_atencion,
+    $telefono, $email, $sitio_web, $facebook, $instagram, 
+    $nit, $mensaje_pie_factura, $horario_atencion,
     $horario_apertura_domicilios, $horario_cierre_domicilios, $domicilios_habilitados
 ];
-$types = "sssssssssssssi";
+$types = "sssssssssssssssi";
 
 if ($logo_url) {
     $sql .= ", logo_url = ?";

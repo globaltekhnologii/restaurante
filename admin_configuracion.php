@@ -92,12 +92,25 @@ require_once 'includes/info_negocio.php';
                     <input type="text" name="nombre_restaurante" value="<?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?>" required>
                 </div>
                 <div class="form-group">
+                    <label>NIT / RUT</label>
+                    <input type="text" name="nit" value="<?php echo htmlspecialchars($info_negocio['nit'] ?? ''); ?>" placeholder="Ej: 900.123.456-7">
+                </div>
+                <div class="form-group">
                     <label>Logo Actual</label>
                     <?php if ($info_negocio['logo_url']): ?>
                         <img src="<?php echo htmlspecialchars($info_negocio['logo_url']); ?>" alt="Logo" style="max-height: 100px; display: block; margin-bottom: 10px;">
                     <?php endif; ?>
                     <input type="file" name="logo" accept="image/*">
                     <small>Deja en blanco para mantener el actual</small>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🧾 Configuración de Factura</h2>
+                <div class="form-group">
+                    <label>Mensaje Pie de Factura</label>
+                    <textarea name="mensaje_pie_factura" rows="3" placeholder="Ej: ¡Gracias por su compra! Propina voluntaria no incluida."><?php echo htmlspecialchars($info_negocio['mensaje_pie_factura'] ?? ''); ?></textarea>
+                    <small>Este mensaje aparecerá al final de todas las facturas impresas.</small>
                 </div>
             </div>
 

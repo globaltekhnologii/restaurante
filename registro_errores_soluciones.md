@@ -34,6 +34,29 @@ Ver: `CORRECCION_009_REPORTES_2025-12-08.md`
 
 ---
 
+## Error #010 - Reportes: Unknown column 'pi.precio'
+
+**Fecha:** 2025-12-13  
+**Estado:** ✅ Resuelto  
+**Módulo:** Reportes y Estadísticas  
+
+**Síntoma:**
+```
+Error al cargar los reportes. Revisa la consola para más detalles.
+Unknown column 'pi.precio' in 'field list'
+```
+
+**Causa:** Nombre incorrecto de columna en consultas SQL. La columna se llama `precio_unitario`, no `precio`.
+
+**Archivos Corregidos:**
+1. `api/get_productos_vendidos.php` - Cambiado `pi.precio` → `pi.precio_unitario`
+2. `api/get_ventas_periodo.php` - Corregido mapeo de métodos de pago
+
+Ver: `CORRECCION_010_REPORTES_PRECIO_UNITARIO_2025-12-13.md`
+
+
+---
+
 ## Resumen General
 - **Total errores corregidos:** 9
 - **Total archivos modificados:** 18 (14 de ayer + 4 de hoy)
