@@ -444,6 +444,7 @@ require_once 'includes/info_negocio.php';
             <a href="inventario.php">📦 Inventario</a>
             <a href="config_pagos.php">💳 Configurar Pagos</a>
             <a href="admin_configuracion.php">⚙️ Configuración</a>
+            <a href="admin_publicidad.php">📢 Publicidad</a>
             <a href="admin_configuracion_domicilios.php">🗺️ Domicilios GPS</a>
             <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
