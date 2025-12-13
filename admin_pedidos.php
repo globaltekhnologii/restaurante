@@ -350,6 +350,9 @@ $conn->close();
 
     </div>
 
+    <!-- Gestor de Notificaciones -->
+    <script src="js/notification_manager.js"></script>
+
     <script>
         function cambiarEstado(pedidoId, nuevoEstado) {
             if (confirm('¿Cambiar el estado del pedido?')) {
