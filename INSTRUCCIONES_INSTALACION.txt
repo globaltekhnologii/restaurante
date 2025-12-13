@@ -1,0 +1,41 @@
+# GUÍA DE INSTALACIÓN - RESTAURANTE EL SABOR
+
+## 1. Requisitos Previos
+- Tener instalado XAMPP (Apache + MySQL/MariaDB)
+- Navegador Web (Chrome/Edge recomendado)
+
+## 2. Instalación de Base de Datos
+1. Abra XAMPP Control Panel y active **Apache** y **MySQL**.
+2. Abra `http://localhost/phpmyadmin` en su navegador.
+3. Cree una nueva base de datos llamada: `menu_restaurante`
+   - Cotejamiento (Collation): `utf8mb4_unicode_ci`
+4. Seleccione la base de datos recién creada.
+5. Vaya a la pestaña **Importar**.
+6. Seleccione el archivo: `/sql/database_install.sql` (ubicado en la carpeta del proyecto).
+7. Haga clic en **Continuar**.
+
+## 3. Configuración del Sistema
+1. Copie toda la carpeta del proyecto a `C:\xampp\htdocs\Restaurante`.
+2. Abra el archivo `config.php` y verifique:
+   ```php
+   define('DB_HOST', 'localhost');
+   define('DB_USER', 'root');
+   define('DB_PASSWORD', ''); // Contraseña de MySQL (usualmente vacía en XAMPP)
+   ```
+
+## 4. Primer Ingreso
+1. Abra el navegador y vaya a: `http://localhost/Restaurante/admin.php`
+2. Inicie sesión con las credenciales por defecto:
+   - **Usuario:** admin
+   - **Contraseña:** Admin@2024!
+3. **IMPORTANTE:** Vaya inmediatamente a "Usuarios" y cambie la contraseña del administrador.
+
+## 5. Personalización
+- Vaya a **Configuración** en el panel para cambiar:
+  - Nombre del Restaurante
+  - Logo
+  - NIT
+  - Mensaje de Factura
+- Vaya a **Publicidad** para agregar banners promocionales.
+
+¡Listo para vender!

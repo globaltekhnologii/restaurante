@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Digital</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -58,13 +64,13 @@
         /* Header Principal */
         header {
             text-align: center;
-            padding: 60px 20px 40px;
+            padding: 30px 20px 20px;
             background: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         
         header h1 {
-            font-size: 2.8em;
+            font-size: 2em;
             color: #333;
             margin-bottom: 10px;
             animation: fadeInDown 0.8s ease;
@@ -110,7 +116,7 @@
         
         .search-box {
             width: 100%;
-            padding: 18px 20px 18px 55px;
+            padding: 12px 20px 12px 45px;
             font-size: 1.1em;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
@@ -271,8 +277,8 @@
         }
         
         .plato-imagen {
-            width: 200px;
-            height: 150px;
+            width: 140px;
+            height: 110px;
             object-fit: cover;
             border-radius: 12px;
             transition: transform 0.4s;
@@ -298,14 +304,14 @@
         }
         
         .nombre-plato {
-            font-size: 1.5em;
+            font-size: 1.25em;
             font-weight: 600;
             color: #333;
             line-height: 1.3;
         }
         
         .precio {
-            font-size: 1.6em;
+            font-size: 1.3em;
             font-weight: 700;
             color: #667eea;
             white-space: nowrap;
