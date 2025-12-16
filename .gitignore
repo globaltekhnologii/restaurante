@@ -1,0 +1,9 @@
+# Credenciales Bold - NO SUBIR A GITHUB
+.env
+.env.bold
+.env.local
+.env.production
+
+# Archivos temporales
+*.tmp
+*.temp
