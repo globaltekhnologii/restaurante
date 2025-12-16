@@ -252,6 +252,10 @@ try {
             header("Location: confirmacion_pedido.php?numero=" . $numero_pedido . "&error=pago");
             exit;
         }
+    } elseif ($metodo_pago_seleccionado === 'demo') {
+        // Pago Demo - Simulador local
+        header("Location: pago_demo.php?pedido_id=" . $pedido_id . "&monto=" . $total);
+        exit;
     } else {
         // Pago en efectivo - redirigir a confirmación normal
         header("Location: confirmacion_pedido.php?numero=" . $numero_pedido);

@@ -356,6 +356,11 @@
                         <span style="font-size: 1.1em;">💵 Pago en Efectivo (Contra entrega)</span>
                     </label>
                     
+                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="metodo_pago_seleccionado" value="demo" style="margin-right: 10px;">
+                        <span style="font-size: 1.1em;">🧪 Pago Demo (Simulador - Pruebas)</span>
+                    </label>
+                    
                     <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
                         <input type="radio" name="metodo_pago_seleccionado" value="bold" style="margin-right: 10px;">
                         <span style="font-size: 1.1em;">💳 Pagar con Tarjeta (Bold)</span>
