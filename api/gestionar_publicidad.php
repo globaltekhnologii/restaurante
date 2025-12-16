@@ -28,6 +28,14 @@ try {
             crearAnuncio($conn, $uploadDir);
             break;
             
+        case 'actualizar':
+            actualizarAnuncio($conn);
+            break;
+            
+        case 'renovar':
+            renovarAnuncio($conn);
+            break;
+            
         case 'cambiar_estado':
             cambiarEstado($conn);
             break;
@@ -149,6 +157,59 @@ function eliminarAnuncio($conn, $uploadDir) {
         echo json_encode(['success' => true]);
     } else {
         throw new Exception('Error al eliminar registro');
+    }
+}
+
+function actualizarAnuncio($conn) {
+    $id = (int)($_POST['id'] ?? 0);
+    $titulo = $_POST['titulo'] ?? '';
+    $fecha_inicio = !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : NULL;
+    $fecha_fin = !empty($_POST['fecha_fin']) ? $_POST['fecha_fin'] : NULL;
+    $link_destino = $_POST['link_destino'] ?? '';
+    
+    if (!$id) {
+        throw new Exception('ID de anuncio no válido');
+    }
+    
+    $sql = "UPDATE publicidad 
+            SET titulo = ?, fecha_inicio = ?, fecha_fin = ?, link_destino = ? 
+            WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssssi", $titulo, $fecha_inicio, $fecha_fin, $link_destino, $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        throw new Exception('Error al actualizar anuncio: ' . $conn->error);
+    }
+}
+
+function renovarAnuncio($conn) {
+    $id = (int)($_POST['id'] ?? 0);
+    $dias = (int)($_POST['dias'] ?? 30);
+    
+    if (!$id) {
+        throw new Exception('ID de anuncio no válido');
+    }
+    
+    // Calcular nueva fecha de fin
+    $nueva_fecha_fin = date('Y-m-d', strtotime("+$dias days"));
+    
+    $sql = "UPDATE publicidad 
+            SET fecha_fin = ?, activo = 1 
+            WHERE id = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $nueva_fecha_fin, $id);
+    
+    if ($stmt->execute()) {
+        echo json_encode([
+            'success' => true, 
+            'nueva_fecha_fin' => $nueva_fecha_fin
+        ]);
+    } else {
+        throw new Exception('Error al renovar anuncio: ' . $conn->error);
     }
 }
 ?>

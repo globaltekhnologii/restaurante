@@ -243,8 +243,47 @@ require_once 'includes/info_negocio.php';
         </div>
     </div>
 
+    <!-- Modal Editar Anuncio -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 20px;">Editar Anuncio</h2>
+            <form id="editForm" onsubmit="actualizarAnuncio(event)">
+                <input type="hidden" id="edit_id" name="id">
+                
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="edit_titulo" name="titulo" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Fecha Inicio</label>
+                        <input type="date" id="edit_fecha_inicio" name="fecha_inicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Fin (Opcional)</label>
+                        <input type="date" id="edit_fecha_fin" name="fecha_fin">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Link Destino (Opcional)</label>
+                    <input type="url" id="edit_link_destino" name="link_destino" placeholder="https://...">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Variable global para almacenar todos los anuncios
+        let todosLosAnuncios = [];
+        
         // Cargar anuncios al iniciar
         document.addEventListener('DOMContentLoaded', cargarAnuncios);
 
@@ -252,6 +291,8 @@ require_once 'includes/info_negocio.php';
             try {
                 const response = await fetch('api/gestionar_publicidad.php?accion=listar');
                 const data = await response.json();
+                
+                todosLosAnuncios = data; // Guardar para uso posterior
                 
                 const grid = document.getElementById('adsGrid');
                 document.getElementById('loading').style.display = 'none';
@@ -287,11 +328,26 @@ require_once 'includes/info_negocio.php';
                 badgeClass = ad.tipo === 'flyer' ? 'badge-flyer' : 'badge-imagen';
             }
 
-            const activeClass = ad.activo == 1 ? 'status-active' : 'status-inactive';
-            const activeText = ad.activo == 1 ? 'Activo' : 'Inactivo';
+            // Verificar si el anuncio está vencido
+            const hoy = new Date().toISOString().split('T')[0];
+            const estaVencido = ad.fecha_fin && ad.fecha_fin < hoy;
+            const estaActivo = ad.activo == 1 && !estaVencido;
+            
+            const activeClass = estaActivo ? 'status-active' : 'status-inactive';
+            let activeText = '';
+            
+            if (estaVencido) {
+                activeText = 'Vencido';
+            } else {
+                activeText = ad.activo == 1 ? 'Activo' : 'Inactivo';
+            }
+
+            // Agregar estilo visual si está vencido
+            const cardStyle = estaVencido ? 'opacity: 0.6; border: 2px solid #e74a3b;' : '';
 
             div.innerHTML = `
                 <div class="ad-type-badge ${badgeClass}">${ad.tipo.toUpperCase()}</div>
+                ${estaVencido ? '<div style="position: absolute; top: 10px; left: 10px; background: #e74a3b; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; z-index: 3;">⏰ VENCIDO</div>' : ''}
                 <div class="ad-preview">
                     ${preview}
                 </div>
@@ -299,18 +355,26 @@ require_once 'includes/info_negocio.php';
                     <div class="ad-title">${ad.titulo}</div>
                     <div class="ad-meta">
                         📅 ${ad.fecha_inicio} ${ad.fecha_fin ? 'hasta ' + ad.fecha_fin : '(Indefinido)'}
+                        ${estaVencido ? '<br><span style="color: #e74a3b; font-weight: bold;">⚠️ Este anuncio ha expirado</span>' : ''}
                     </div>
                     <div class="ad-actions">
                         <div class="status-toggle" onclick="toggleEstado(${ad.id}, ${ad.activo})">
                             <div class="status-indicator ${activeClass}"></div>
                             <span style="font-size: 0.9em; color: #666;">${activeText}</span>
                         </div>
-                        <div>
-                            <button class="btn-icon btn-delete" onclick="eliminarAnuncio(${ad.id})">🗑️</button>
+                        <div style="display: flex; gap: 5px;">
+                            ${estaVencido ? `<button class="btn-icon" onclick="renovarAnuncio(${ad.id})" title="Renovar anuncio" style="color: #1cc88a;">🔄</button>` : ''}
+                            <button class="btn-icon" onclick="editarAnuncio(${ad.id})" title="Editar">✏️</button>
+                            <button class="btn-icon btn-delete" onclick="eliminarAnuncio(${ad.id})" title="Eliminar">🗑️</button>
                         </div>
                     </div>
                 </div>
             `;
+            
+            if (estaVencido) {
+                div.style.cssText = cardStyle;
+            }
+            
             return div;
         }
 
@@ -437,6 +501,98 @@ require_once 'includes/info_negocio.php';
             }
         }
 
+        async function editarAnuncio(id) {
+            const anuncio = todosLosAnuncios.find(ad => ad.id == id);
+            if (!anuncio) {
+                Swal.fire('Error', 'No se encontró el anuncio', 'error');
+                return;
+            }
+
+            // Llenar el formulario de edición
+            document.getElementById('edit_id').value = anuncio.id;
+            document.getElementById('edit_titulo').value = anuncio.titulo;
+            document.getElementById('edit_fecha_inicio').value = anuncio.fecha_inicio || '';
+            document.getElementById('edit_fecha_fin').value = anuncio.fecha_fin || '';
+            document.getElementById('edit_link_destino').value = anuncio.link_destino || '';
+
+            // Mostrar modal
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        async function actualizarAnuncio(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            formData.append('accion', 'actualizar');
+
+            try {
+                const response = await fetch('api/gestionar_publicidad.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire('¡Éxito!', 'Anuncio actualizado correctamente', 'success');
+                    closeEditModal();
+                    cargarAnuncios();
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message || 'Error al actualizar anuncio', 'error');
+            }
+        }
+
+        async function renovarAnuncio(id) {
+            const result = await Swal.fire({
+                title: '🔄 Renovar Anuncio',
+                html: `
+                    <p>Selecciona cuánto tiempo quieres extender este anuncio:</p>
+                    <select id="renovar_dias" class="swal2-input" style="width: 80%;">
+                        <option value="7">7 días</option>
+                        <option value="15">15 días</option>
+                        <option value="30" selected>30 días (1 mes)</option>
+                        <option value="60">60 días (2 meses)</option>
+                        <option value="90">90 días (3 meses)</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Renovar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    return document.getElementById('renovar_dias').value;
+                }
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const dias = result.value;
+                    const formData = new FormData();
+                    formData.append('accion', 'renovar');
+                    formData.append('id', id);
+                    formData.append('dias', dias);
+
+                    const response = await fetch('api/gestionar_publicidad.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire('¡Renovado!', `Anuncio extendido por ${dias} días`, 'success');
+                        cargarAnuncios();
+                    } else {
+                        throw new Error(data.error);
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        }
+
         function openModal() {
             document.getElementById('adModal').style.display = 'flex';
         }
@@ -445,10 +601,18 @@ require_once 'includes/info_negocio.php';
             document.getElementById('adModal').style.display = 'none';
         }
 
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
         window.onclick = function(event) {
             const modal = document.getElementById('adModal');
+            const editModal = document.getElementById('editModal');
             if (event.target == modal) {
                 closeModal();
+            }
+            if (event.target == editModal) {
+                closeEditModal();
             }
         }
     </script>

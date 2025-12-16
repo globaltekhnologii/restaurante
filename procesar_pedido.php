@@ -23,6 +23,8 @@ $nombre_cliente = trim($_POST['nombre']);
 $telefono = trim($_POST['telefono']);
 $direccion = trim($_POST['direccion']);
 $ciudad_entrega = isset($_POST['ciudad_entrega']) ? trim($_POST['ciudad_entrega']) : '';
+$tipo_documento = isset($_POST['tipo_documento']) ? trim($_POST['tipo_documento']) : '';
+$numero_documento = isset($_POST['numero_documento']) ? trim($_POST['numero_documento']) : '';
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
 $notas = isset($_POST['notas']) ? trim($_POST['notas']) : '';
 $total = floatval($_POST['total']);
@@ -116,15 +118,18 @@ try {
     $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'domicilio';
     
     // Insertar el pedido principal
-    // Insertar pedido con datos GPS si están disponibles
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, direccion, email, total, estado, notas, tipo_pedido, latitud_cliente, longitud_cliente, distancia_km, costo_domicilio) VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?, ?, ?, ?, ?)");
+    // Insertar pedido con datos GPS, documento y ciudad si están disponibles
+    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, tipo_documento, numero_documento, direccion, ciudad_entrega, email, total, estado, notas, tipo_pedido, latitud_cliente, longitud_cliente, distancia_km, costo_domicilio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?, ?, ?, ?, ?)");
     
-    $stmt->bind_param("sissssdssdddd", 
+    $stmt->bind_param("sississssdssdddd", 
         $numero_pedido,
         $cliente_id,
         $nombre_cliente,
         $telefono,
+        $tipo_documento,
+        $numero_documento,
         $direccion,
+        $ciudad_entrega,
         $email,
         $total,
         $notas,

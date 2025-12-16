@@ -567,6 +567,11 @@ try {
     closeDatabaseConnection($conn);
     
 } catch (Exception $e) {
+    // Debugging visible en caso de error
+    echo "<div style='background:red; color:white; padding:20px; text-align:center;'>";
+    echo "<h3>Error Crítico</h3>";
+    echo "<p>" . $e->getMessage() . "</p>";
+    echo "</div>";
     error_log("Error en index.php: " . $e->getMessage());
     $error = true;
 }
@@ -606,7 +611,7 @@ try {
     <!-- Header Principal -->
     <header>
         <h1>Bienvenidos a <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></h1>
-        <p>Menú cargado automáticamente desde la Base de Datos</p>
+        <p>Descubre nuestros deliciosos platos</p>
     </header>
 
     <!-- Carrusel de Publicidad -->

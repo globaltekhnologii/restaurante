@@ -7,19 +7,12 @@ const AUTO_PLAY_DELAY = 5000; // 5 segundos
 
 async function initCarousel() {
     try {
-        // Cargar anuncios desde API
-        const response = await fetch('api/gestionar_publicidad.php?accion=listar');
+        // Cargar anuncios desde API pública
+        const response = await fetch('api/publicidad_publica.php');
         const anuncios = await response.json();
 
-        // Filtrar solo activos y vigentes
-        const hoy = new Date().toISOString().split('T')[0];
-        slidesData = anuncios.filter(ad => {
-            if (ad.activo != 1) return false;
-            if (ad.fecha_fin && ad.fecha_fin < hoy) return false;
-            // Fecha inicio no debería ser problema si consultamos los que ya iniciaron, 
-            // pero podemos validar por seguridad
-            return true;
-        });
+        // La API ya devuelve solo anuncios activos y vigentes
+        slidesData = anuncios;
 
         if (slidesData.length > 0) {
             renderCarousel();

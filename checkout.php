@@ -232,23 +232,46 @@
                     </div>
                 </div>
                 
-                <h2 class="section-title">📋 Información de Contacto</h2>
+                <h2 class="section-title">👤 Información del Cliente</h2>
                 
-                <div class="form-row">
+                <!-- TELÉFONO PRIMERO - Activa autocompletado -->
+                <div class="form-group">
+                    <label for="telefono">Teléfono <span class="required">*</span></label>
+                    <input type="tel" id="telefono" name="telefono" required placeholder="Ej: 3177731338" maxlength="15">
+                    <small id="telefono_feedback" style="display: none; margin-top: 5px;"></small>
+                </div>
+                
+                <div class="grid-2">
                     <div class="form-group">
                         <label for="nombre">Nombre Completo <span class="required">*</span></label>
-                        <input type="text" id="nombre" name="nombre" required>
+                        <input type="text" id="nombre" name="nombre" required placeholder="Ej: Juan Pérez">
                     </div>
                     
                     <div class="form-group">
-                        <label for="telefono">Teléfono <span class="required">*</span></label>
-                        <input type="tel" id="telefono" name="telefono" required>
+                        <label for="email">Email (Opcional)</label>
+                        <input type="email" id="email" name="email" placeholder="ejemplo@email.com">
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="email">Email (Opcional)</label>
-                    <input type="email" id="email" name="email">
+                <!-- DOCUMENTO DE IDENTIDAD -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="tipo_documento">Tipo de Documento <span class="required">*</span></label>
+                        <select id="tipo_documento" name="tipo_documento" required>
+                            <option value="">Seleccione...</option>
+                            <option value="CC">Cédula de Ciudadanía (CC)</option>
+                            <option value="TI">Tarjeta de Identidad (TI)</option>
+                            <option value="CE">Cédula de Extranjería (CE)</option>
+                            <option value="PEP">Permiso Especial de Permanencia (PEP)</option>
+                            <option value="Pasaporte">Pasaporte</option>
+                            <option value="NIT">NIT (Número de Identificación Tributaria)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="numero_documento">Número de Documento <span class="required">*</span></label>
+                        <input type="text" id="numero_documento" name="numero_documento" required placeholder="Ej: 1234567890">
+                    </div>
                 </div>
                 
                 <h2 class="section-title" style="margin-top: 40px;">📍 Dirección de Entrega</h2>
@@ -579,6 +602,90 @@
                 document.getElementById('direccion').value = 'Mesa ' + this.options[this.selectedIndex].text;
             }
         });
+
+        // ========================================
+        // AUTOCOMPLETADO DE CLIENTE POR TELÉFONO
+        // ========================================
+        let autocompletadoTimeout;
+        const telefonoInput = document.getElementById('telefono');
+        const telefonoFeedback = document.getElementById('telefono_feedback');
+
+        telefonoInput.addEventListener('blur', buscarClientePorTelefono);
+        telefonoInput.addEventListener('input', function() {
+            // Debouncing: esperar 1 segundo después de que el usuario deje de escribir
+            clearTimeout(autocompletadoTimeout);
+            const telefono = this.value.replace(/[^0-9]/g, ''); // Solo números
+            
+            if (telefono.length >= 10) {
+                autocompletadoTimeout = setTimeout(() => {
+                    buscarClientePorTelefono();
+                }, 1000);
+            }
+        });
+
+        async function buscarClientePorTelefono() {
+            const telefono = telefonoInput.value.replace(/[^0-9]/g, '');
+            
+            if (telefono.length < 10) {
+                telefonoFeedback.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Mostrar indicador de carga
+                telefonoFeedback.textContent = '🔍 Buscando...';
+                telefonoFeedback.style.display = 'block';
+                telefonoFeedback.style.color = '#666';
+
+                const response = await fetch(`api/buscar_cliente_por_telefono.php?telefono=${telefono}`);
+                const data = await response.json();
+
+                if (data.found) {
+                    // Cliente encontrado - Autocompletar campos
+                    document.getElementById('nombre').value = data.data.nombre || '';
+                    document.getElementById('email').value = data.data.email || '';
+                    document.getElementById('tipo_documento').value = data.data.tipo_documento || '';
+                    document.getElementById('numero_documento').value = data.data.numero_documento || '';
+                    document.getElementById('direccion').value = data.data.direccion || '';
+                    document.getElementById('ciudad_entrega').value = data.data.ciudad_entrega || '';
+
+                    // Resaltar campos autocompletados brevemente
+                    const campos = ['nombre', 'email', 'tipo_documento', 'numero_documento', 'direccion', 'ciudad_entrega'];
+                    campos.forEach(campo => {
+                        const elemento = document.getElementById(campo);
+                        if (elemento && elemento.value) {
+                            elemento.style.backgroundColor = '#d4edda';
+                            setTimeout(() => {
+                                elemento.style.backgroundColor = '';
+                            }, 2000);
+                        }
+                    });
+
+                    // Mostrar mensaje de éxito
+                    telefonoFeedback.textContent = '✅ ' + data.message;
+                    telefonoFeedback.style.color = '#28a745';
+                    
+                    // Recalcular costo de domicilio si hay dirección
+                    if (data.data.direccion && data.data.ciudad_entrega) {
+                        setTimeout(calcularCostoDomicilio, 500);
+                    }
+                } else {
+                    // Cliente nuevo
+                    telefonoFeedback.textContent = 'ℹ️ ' + data.message;
+                    telefonoFeedback.style.color = '#17a2b8';
+                }
+
+                // Ocultar mensaje después de 5 segundos
+                setTimeout(() => {
+                    telefonoFeedback.style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error al buscar cliente:', error);
+                telefonoFeedback.textContent = '⚠️ Error al buscar datos';
+                telefonoFeedback.style.color = '#dc3545';
+            }
+        }
 
         function validarPedido() {
             const tipo = document.getElementById('tipo_pedido').value;
