@@ -37,6 +37,9 @@ $longitud_cliente = isset($_POST['longitud_cliente']) && !empty($_POST['longitud
 $distancia_km = isset($_POST['distancia_km']) && !empty($_POST['distancia_km']) ? floatval($_POST['distancia_km']) : null;
 $costo_domicilio = isset($_POST['costo_domicilio']) && !empty($_POST['costo_domicilio']) ? floatval($_POST['costo_domicilio']) : null;
 
+// Método de pago seleccionado
+$metodo_pago_seleccionado = isset($_POST['metodo_pago_seleccionado']) ? trim($_POST['metodo_pago_seleccionado']) : 'efectivo';
+
 // Validaciones básicas
 if (empty($nombre_cliente) || empty($telefono) || empty($direccion)) {
     header("Location: checkout.php?error=Faltan datos obligatorios");
@@ -202,9 +205,58 @@ try {
     
     $conn->close();
     
-    // Redirigir a página de confirmación con el número de pedido
-    header("Location: confirmacion_pedido.php?numero=" . $numero_pedido);
-    exit;
+    // Redirigir según método de pago
+    if ($metodo_pago_seleccionado === 'bold') {
+        // Pago con Bold - crear orden de pago
+        require_once 'includes/bold_client.php';
+        
+        try {
+            $envFile = __DIR__ . '/.env.bold';
+            $config = parse_ini_file($envFile);
+            
+            $datosOrden = [
+                'monto' => $total,
+                'descripcion' => 'Pedido #' . $numero_pedido,
+                'referencia' => $numero_pedido,
+                'url_retorno' => $config['BOLD_RETURN_URL'] . '?pedido_id=' . $pedido_id,
+                'url_webhook' => $config['BOLD_WEBHOOK_URL'],
+                'cliente_nombre' => $nombre_cliente,
+                'cliente_email' => $email,
+                'cliente_telefono' => $telefono,
+                'tipo_documento' => $tipo_documento,
+                'numero_documento' => $numero_documento
+            ];
+            
+            $bold = new BoldClient();
+            $respuesta = $bold->crearOrdenPago($datosOrden);
+            
+            // Guardar transacción en BD
+            $conn = getDatabaseConnection();
+            $stmt = $conn->prepare("INSERT INTO pagos_bold (pedido_id, bold_transaction_id, bold_order_id, monto, estado, datos_bold) VALUES (?, ?, ?, ?, 'pendiente', ?)");
+            
+            $transactionId = $respuesta['data']['id'] ?? '';
+            $orderId = $respuesta['data']['orderId'] ?? '';
+            $datosBold = json_encode($respuesta);
+            
+            $stmt->bind_param("issds", $pedido_id, $transactionId, $orderId, $total, $datosBold);
+            $stmt->execute();
+            $conn->close();
+            
+            // Redirigir a checkout de Bold
+            $checkoutUrl = $bold->getCheckoutUrl($orderId);
+            header("Location: " . $checkoutUrl);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Error al crear pago Bold: " . $e->getMessage());
+            header("Location: confirmacion_pedido.php?numero=" . $numero_pedido . "&error=pago");
+            exit;
+        }
+    } else {
+        // Pago en efectivo - redirigir a confirmación normal
+        header("Location: confirmacion_pedido.php?numero=" . $numero_pedido);
+        exit;
+    }
     
 } catch (Exception $e) {
     // Revertir transacción en caso de error

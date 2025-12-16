@@ -348,6 +348,21 @@
                     <!-- Se llena con JavaScript -->
                 </div>
                 
+                <h2 class="section-title" style="margin-top: 40px;">💳 Método de Pago</h2>
+                
+                <div class="payment-methods" style="margin-bottom: 30px;">
+                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="metodo_pago_seleccionado" value="efectivo" checked style="margin-right: 10px;">
+                        <span style="font-size: 1.1em;">💵 Pago en Efectivo (Contra entrega)</span>
+                    </label>
+                    
+                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                        <input type="radio" name="metodo_pago_seleccionado" value="bold" style="margin-right: 10px;">
+                        <span style="font-size: 1.1em;">💳 Pagar con Tarjeta (Bold)</span>
+                        <img src="https://bold.co/wp-content/uploads/2021/03/logo-bold.svg" alt="Bold" style="height: 20px; margin-left: auto;">
+                    </label>
+                </div>
+                
                 <input type="hidden" id="carritoData" name="carrito">
                 <input type="hidden" id="totalData" name="total">
                 <input type="hidden" id="tipo_pedido" name="tipo_pedido" value="domicilio">
