@@ -63,7 +63,6 @@ class MercadoPagoClient {
                 'failure' => $data['url_retorno'],
                 'pending' => $data['url_retorno']
             ],
-            'auto_return' => 'approved',
             'external_reference' => $data['referencia'],
             'notification_url' => $data['url_webhook']
         ];
