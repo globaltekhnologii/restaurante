@@ -498,6 +498,19 @@ require_once 'includes/info_negocio.php';
                 <div class="number"><?php echo $stats['veganos']; ?></div>
             </div>
         </div>
+        
+        <!-- Acceso Rápido a Configuración de Pagos -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="color: white; margin: 0 0 10px 0;">💳 Configuración de Pasarelas de Pago</h3>
+                    <p style="color: rgba(255,255,255,0.9); margin: 0;">Gestiona Bold, Mercado Pago y métodos de pago</p>
+                </div>
+                <a href="admin_config_pagos.php" style="background: white; color: #667eea; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: all 0.3s;">
+                    ⚙️ Configurar Pagos
+                </a>
+            </div>
+        </div>
         <!-- Mensajes de Feedback -->
         <?php if(isset($_GET['success'])): ?>
         <div style="background: #d4edda; border-left: 4px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: slideDown 0.5s ease;">

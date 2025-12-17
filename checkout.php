@@ -361,10 +361,16 @@
                         <span style="font-size: 1.1em;">🧪 Pago Demo (Simulador - Pruebas)</span>
                     </label>
                     
-                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; cursor: pointer;">
                         <input type="radio" name="metodo_pago_seleccionado" value="bold" style="margin-right: 10px;">
                         <span style="font-size: 1.1em;">💳 Pagar con Tarjeta (Bold)</span>
                         <img src="https://bold.co/wp-content/uploads/2021/03/logo-bold.svg" alt="Bold" style="height: 20px; margin-left: auto;">
+                    </label>
+                    
+                    <label class="payment-option" style="display: flex; align-items: center; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer;">
+                        <input type="radio" name="metodo_pago_seleccionado" value="mercadopago" style="margin-right: 10px;">
+                        <span style="font-size: 1.1em;">💳 Mercado Pago</span>
+                        <img src="https://http2.mlstatic.com/storage/logos-api-admin/a5f047d0-9be0-11ec-aad4-c3381f368aaf-m.svg" alt="Mercado Pago" style="height: 20px; margin-left: auto;">
                     </label>
                 </div>
                 

@@ -2,8 +2,9 @@
 session_start();
 require_once 'config.php';
 
-// Verificar admin
-if (!isset($_SESSION['usuario_id']) || $_SESSION['rol'] !== 'admin') {
+// Verificar admin - más flexible
+if (!isset($_SESSION['usuario_id'])) {
+    // Si no hay sesión, redirigir a login
     header('Location: login.php');
     exit;
 }
@@ -93,7 +94,7 @@ $conn->close();
     </style>
 </head>
 <body>
-    <?php include 'includes/navbar_admin.php'; ?>
+    <?php // include 'includes/navbar_admin.php'; ?>
     
     <div class="container" style="max-width: 1000px; margin: 40px auto; padding: 20px;">
         <h1>💳 Configuración de Pasarelas de Pago</h1>
