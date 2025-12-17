@@ -59,9 +59,9 @@ class MercadoPagoClient {
                 ]
             ],
             'back_urls' => [
-                'success' => $data['url_retorno'] . '&status=success',
-                'failure' => $data['url_retorno'] . '&status=failure',
-                'pending' => $data['url_retorno'] . '&status=pending'
+                'success' => $data['url_retorno'],
+                'failure' => $data['url_retorno'],
+                'pending' => $data['url_retorno']
             ],
             'auto_return' => 'approved',
             'external_reference' => $data['referencia'],
