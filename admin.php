@@ -506,7 +506,7 @@ require_once 'includes/info_negocio.php';
                     <h3 style="color: white; margin: 0 0 10px 0;">💳 Configuración de Pasarelas de Pago</h3>
                     <p style="color: rgba(255,255,255,0.9); margin: 0;">Gestiona Bold, Mercado Pago y métodos de pago</p>
                 </div>
-                <a href="admin_config_pagos.php" style="background: white; color: #667eea; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: all 0.3s;">
+                <a href="config_pagos_simple.php" style="background: white; color: #667eea; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: all 0.3s;">
                     ⚙️ Configurar Pagos
                 </a>
             </div>
