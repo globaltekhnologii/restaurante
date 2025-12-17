@@ -511,6 +511,20 @@ require_once 'includes/info_negocio.php';
                 </a>
             </div>
         </div>
+        
+        <!-- Banner de Configuración de Pagos -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h3 style="color: white; margin: 0 0 8px 0; font-size: 20px;">💳 Configuración de Pasarelas de Pago</h3>
+                    <p style="color: rgba(255,255,255,0.95); margin: 0; font-size: 14px;">Gestiona Bold, Mercado Pago y otros métodos de pago</p>
+                </div>
+                <a href="config_pagos_simple.php" style="background: white; color: #667eea; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.15); white-space: nowrap;">
+                    ⚙️ Configurar Pagos
+                </a>
+            </div>
+        </div>
+        
         <!-- Mensajes de Feedback -->
         <?php if(isset($_GET['success'])): ?>
         <div style="background: #d4edda; border-left: 4px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; animation: slideDown 0.5s ease;">
