@@ -252,6 +252,46 @@ try {
             header("Location: confirmacion_pedido.php?numero=" . $numero_pedido . "&error=pago");
             exit;
         }
+    } elseif ($metodo_pago_seleccionado === 'mercadopago') {
+        // Pago con Mercado Pago
+        require_once 'includes/mercadopago_client.php';
+        
+        try {
+            $datosPreferencia = [
+                'monto' => $total,
+                'descripcion' => 'Pedido #' . $numero_pedido,
+                'referencia' => $numero_pedido,
+                'url_retorno' => 'http://localhost/Restaurante/pago_confirmacion.php?pedido_id=' . $pedido_id,
+                'url_webhook' => 'http://localhost/Restaurante/api/webhook_mercadopago.php',
+                'cliente_nombre' => $nombre_cliente,
+                'cliente_email' => $email ?: 'cliente@ejemplo.com',
+                'cliente_telefono' => $telefono,
+                'tipo_documento' => $tipo_documento ?: 'CC',
+                'numero_documento' => $numero_documento ?: '12345678'
+            ];
+            
+            $mp = new MercadoPagoClient();
+            $respuesta = $mp->crearPreferencia($datosPreferencia);
+            
+            $conn = getDatabaseConnection();
+            $stmt = $conn->prepare("INSERT INTO pagos_bold (pedido_id, bold_transaction_id, bold_order_id, monto, estado, datos_bold) VALUES (?, ?, ?, ?, 'pendiente', ?)");
+            
+            $preferenceId = $respuesta['id'] ?? '';
+            $initPoint = $respuesta['init_point'] ?? '';
+            $datosMp = json_encode($respuesta);
+            
+            $stmt->bind_param("issds", $pedido_id, $preferenceId, $initPoint, $total, $datosMp);
+            $stmt->execute();
+            $conn->close();
+            
+            header("Location: " . $initPoint);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log("Error Mercado Pago: " . $e->getMessage());
+            header("Location: confirmacion_pedido.php?numero=" . $numero_pedido . "&error=pago_mp");
+            exit;
+        }
     } elseif ($metodo_pago_seleccionado === 'demo') {
         // Pago Demo - Simulador local
         header("Location: pago_demo.php?pedido_id=" . $pedido_id . "&monto=" . $total);
