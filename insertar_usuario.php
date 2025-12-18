@@ -2,7 +2,11 @@
 session_start();
 
 // Verificar sesión y rol de administrador
+// Verificar sesión y rol de administrador
 require_once 'auth_helper.php';
+require_once 'includes/csrf_helper.php';
+require_once 'includes/sanitize_helper.php'; // Sanitización
+
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
@@ -14,13 +18,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// Obtener y validar datos
-$usuario = trim($_POST['usuario']);
-$nombre = trim($_POST['nombre']);
-$email = trim($_POST['email']);
-$telefono = trim($_POST['telefono'] ?? '');
-$rol = $_POST['rol'];
-$clave = $_POST['clave'];
+// Validar Token CSRF
+verificarTokenOError();
+
+// Obtener y validar datos con sanitización
+$usuario = cleanString($_POST['usuario']);
+$nombre = cleanString($_POST['nombre']);
+$email = cleanEmail($_POST['email']); // Sanitización específica para email
+$telefono = cleanString($_POST['telefono'] ?? '');
+$rol = cleanString($_POST['rol']);
+$clave = $_POST['clave']; // No sanitizar contraseñas (pueden tener caracteres especiales)
 $clave_confirm = $_POST['clave_confirm'];
 
 // Validaciones

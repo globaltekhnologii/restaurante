@@ -85,6 +85,7 @@ require_once 'includes/info_negocio.php';
         <?php endif; ?>
 
         <form action="guardar_configuracion.php" method="POST" enctype="multipart/form-data">
+            <?php require_once 'includes/csrf_helper.php'; echo csrf_field(); ?>
             <div class="card">
                 <h2>🏢 Información Básica</h2>
                 <div class="form-group">

@@ -12,6 +12,9 @@ $pedido_id = intval($_GET['pedido_id']);
 require_once 'config.php';
 $conn = getDatabaseConnection();
 
+// Cargar información del negocio
+require_once 'includes/info_negocio.php';
+
 // Obtener información del pedido y pago
 $sql = "SELECT p.*, pg.*, m.numero_mesa, u.nombre as mesero_nombre,
         mp.nombre_display as metodo_nombre
@@ -48,7 +51,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprobante de Pago - <?php echo $result['numero_pedido']; ?></title>
+    <title>Comprobante de Pago - <?php echo $result['numero_pedido']; ?> - <?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></title>
     <style>
         body {
             font-family: 'Courier New', Courier, monospace;
@@ -172,10 +175,12 @@ $conn->close();
     <a href="#" onclick="window.print(); return false;" class="btn-print no-print">🖨️ IMPRIMIR COMPROBANTE</a>
 
     <div class="header">
-        <div class="logo">RESTAURANTE EL SABOR</div>
-        <div>NIT: 900.123.456-7</div>
-        <div>Calle 123 # 45-67</div>
-        <div>Tel: 300 123 4567</div>
+        <div class="logo"><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></div>
+        <?php if (!empty($info_negocio['nit'])): ?>
+            <div>NIT: <?php echo htmlspecialchars($info_negocio['nit']); ?></div>
+        <?php endif; ?>
+        <div><?php echo htmlspecialchars($info_negocio['direccion']); ?></div>
+        <div>Tel: <?php echo htmlspecialchars($info_negocio['telefono']); ?></div>
     </div>
 
     <div class="comprobante-title">
@@ -278,9 +283,13 @@ $conn->close();
     </div>
 
     <div class="footer">
-        <p><strong>¡Gracias por su compra!</strong></p>
-        <p>Este es un comprobante válido de pago</p>
-        <p style="margin-top: 10px;">Restaurante El Sabor - Sistema v2.0</p>
+        <?php if (!empty($info_negocio['mensaje_pie_factura'])): ?>
+            <p><?php echo nl2br(htmlspecialchars($info_negocio['mensaje_pie_factura'])); ?></p>
+        <?php else: ?>
+            <p><strong>¡Gracias por su compra!</strong></p>
+            <p>Este es un comprobante válido de pago</p>
+        <?php endif; ?>
+        <p style="margin-top: 10px; font-size: 0.9em; color: #666;"><?php echo htmlspecialchars($info_negocio['nombre_restaurante']); ?></p>
     </div>
 
     <script>

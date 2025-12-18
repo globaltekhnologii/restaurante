@@ -7,6 +7,7 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/csrf_helper.php';
 $conn = getDatabaseConnection();
 
 // Obtener estadísticas de usuarios
@@ -445,9 +446,21 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
                     // No permitir desactivar/eliminar al último admin
                     if ($row['rol'] != 'admin' || $stats['admins'] > 1) {
                         if ($row['activo']) {
-                            echo '<a href="toggle_usuario.php?id=' . $row['id'] . '&accion=desactivar" class="btn btn-small btn-delete" onclick="return confirm(\'¿Desactivar este usuario?\')">🚫 Desactivar</a>';
+                            // Cambio: Formulario POST para desactivar
+                            echo '<form action="toggle_usuario.php" method="POST" style="display:inline;" onsubmit="return confirm(\'¿Desactivar este usuario?\')">';
+                            echo '<input type="hidden" name="id" value="' . $row['id'] . '">';
+                            echo '<input type="hidden" name="accion" value="desactivar">';
+                            echo csrf_field();
+                            echo '<button type="submit" class="btn btn-small btn-delete">🚫 Desactivar</button>';
+                            echo '</form>';
                         } else {
-                            echo '<a href="toggle_usuario.php?id=' . $row['id'] . '&accion=activar" class="btn btn-small btn-activate">✅ Activar</a>';
+                            // Cambio: Formulario POST para activar
+                            echo '<form action="toggle_usuario.php" method="POST" style="display:inline;">';
+                            echo '<input type="hidden" name="id" value="' . $row['id'] . '">';
+                            echo '<input type="hidden" name="accion" value="activar">';
+                            echo csrf_field();
+                            echo '<button type="submit" class="btn btn-small btn-activate">✅ Activar</button>';
+                            echo '</form>';
                         }
                     }
                     

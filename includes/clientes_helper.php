@@ -207,4 +207,3 @@ function nombreCompletoCliente($cliente) {
     $nombre = trim($cliente['nombre'] . ' ' . ($cliente['apellido'] ?? ''));
     return $nombre;
 }
-?>

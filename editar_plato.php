@@ -16,6 +16,7 @@ $id_plato = $_GET['id'];
 
 // Usar configuración centralizada
 require_once 'config.php';
+require_once 'includes/csrf_helper.php';
 $conn = getDatabaseConnection();
 
 // Obtener datos del plato
@@ -563,11 +564,14 @@ $stmt->close();
             <div class="danger-zone">
                 <h3>⚠️ Zona de Peligro</h3>
                 <p>Una vez que elimines este plato, no podrás recuperarlo.</p>
-                <a href="borrar_plato.php?id=<?php echo $plato['id']; ?>" 
-                   class="btn btn-danger"
-                   onclick="return confirm('⚠️ ¿Estás completamente seguro de eliminar este plato?\n\nNombre: <?php echo htmlspecialchars($plato['nombre']); ?>\n\nEsta acción no se puede deshacer.')">
-                    🗑️ Eliminar Plato Permanentemente
-                </a>
+                
+                <form action="borrar_plato.php" method="POST" onsubmit="return confirm('⚠️ ¿Estás completamente seguro de eliminar este plato?\n\nNombre: <?php echo htmlspecialchars($plato['nombre']); ?>\n\nEsta acción no se puede deshacer.');">
+                    <input type="hidden" name="id" value="<?php echo $plato['id']; ?>">
+                    <?php echo csrf_field(); ?>
+                    <button type="submit" class="btn btn-danger" style="width: auto;">
+                        🗑️ Eliminar Plato Permanentemente
+                    </button>
+                </form>
             </div>
 
         </div>

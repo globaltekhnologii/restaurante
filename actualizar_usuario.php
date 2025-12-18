@@ -2,7 +2,11 @@
 session_start();
 
 // Verificar sesión y rol de administrador
+// Verificar sesión y rol de administrador
 require_once 'auth_helper.php';
+require_once 'includes/csrf_helper.php';
+require_once 'includes/sanitize_helper.php'; 
+
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
@@ -14,15 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Validar Token CSRF
+verificarTokenOError();
+
 // Obtener y validar datos
-$id = intval($_POST['id']);
-$usuario = trim($_POST['usuario']);
-$nombre = trim($_POST['nombre']);
-$email = trim($_POST['email']);
-$telefono = trim($_POST['telefono'] ?? '');
-$rol = $_POST['rol'];
-$clave = isset($_POST['clave']) ? trim($_POST['clave']) : '';
-$clave_confirm = isset($_POST['clave_confirm']) ? trim($_POST['clave_confirm']) : '';
+$id = cleanInt($_POST['id']);
+$usuario = cleanString($_POST['usuario']);
+$nombre = cleanString($_POST['nombre']);
+$email = cleanEmail($_POST['email']);
+$telefono = cleanString($_POST['telefono'] ?? '');
+$rol = cleanString($_POST['rol']);
+$clave = isset($_POST['clave']) ? $_POST['clave'] : '';
+$clave_confirm = isset($_POST['clave_confirm']) ? $_POST['clave_confirm'] : '';
 
 // Validaciones básicas
 if (empty($usuario) || empty($nombre) || empty($rol)) {

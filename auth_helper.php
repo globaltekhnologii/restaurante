@@ -7,7 +7,18 @@
  */
 function verificarSesion() {
     if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+        // Configuración segura de sesión
+        ini_set('session.cookie_httponly', 1);
+        ini_set('session.cookie_samesite', 'Strict');
+        
+        // Solo marcar Secure si estamos en HTTPS (para no romper localhost simple http)
+        if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+            ini_set('session.cookie_secure', 1);
+        }
+        
+        if (!headers_sent()) {
+            session_start();
+        }
     }
     
     if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {

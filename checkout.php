@@ -1,3 +1,7 @@
+<?php
+require_once 'config.php';
+require_once 'includes/csrf_helper.php';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -204,6 +208,7 @@
         <div class="checkout-card">
             
             <form id="checkoutForm" action="procesar_pedido.php" method="POST">
+                <?php echo csrf_field(); ?>
                 
                 <!-- TIPO DE PEDIDO -->
                 <h2 class="section-title">📋 Tipo de Pedido</h2>

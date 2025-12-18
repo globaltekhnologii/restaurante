@@ -1,0 +1,146 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  EC2_INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+
+jobs:
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sincronizar archivos estáticos a S3
+        run: |
+          # Subir imágenes de platos a S3
+          aws s3 sync ./imagenes_platos s3://${{ env.S3_BUCKET }}/imagenes_platos --delete
+          
+          # Subir imágenes generales
+          aws s3 sync ./img s3://${{ env.S3_BUCKET }}/img --delete
+          
+          # Subir códigos QR
+          aws s3 sync ./imagenes_qr s3://${{ env.S3_BUCKET }}/imagenes_qr --delete
+          
+          # Subir publicidad
+          aws s3 sync ./publicidad s3://${{ env.S3_BUCKET }}/publicidad --delete
+          
+          # Subir archivos CSS y JS
+          aws s3 sync ./css s3://${{ env.S3_BUCKET }}/css --delete
+          aws s3 sync ./js s3://${{ env.S3_BUCKET }}/js --delete
+          
+          # Subir sonidos
+          aws s3 sync ./sounds s3://${{ env.S3_BUCKET }}/sounds --delete
+
+      - name: Crear archivo de despliegue
+        run: |
+          # Crear archivo tar excluyendo archivos innecesarios
+          tar -czf deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='imagenes_platos' \
+            --exclude='img' \
+            --exclude='imagenes_qr' \
+            --exclude='publicidad' \
+            --exclude='backups' \
+            --exclude='*.md' \
+            --exclude='android_app' \
+            --exclude='ChatbotSaaS' \
+            .
+
+      - name: Copiar archivos a EC2
+        run: |
+          # Guardar la clave SSH
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          
+          # Copiar archivo comprimido al servidor
+          scp -i private_key.pem -o StrictHostKeyChecking=no \
+            deploy.tar.gz ec2-user@${{ secrets.EC2_HOST }}:/tmp/
+          
+          # Limpiar clave SSH
+          rm -f private_key.pem
+
+      - name: Desplegar en EC2
+        run: |
+          # Guardar la clave SSH
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          
+          # Conectar y ejecutar comandos de despliegue
+          ssh -i private_key.pem -o StrictHostKeyChecking=no \
+            ec2-user@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            
+            # Ir al directorio de la aplicación
+            cd /var/www/html
+            
+            # Hacer backup de la versión actual
+            sudo tar -czf /home/ec2-user/backups/backup-$(date +%Y%m%d-%H%M%S).tar.gz .
+            
+            # Extraer nueva versión
+            sudo tar -xzf /tmp/deploy.tar.gz -C /var/www/html
+            
+            # Establecer permisos correctos
+            sudo chown -R apache:apache /var/www/html
+            sudo chmod -R 755 /var/www/html
+            
+            # Crear directorios necesarios si no existen
+            sudo mkdir -p /var/www/html/backups
+            sudo chown apache:apache /var/www/html/backups
+            
+            # Reiniciar Apache
+            sudo systemctl restart httpd
+            
+            # Limpiar archivo temporal
+            rm -f /tmp/deploy.tar.gz
+            
+            echo "✅ Despliegue completado exitosamente"
+          ENDSSH
+          
+          # Limpiar clave SSH
+          rm -f private_key.pem
+
+      - name: Verificar estado del servidor
+        run: |
+          echo "🔍 Verificando estado del servidor..."
+          
+          # Esperar un momento para que el servidor reinicie
+          sleep 5
+          
+          # Verificar que el sitio responde
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.EC2_HOST }})
+          
+          if [ $HTTP_STATUS -eq 200 ] || [ $HTTP_STATUS -eq 302 ]; then
+            echo "✅ Servidor respondiendo correctamente (HTTP $HTTP_STATUS)"
+          else
+            echo "⚠️ Advertencia: Servidor respondió con HTTP $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Notificar resultado
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "🚀 Despliegue exitoso a AWS"
+            echo "🌐 URL: http://${{ secrets.EC2_HOST }}"
+          else
+            echo "❌ El despliegue falló"
+          fi

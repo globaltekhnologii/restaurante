@@ -2,20 +2,32 @@
 session_start();
 
 // Verificar sesión y rol de administrador
+// Verificar sesión y rol de administrador
 require_once 'auth_helper.php';
+require_once 'includes/csrf_helper.php';
+require_once 'includes/sanitize_helper.php';
+
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
 
-// Validar parámetros
-if (!isset($_GET['id']) || !isset($_GET['accion'])) {
+// Validar método POST y token CSRF
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header("Location: admin_usuarios.php?error=" . urlencode("Método no permitido. Use el botón de la interfaz."));
+    exit;
+}
+
+verificarTokenOError();
+
+// Validar parámetros (ahora vienen por POST)
+if (!isset($_POST['id']) || !isset($_POST['accion'])) {
     header("Location: admin_usuarios.php?error=" . urlencode("Parámetros inválidos"));
     exit;
 }
 
-$id = intval($_GET['id']);
-$accion = $_GET['accion'];
+$id = cleanInt($_POST['id']);
+$accion = cleanString($_POST['accion']);
 
 if ($accion !== 'activar' && $accion !== 'desactivar') {
     header("Location: admin_usuarios.php?error=" . urlencode("Acción no válida"));

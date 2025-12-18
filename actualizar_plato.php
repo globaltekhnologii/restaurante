@@ -14,6 +14,8 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
 // Usar configuración centralizada
 require_once 'config.php';
 require_once 'file_upload_helper.php';
+require_once 'includes/csrf_helper.php';
+require_once 'includes/sanitize_helper.php';
 
 $conn = getDatabaseConnection();
 
@@ -23,13 +25,16 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
     exit;
 }
 
+// Validar Token CSRF
+verificarTokenOError();
+
 // Recibir y sanitizar datos del formulario
-$id = intval($_POST['id']);
-$nombre = trim($_POST['nombre']);
-$descripcion = trim($_POST['descripcion']);
-$precio = floatval($_POST['precio']);
-$categoria = trim($_POST['categoria']);
-$imagen_actual = $_POST['imagen_actual'];
+$id = cleanInt($_POST['id']);
+$nombre = cleanString($_POST['nombre']);
+$descripcion = cleanHtml($_POST['descripcion']); // HTML permitido
+$precio = cleanFloat($_POST['precio']);
+$categoria = cleanString($_POST['categoria']);
+$imagen_actual = cleanString($_POST['imagen_actual']);
 
 // Checkboxes (0 si no están marcados, 1 si están marcados)
 $popular = isset($_POST['popular']) ? 1 : 0;

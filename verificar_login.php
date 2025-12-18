@@ -3,6 +3,11 @@ session_start();
 
 // Usar configuración centralizada
 require_once 'config.php';
+require_once 'includes/csrf_helper.php';
+
+// Validar CSRF antes de procesar cualquier dato
+verificarTokenOError();
+
 $conn = getDatabaseConnection();
 
 // Obtener datos del formulario

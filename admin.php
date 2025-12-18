@@ -6,6 +6,7 @@ require_once 'auth_helper.php';
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 require_once 'includes/info_negocio.php';
+require_once 'includes/csrf_helper.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -535,6 +536,7 @@ require_once 'includes/info_negocio.php';
             <h2>➕ Añadir Nuevo Plato</h2>
             
             <form action="insertar_plato_con_imagen.php" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="nombre">Nombre del Plato *</label>
@@ -667,7 +669,14 @@ require_once 'includes/info_negocio.php';
                     echo '<td>';
                     echo '<div class="action-buttons">';
                     echo '<a href="editar_plato.php?id=' . $row["id"] . '" class="btn-small btn-edit">✏️ Editar</a>';
-                    echo '<a href="borrar_plato.php?id=' . $row["id"] . '" class="btn-small btn-delete" onclick="return confirm(\'¿Estás seguro de eliminar este plato?\')">🗑️ Borrar</a>';
+                    
+                    // Formulario POST para borrar de forma segura
+                    echo '<form action="borrar_plato.php" method="POST" style="display:inline;" onsubmit="return confirm(\'¿Estás seguro de eliminar este plato?\')">';
+                    echo '<input type="hidden" name="id" value="' . $row["id"] . '">';
+                    echo csrf_field();
+                    echo '<button type="submit" class="btn-small btn-delete">🗑️ Borrar</button>';
+                    echo '</form>';
+                    
                     echo '</div>';
                     echo '</td>';
                     

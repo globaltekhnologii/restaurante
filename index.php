@@ -1,3 +1,6 @@
+<?php
+require_once 'includes/info_negocio.php';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

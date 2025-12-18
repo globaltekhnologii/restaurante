@@ -1,0 +1,38 @@
+runtime: php82
+
+# Configuración de variables de entorno para la base de datos
+# REEMPLAZA LOS VALORES CON TU INFORMACIÓN REAL DE GOOGLE CLOUD
+env_variables:
+  # Nombre de conexión de la instancia: PROJECT_ID:REGION:INSTANCE_ID
+  # Ejemplo: restaurante-app-2025:us-central1:restaurante-db
+  CLOUDSQL_CONNECTION_NAME: "restaurantes-481121:us-central1:restaurante-db"
+  
+  # Usuario de base de datos (por defecto root)
+  DB_USER: "root"
+  
+  # Contraseña de base de datos en la nube (la que configures al crear la instancia)
+  DB_PASSWORD: "Elcabezon11?"
+  
+  # Nombre de la base de datos
+  DB_NAME: "menu_restaurante"
+
+# Manejadores de URL (Routing)
+handlers:
+  # Servir archivos estáticos (imágenes, css, js) directamente
+  - url: /css
+    static_dir: css
+  - url: /js
+    static_dir: js
+  - url: /img
+    static_dir: img
+  - url: /imagenes_platos
+    static_dir: imagenes_platos
+  - url: /sounds
+    static_dir: sounds
+  
+  # Todo lo demás va a index.php o al script correspondiente
+  - url: /.*
+    script: auto
+
+# Ajustes de recursos (opcional, defaults son "F1")
+# instance_class: F1

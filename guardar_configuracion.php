@@ -5,30 +5,35 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/csrf_helper.php';
+require_once 'includes/sanitize_helper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: admin_configuracion.php");
     exit;
 }
 
+// Validar Token CSRF
+verificarTokenOError();
+
 $conn = getDatabaseConnection();
 
-// Obtener datos del formulario
-$nombre_restaurante = trim($_POST['nombre_restaurante']);
-$pais = trim($_POST['pais']);
-$departamento = trim($_POST['departamento']);
-$ciudad = trim($_POST['ciudad']);
-$direccion = trim($_POST['direccion']);
-$telefono = trim($_POST['telefono']);
-$email = trim($_POST['email']);
-$sitio_web = trim($_POST['sitio_web']);
-$facebook = trim($_POST['facebook']);
-$instagram = trim($_POST['instagram']);
-$nit = trim($_POST['nit']);
-$mensaje_pie_factura = trim($_POST['mensaje_pie_factura']);
-$horario_atencion = trim($_POST['horario_atencion']);
-$horario_apertura_domicilios = trim($_POST['horario_apertura_domicilios']);
-$horario_cierre_domicilios = trim($_POST['horario_cierre_domicilios']);
+// Obtener datos del formulario y sanitizar
+$nombre_restaurante = cleanString($_POST['nombre_restaurante']);
+$pais = cleanString($_POST['pais']);
+$departamento = cleanString($_POST['departamento']);
+$ciudad = cleanString($_POST['ciudad']);
+$direccion = cleanString($_POST['direccion']);
+$telefono = cleanString($_POST['telefono']);
+$email = cleanEmail($_POST['email']);
+$sitio_web = cleanString($_POST['sitio_web']);
+$facebook = cleanString($_POST['facebook']);
+$instagram = cleanString($_POST['instagram']);
+$nit = cleanString($_POST['nit']);
+$mensaje_pie_factura = cleanString($_POST['mensaje_pie_factura']);
+$horario_atencion = cleanString($_POST['horario_atencion']);
+$horario_apertura_domicilios = cleanString($_POST['horario_apertura_domicilios']);
+$horario_cierre_domicilios = cleanString($_POST['horario_cierre_domicilios']);
 $domicilios_habilitados = isset($_POST['domicilios_habilitados']) ? 1 : 0;
 
 // Manejar subida de logo
@@ -93,6 +98,10 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);
 
 if ($stmt->execute()) {
+    // Invalidar cache de sesión para que se recargue la nueva info
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    unset($_SESSION['info_negocio']);
+    
     header("Location: admin_configuracion.php?success=Configuración guardada correctamente");
 } else {
     header("Location: admin_configuracion.php?error=Error al guardar: " . $conn->error);

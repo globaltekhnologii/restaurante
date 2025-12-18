@@ -1,9 +1,14 @@
-# Credenciales Bold - NO SUBIR A GITHUB
+vendor/
+node_modules/
 .env
-.env.bold
-.env.local
-.env.production
-
-# Archivos temporales
-*.tmp
-*.temp
+config.php
+backups/
+*.zip
+*.sql
+!database_inventario.sql
+!schema.sql
+.DS_Store
+Thumbs.db
+debug_*.php
+test_*.php
+admin_logs.php

@@ -7,6 +7,7 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/csrf_helper.php';
 
 // Validar parámetro
 if (!isset($_GET['id'])) {
@@ -162,6 +163,7 @@ $stmt->close();
             </div>
 
             <form action="actualizar_usuario.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="id" value="<?php echo $usuario['id']; ?>">
                 
                 <div class="form-grid">

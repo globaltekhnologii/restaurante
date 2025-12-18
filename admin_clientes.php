@@ -433,10 +433,10 @@ if (isset($_GET['ver'])) {
                     <?php while ($cliente = $result_clientes->fetch_assoc()): ?>
                     <tr>
                         <td><?php echo $cliente['id']; ?></td>
-                        <td><?php echo htmlspecialchars($cliente['nombre'] . ' ' . $cliente['apellido']); ?></td>
-                        <td><?php echo htmlspecialchars($cliente['telefono']); ?></td>
-                        <td><?php echo htmlspecialchars($cliente['email']); ?></td>
-                        <td><?php echo htmlspecialchars($cliente['ciudad']); ?></td>
+                        <td><?php echo htmlspecialchars($cliente['nombre'] . ' ' . ($cliente['apellido'] ?? '')); ?></td>
+                        <td><?php echo htmlspecialchars($cliente['telefono'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($cliente['email'] ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($cliente['ciudad'] ?? ''); ?></td>
                         <td><?php echo $cliente['total_pedidos']; ?></td>
                         <td><?php echo $cliente['ultimo_pedido'] ? date('d/m/Y', strtotime($cliente['ultimo_pedido'])) : '-'; ?></td>
                         <td>
@@ -593,12 +593,12 @@ if (isset($_GET['exportar']) && $_GET['exportar'] === 'excel') {
     while ($row = $result_export->fetch_assoc()) {
         echo "<tr>";
         echo "<td>" . $row['id'] . "</td>";
-        echo "<td>" . htmlspecialchars($row['nombre']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['apellido']) . "</td>";
-        echo "<td>" . $row['telefono'] . "</td>";
-        echo "<td>" . htmlspecialchars($row['email']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['direccion_principal']) . "</td>";
-        echo "<td>" . htmlspecialchars($row['ciudad']) . "</td>";
+        echo "<td>" . htmlspecialchars($row['nombre'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($row['apellido'] ?? '') . "</td>";
+        echo "<td>" . ($row['telefono'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($row['email'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($row['direccion_principal'] ?? '') . "</td>";
+        echo "<td>" . htmlspecialchars($row['ciudad'] ?? '') . "</td>";
         echo "<td>" . $row['total_pedidos'] . "</td>";
         echo "<td>" . $row['ultimo_pedido'] . "</td>";
         echo "<td>" . $row['fecha_registro']. "</td>";

@@ -6,6 +6,9 @@ verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
 require_once 'includes/info_negocio.php';
+require_once 'includes/csrf_helper.php';     // Protección CSRF
+require_once 'includes/sanitize_helper.php'; // Sanitización
+
 $conn = getDatabaseConnection();
 
 $mensaje = '';
@@ -13,12 +16,24 @@ $tipo_mensaje = '';
 
 // CRUD de proveedores
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // 1. Verificar CSRF antes de nada
+    verificarTokenOError();
+    
     if (isset($_POST['accion'])) {
+        // Sanitizar datos comunes
+        $nombre = cleanString($_POST['nombre'] ?? '');
+        $contacto = cleanString($_POST['contacto'] ?? '');
+        $telefono = cleanString($_POST['telefono'] ?? '');
+        $email = cleanEmail($_POST['email'] ?? '');
+        $direccion = cleanString($_POST['direccion'] ?? '');
+        $notas = cleanString($_POST['notas'] ?? '');
+        
         switch ($_POST['accion']) {
             case 'crear':
                 $sql = "INSERT INTO proveedores (nombre, contacto, telefono, email, direccion, notas) VALUES (?, ?, ?, ?, ?, ?)";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssss", $_POST['nombre'], $_POST['contacto'], $_POST['telefono'], $_POST['email'], $_POST['direccion'], $_POST['notas']);
+                $stmt->bind_param("ssssss", $nombre, $contacto, $telefono, $email, $direccion, $notas);
                 
                 if ($stmt->execute()) {
                     $mensaje = "Proveedor creado exitosamente";
@@ -30,9 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'editar':
+                $id = cleanInt($_POST['id']);
                 $sql = "UPDATE proveedores SET nombre=?, contacto=?, telefono=?, email=?, direccion=?, notas=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssssi", $_POST['nombre'], $_POST['contacto'], $_POST['telefono'], $_POST['email'], $_POST['direccion'], $_POST['notas'], $_POST['id']);
+                $stmt->bind_param("ssssssi", $nombre, $contacto, $telefono, $email, $direccion, $notas, $id);
                 
                 if ($stmt->execute()) {
                     $mensaje = "Proveedor actualizado exitosamente";
@@ -44,9 +60,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'eliminar':
-                $conn->query("UPDATE proveedores SET activo = 0 WHERE id = " . $_POST['id']);
-                $mensaje = "Proveedor eliminado exitosamente";
-                $tipo_mensaje = "success";
+                // CORRECCIÓN SQL INJECTION
+                $id = cleanInt($_POST['id']);
+                $stmt = $conn->prepare("UPDATE proveedores SET activo = 0 WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                
+                if ($stmt->execute()) {
+                     $mensaje = "Proveedor eliminado exitosamente";
+                     $tipo_mensaje = "success";
+                } else {
+                     $mensaje = "Error al eliminar";
+                     $tipo_mensaje = "error";
+                }
+                $stmt->close();
                 break;
         }
     }
@@ -114,6 +140,7 @@ $proveedores = $conn->query("SELECT * FROM proveedores WHERE activo = 1 ORDER BY
                                 <td>
                                     <button onclick='editarProveedor(<?php echo json_encode($prov); ?>)' class="btn-small btn-edit">Editar</button>
                                     <form method="POST" style="display: inline;" onsubmit="return confirm('¿Eliminar este proveedor?');">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="accion" value="eliminar">
                                         <input type="hidden" name="id" value="<?php echo $prov['id']; ?>">
                                         <button type="submit" class="btn-small btn-delete">Eliminar</button>
@@ -137,6 +164,7 @@ $proveedores = $conn->query("SELECT * FROM proveedores WHERE activo = 1 ORDER BY
         <div style="background: white; border-radius: 16px; padding: 32px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
             <h2 id="modalTitulo">Nuevo Proveedor</h2>
             <form id="formProveedor" method="POST">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="accion" id="accion" value="crear">
                 <input type="hidden" name="id" id="proveedor_id">
                 
@@ -176,13 +204,20 @@ $proveedores = $conn->query("SELECT * FROM proveedores WHERE activo = 1 ORDER BY
             </form>
         </div>
     </div>
-
+    
     <script>
         function mostrarModal() {
             document.getElementById('modalProveedor').style.display = 'flex';
             document.getElementById('modalTitulo').textContent = 'Nuevo Proveedor';
+            // Resetear form pero mantener token CSRF? 
+            // Mejor resetear inputs manual o reload, pero el reset() borrar ocultos.
+            // Guardamos el token antes de reset
+            const form = document.getElementById('formProveedor');
+            const token = form.querySelector('input[name="csrf_token"]').value;
+            form.reset();
+            form.querySelector('input[name="csrf_token"]').value = token;
+            
             document.getElementById('accion').value = 'crear';
-            document.getElementById('formProveedor').reset();
         }
 
         function editarProveedor(prov) {

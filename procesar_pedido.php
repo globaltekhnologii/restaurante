@@ -8,7 +8,7 @@ error_reporting(E_ALL);
 
 // Usar configuración centralizada
 require_once 'config.php';
-require_once 'config.php';
+require_once 'includes/csrf_helper.php';
 require_once 'includes/functions_inventario.php';
 $conn = getDatabaseConnection();
 
@@ -17,6 +17,9 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: index.php");
     exit;
 }
+
+// Validar CSRF
+verificarTokenOError();
 
 // Recibir y sanitizar datos del formulario
 $nombre_cliente = trim($_POST['nombre']);
