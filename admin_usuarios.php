@@ -336,6 +336,7 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
         <div id="formNuevoUsuario" class="section" style="display: none;">
             <h2>➕ Nuevo Usuario</h2>
             <form action="insertar_usuario.php" method="POST">
+                <?php echo csrf_field(); ?>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
                     <div>
                         <label style="display: block; margin-bottom: 8px; font-weight: 600;">Usuario *</label>
