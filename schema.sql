@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   `email` varchar(100) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
   `menu_permisos` text DEFAULT NULL,
+  `ultimo_acceso` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `usuario` (`usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

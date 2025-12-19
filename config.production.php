@@ -41,11 +41,13 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 ini_set('error_log', LOG_PATH . '/php_errors.log');
 
-// Configuración de Sesión Segura
-ini_set('session.cookie_httponly', 1);
-ini_set('session.use_strict_mode', 1);
-ini_set('session.cookie_secure', 1); // Requiere HTTPS
-ini_set('session.cookie_samesite', 'Strict');
+// Configuración de Sesión Segura (Solo si no ha iniciado sesión)
+if (session_status() == PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_strict_mode', 1);
+    ini_set('session.cookie_secure', 1); // Requiere HTTPS
+    ini_set('session.cookie_samesite', 'Strict');
+}
 
 /**
  * FUNCIONES GLOBALES DE CONEXIÓN
