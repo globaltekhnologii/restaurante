@@ -18,9 +18,9 @@ if ($action === 'check') {
     // Por simplicidad, intentamos pull directo y capturamos resultado.
     $output = "Listo para buscar actualizaciones.";
 } elseif ($action === 'update') {
-    // Definir el comando. 2>&1 redirige errores al output estandar
-    // Añadimos HOME env variable porque git a veces la necesita
-    $cmd = "export HOME=/home/user/web/srv1208645.hstgr.cloud && cd " . __DIR__ . " && git pull origin main 2>&1";
+    // Cambiar al directorio y ejecutar git pull
+    $dir = __DIR__;
+    $cmd = "cd $dir && git pull 2>&1";
     
     // Ejecutar
     $output = shell_exec($cmd);
