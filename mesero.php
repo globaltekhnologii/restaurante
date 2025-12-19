@@ -425,6 +425,31 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
         }
     </style>
     <link rel="stylesheet" href="css/auto_refresh.css">
+    <script>
+        // Funciones UI Globales (Cargadas en Head para evitar ReferenceError)
+        function cambiarTab(tabName, event) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar el tab seleccionado (Fallback seguro si no existe)
+            const tabContent = document.getElementById('tab-' + tabName);
+            if(tabContent) tabContent.classList.add('active');
+            
+            // Usar el evento pasado explícitamente o fallback seguro
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Fallback si no hay evento (ej. llamada manual)
+                const btn = document.querySelector(`button[onclick*="'${tabName}'"]`);
+                if(btn) btn.classList.add('active');
+            }
+        }
+    </script>
 </head>
 <body>
     <!-- Navbar -->
@@ -615,26 +640,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
     </div>
 
     <script>
-        function cambiarTab(tabName, event) {
-            // Ocultar todos los tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar el tab seleccionado
-            document.getElementById('tab-' + tabName).classList.add('active');
-            // Usar el evento pasado explícitamente o fallback seguro
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else {
-                // Fallback si no hay evento (ej. llamada manual)
-                document.querySelector(`button[onclick*="'${tabName}'"]`).classList.add('active');
-            }
-        }
-        
+        // Función utilitaria temporal (será movida al head)
         function ocuparMesa(mesaId) {
             if (confirm('¿Deseas tomar un pedido para esta mesa?')) {
                 window.location.href = 'tomar_pedido_mesero.php?mesa_id=' + mesaId;
