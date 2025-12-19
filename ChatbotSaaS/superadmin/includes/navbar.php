@@ -8,6 +8,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="dashboard.php" class="<?php echo ($current_page == 'dashboard.php') ? 'active' : ''; ?>">Dashboard</a>
         <a href="tenants.php" class="<?php echo ($current_page == 'tenants.php') ? 'active' : ''; ?>">Restaurantes</a>
         <a href="subscriptions.php" class="<?php echo ($current_page == 'subscriptions.php') ? 'active' : ''; ?>">Suscripciones</a>
+        <a href="monitoring.php" class="<?php echo ($current_page == 'monitoring.php') ? 'active' : ''; ?>">📊 Monitoreo</a>
+        <a href="notifications.php" class="<?php echo ($current_page == 'notifications.php') ? 'active' : ''; ?>">🔔 Notificaciones</a>
+        <a href="audit_logs.php" class="<?php echo ($current_page == 'audit_logs.php') ? 'active' : ''; ?>">📝 Auditoría</a>
+        <a href="updates.php" class="<?php echo ($current_page == 'updates.php') ? 'active' : ''; ?>">🔄 Actualizaciones</a>
         <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
             <span><?php echo htmlspecialchars($current_admin['name'] ?? 'Admin'); ?></span>
             <div class="dropdown" style="position: relative; display: inline-block;">

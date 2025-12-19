@@ -153,7 +153,82 @@ $current_admin = getCurrentSuperAdmin();
             color: #1f2937;
         }
         
-    <?php include 'includes/navbar.php'; ?>        
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .navbar-menu a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .navbar-menu a:hover, .navbar-menu a.active {
+            color: #3b82f6;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6b7280;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropbtn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
         .container {
             max-width: 1400px;
             margin: 2rem auto;
@@ -378,6 +453,8 @@ $current_admin = getCurrentSuperAdmin();
 </head>
 <body>
 
+    <?php include 'includes/navbar.php'; ?>
+
     <div class="container">
         <div class="header">
             <h1>Gestión de Restaurantes</h1>
@@ -406,6 +483,7 @@ $current_admin = getCurrentSuperAdmin();
                         <th>Email</th>
                         <th>Teléfono</th>
                         <th>Plan</th>
+                        <th>Tenant Key</th>
                         <th>Estado</th>
                         <th>Suscripción</th>
                         <th>Días Restantes</th>
@@ -423,6 +501,16 @@ $current_admin = getCurrentSuperAdmin();
                             <td><?php echo htmlspecialchars($tenant['owner_email']); ?></td>
                             <td><?php echo htmlspecialchars($tenant['phone'] ?? 'N/A'); ?></td>
                             <td><?php echo getPlanBadge($tenant['plan']); ?></td>
+                            <td>
+                                <?php if (!empty($tenant['tenant_key'])): ?>
+                                    <code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;" 
+                                          title="<?php echo htmlspecialchars($tenant['tenant_key']); ?>">
+                                        <?php echo htmlspecialchars(substr($tenant['tenant_key'], 0, 20)); ?>...
+                                    </code>
+                                <?php else: ?>
+                                    <span style="color: #ef4444;">No generado</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <span class="status-indicator <?php echo $tenant['status']; ?>"></span>
                                 <?php echo getStatusBadge($tenant['status']); ?>
@@ -468,6 +556,14 @@ $current_admin = getCurrentSuperAdmin();
                                             onclick="openExtendModal(<?php echo $tenant['id']; ?>)">
                                         Extender
                                     </button>
+                                    
+                                    <?php if (!empty($tenant['tenant_key'])): ?>
+                                        <a href="generate_tenant_config.php?tenant_id=<?php echo $tenant['id']; ?>" 
+                                           class="btn btn-primary btn-sm" 
+                                           title="Descargar archivo de configuración">
+                                            📥 Config
+                                        </a>
+                                    <?php endif; ?>
                                     
                                     <form method="POST" style="display:inline;" 
                                           onsubmit="return confirm('¿Estás seguro de eliminar este restaurante?');">

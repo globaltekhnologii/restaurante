@@ -46,6 +46,37 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] == 0) {
     }
 }
 
+// ============================================
+// VALIDACIÓN DE LÍMITES DEL PLAN (Tenant ID)
+// ============================================
+if (file_exists(__DIR__ . '/tenant_config.php')) {
+    require_once __DIR__ . '/tenant_config.php';
+    require_once __DIR__ . '/includes/tenant_limits.php';
+    
+    // Verificar límite de platos
+    $limitCheck = checkCanAddMenuItem();
+    
+    if (!$limitCheck['allowed']) {
+        $conn->close();
+        header("Location: admin.php?error=" . urlencode($limitCheck['message']));
+        exit;
+    }
+    
+    // Si hay imagen, verificar límite de almacenamiento
+    if (!empty($imagen_ruta) && file_exists($imagen_ruta)) {
+        $fileSize = filesize($imagen_ruta);
+        $storageCheck = checkStorageLimit($fileSize);
+        
+        if (!$storageCheck['allowed']) {
+            // Eliminar imagen subida
+            unlink($imagen_ruta);
+            $conn->close();
+            header("Location: admin.php?error=" . urlencode($storageCheck['message']));
+            exit;
+        }
+    }
+}
+
 // Preparar consulta SQL con los nuevos campos
 $stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 $stmt->bind_param("ssdssiii", $nombre, $descripcion, $precio, $imagen_ruta, $categoria, $popular, $nuevo, $vegano);

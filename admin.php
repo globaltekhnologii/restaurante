@@ -7,6 +7,11 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 require_once 'includes/info_negocio.php';
 require_once 'includes/csrf_helper.php';
+
+// Cargar configuración de tenant si existe
+if (file_exists(__DIR__ . '/tenant_config.php')) {
+    require_once __DIR__ . '/tenant_config.php';
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -499,6 +504,13 @@ require_once 'includes/csrf_helper.php';
                 <div class="number"><?php echo $stats['veganos']; ?></div>
             </div>
         </div>
+        
+        <?php
+        // Widget de Uso de Recursos del Tenant (si está configurado)
+        if (file_exists(__DIR__ . '/includes/tenant_usage_widget.php')) {
+            include __DIR__ . '/includes/tenant_usage_widget.php';
+        }
+        ?>
         
         <!-- Banner de Configuración de Pagos -->
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">

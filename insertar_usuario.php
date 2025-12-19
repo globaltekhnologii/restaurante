@@ -69,6 +69,28 @@ if ($result->num_rows > 0) {
 }
 $stmt->close();
 
+// ============================================
+// VALIDACIÓN DE LÍMITES DEL PLAN (Tenant ID)
+// ============================================
+if (file_exists(__DIR__ . '/tenant_config.php')) {
+    require_once __DIR__ . '/tenant_config.php';
+    require_once __DIR__ . '/includes/tenant_limits.php';
+    
+    $limitCheck = checkCanAddUser();
+    
+    if (!$limitCheck['allowed']) {
+        $conn->close();
+        header("Location: admin_usuarios.php?error=" . urlencode($limitCheck['message']));
+        exit;
+    }
+    
+    // Mostrar advertencia si está cerca del límite (>80%)
+    if (isset($limitCheck['percentage']) && $limitCheck['percentage'] >= 80) {
+        // La advertencia se mostrará en admin_usuarios.php
+        $_SESSION['limit_warning'] = $limitCheck['message'];
+    }
+}
+
 // Hashear contraseña
 $clave_hash = password_hash($clave, PASSWORD_DEFAULT);
 

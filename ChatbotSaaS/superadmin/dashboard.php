@@ -77,12 +77,80 @@ $current_admin = getCurrentSuperAdmin();
             color: #1f2937;
         }
         
-    <?php include 'includes/navbar.php'; ?>        
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .navbar-menu a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .navbar-menu a:hover, .navbar-menu a.active {
+            color: #3b82f6;
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
             gap: 0.5rem;
             color: #6b7280;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropbtn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
         }
         
         .container {
@@ -234,6 +302,8 @@ $current_admin = getCurrentSuperAdmin();
     </style>
 </head>
 <body>
+
+    <?php include 'includes/navbar.php'; ?>
 
     <div class="container">
         <h1 style="margin-bottom: 2rem;">Dashboard</h1>
