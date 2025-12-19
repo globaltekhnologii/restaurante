@@ -449,6 +449,20 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                 if(btn) btn.classList.add('active');
             }
         }
+        
+        // Funciones de control de mesas (Globales)
+        function ocuparMesa(mesaId) {
+            if (confirm('¿Deseas tomar un pedido para esta mesa?')) {
+                window.location.href = 'tomar_pedido_mesero.php?mesa_id=' + mesaId;
+            }
+        }
+        
+        function liberarMesa(mesaId) {
+            if (confirm('¿Deseas liberar esta mesa? Asegúrate de que el pedido esté completado.')) {
+                window.location.href = 'liberar_mesa.php?mesa_id=' + mesaId;
+            }
+        }
+    }
     </script>
 </head>
 <body>
@@ -640,19 +654,6 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
     </div>
 
     <script>
-        // Función utilitaria temporal (será movida al head)
-        function ocuparMesa(mesaId) {
-            if (confirm('¿Deseas tomar un pedido para esta mesa?')) {
-                window.location.href = 'tomar_pedido_mesero.php?mesa_id=' + mesaId;
-            }
-        }
-        
-        function liberarMesa(mesaId) {
-            if (confirm('¿Deseas liberar esta mesa? Asegúrate de que el pedido esté completado.')) {
-                window.location.href = 'liberar_mesa.php?mesa_id=' + mesaId;
-            }
-        }
-        
         // Auto-ocultar mensajes
         setTimeout(function() {
             const messages = document.querySelectorAll('.message');
