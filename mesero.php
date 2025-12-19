@@ -486,9 +486,9 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="cambiarTab('mesas')">🪑 Mesas</button>
-            <button class="tab" onclick="cambiarTab('pedidos')">📋 Mis Pedidos Activos</button>
-            <button class="tab" onclick="cambiarTab('nuevo')">➕ Nuevo Pedido</button>
+            <button class="tab active" onclick="cambiarTab('mesas', event)">🪑 Mesas</button>
+            <button class="tab" onclick="cambiarTab('pedidos', event)">📋 Mis Pedidos Activos</button>
+            <button class="tab" onclick="cambiarTab('nuevo', event)">➕ Nuevo Pedido</button>
         </div>
 
         <!-- Tab: Mesas -->
@@ -615,7 +615,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
     </div>
 
     <script>
-        function cambiarTab(tabName) {
+        function cambiarTab(tabName, event) {
             // Ocultar todos los tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -626,7 +626,13 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
             
             // Mostrar el tab seleccionado
             document.getElementById('tab-' + tabName).classList.add('active');
-            event.target.classList.add('active');
+            // Usar el evento pasado explícitamente o fallback seguro
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Fallback si no hay evento (ej. llamada manual)
+                document.querySelector(`button[onclick*="'${tabName}'"]`).classList.add('active');
+            }
         }
         
         function ocuparMesa(mesaId) {
