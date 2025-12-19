@@ -46,4 +46,28 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.use_strict_mode', 1);
 ini_set('session.cookie_secure', 1); // Requiere HTTPS
 ini_set('session.cookie_samesite', 'Strict');
+
+/**
+ * FUNCIONES GLOBALES DE CONEXIÓN
+ * Requeridas por el sistema legacy
+ */
+function getDatabaseConnection() {
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    if ($conn->connect_error) {
+        error_log("Connection failed: " . $conn->connect_error);
+        // Mostrar error genérico en producción
+        die("Error de conexión a la base de datos."); 
+    }
+    $conn->set_charset("utf8mb4");
+    return $conn;
+}
+
+// Alias por compatibilidad
+function getDBConnection() {
+    return getDatabaseConnection();
+}
+
+function closeDatabaseConnection($conn) {
+    if ($conn) $conn->close();
+}
 ?>
