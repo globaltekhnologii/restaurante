@@ -60,14 +60,14 @@ define('PLAN_MAX_STORAGE_MB', 2048);
 // ============================================
 
 // Habilitar sincronización automática
-define('SYNC_ENABLED', true);
+if (!defined('SYNC_ENABLED')) define('SYNC_ENABLED', true);
 
 // Intervalo de sincronización en segundos (por defecto: 1 hora)
-define('SYNC_INTERVAL', 3600);
+if (!defined('SYNC_INTERVAL')) define('SYNC_INTERVAL', 3600);
 
 // Última sincronización (timestamp)
 // Este valor se actualiza automáticamente
-define('LAST_SYNC_TIME', 0);
+if (!defined('LAST_SYNC_TIME')) define('LAST_SYNC_TIME', 0);
 
 // ============================================
 // MODO DE OPERACIÓN
@@ -75,10 +75,10 @@ define('LAST_SYNC_TIME', 0);
 
 // Modo offline: Si está en true, el sistema funciona sin validar límites
 // Útil para desarrollo o cuando el servidor SaaS no está disponible
-define('OFFLINE_MODE', false);
+if (!defined('OFFLINE_MODE')) define('OFFLINE_MODE', false);
 
 // Modo estricto: Si está en true, bloquea acciones que excedan límites
 // Si está en false, solo muestra advertencias
-define('STRICT_LIMITS', true);
+if (!defined('STRICT_LIMITS')) define('STRICT_LIMITS', true);
 
 ?>

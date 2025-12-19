@@ -464,18 +464,11 @@ if (file_exists(__DIR__ . '/tenant_config.php')) {
         
         <?php
         // Conexión a la base de datos
-        $servername = "localhost";
-        $username = "root";
-        $password = "";
-        $dbname = "menu_restaurante";
-
-        $conn = new mysqli($servername, $username, $password, $dbname);
-
-        if ($conn->connect_error) {
-            die("Conexión fallida: " . $conn->connect_error);
+        // Usar función global definida en config.php/info_negocio.php
+        if (!function_exists('getDatabaseConnection')) {
+             require_once 'config.php';
         }
-        
-        $conn->set_charset("utf8mb4");
+        $conn = getDatabaseConnection();
 
         // Obtener estadísticas
         $stats = [];
