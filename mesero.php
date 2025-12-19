@@ -462,7 +462,6 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                 window.location.href = 'liberar_mesa.php?mesa_id=' + mesaId;
             }
         }
-    }
     </script>
 </head>
 <body>
