@@ -453,6 +453,7 @@ if (file_exists(__DIR__ . '/tenant_config.php')) {
             <a href="admin_configuracion_domicilios.php">🗺️ Domicilios GPS</a>
             <a href="admin_publicidad.php">📢 Publicidad</a>
             <a href="admin_respaldos.php">💾 Respaldos</a>
+            <a href="system_updater.php" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; font-weight: 600;">🔄 Actualizar Sistema</a>
             <a href="ver_qr.php" target="_blank">📱 Acceso Móvil</a>
             <a href="index.php" target="_blank">👁️ Ver Menú</a>
             <div class="theme-switcher-container"></div>
