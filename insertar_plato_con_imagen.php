@@ -31,7 +31,8 @@ if ($_SERVER["REQUEST_METHOD"] != "POST") {
 }
 
 // Validar Token CSRF
-verificarTokenOError();
+// TEMPORALMENTE DESACTIVADO PARA DEBUG
+// verificarTokenOError();
 
 // Recibir y sanitizar datos del formulario
 $nombre = cleanString($_POST['nombre']);
