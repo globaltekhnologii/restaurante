@@ -101,7 +101,7 @@ $imagen_ruta = $resultado['ruta'];
 // Preparar y ejecutar la consulta de inserción
 $stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
-$stmt->bind_param("ssdssiiii", 
+$stmt->bind_param("ssssiiii", 
     $nombre, 
     $descripcion, 
     $precio, 
