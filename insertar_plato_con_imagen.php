@@ -71,7 +71,7 @@ if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] == 4) {
 // Si hay errores, redirigir de vuelta con mensaje
 if (!empty($errores)) {
     $mensaje_error = implode(" | ", $errores);
-    closeDatabaseConnection($conn);
+    $conn->close();
     header("Location: admin.php?error=" . urlencode($mensaje_error));
     exit;
 }
@@ -80,7 +80,7 @@ if (!empty($errores)) {
 $validacion = validarImagenSubida($_FILES['imagen']);
 
 if (!$validacion['valido']) {
-    closeDatabaseConnection($conn);
+    $conn->close();
     header("Location: admin.php?error=" . urlencode($validacion['error']));
     exit;
 }
@@ -89,7 +89,7 @@ if (!$validacion['valido']) {
 $resultado = moverArchivoSubido($_FILES['imagen'], 'imagenes_platos/');
 
 if (!$resultado['exito']) {
-    closeDatabaseConnection($conn);
+    $conn->close();
     header("Location: admin.php?error=" . urlencode($resultado['error']));
     exit;
 }
@@ -116,7 +116,7 @@ if ($stmt->execute()) {
     // Inserción exitosa
     $nuevo_id = $stmt->insert_id;
     $stmt->close();
-    closeDatabaseConnection($conn);
+    $conn->close();
     
     // Redirigir con mensaje de éxito
     header("Location: admin.php?success=1&nuevo_id=" . $nuevo_id);
@@ -130,7 +130,7 @@ if ($stmt->execute()) {
     eliminarArchivoSeguro($imagen_ruta);
     
     $stmt->close();
-    closeDatabaseConnection($conn);
+    $conn->close();
     
     // Redirigir con mensaje de error
     header("Location: admin.php?error=Error al guardar el plato en la base de datos. Intenta nuevamente.");
