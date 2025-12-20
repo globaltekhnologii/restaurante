@@ -93,7 +93,7 @@ try {
     
     $estado = 'confirmado';
     $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-    $stmt->bind_param("sssssdsiis", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id, $tipo_pedido);
+    $stmt->bind_param("sssssssiis", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id, $tipo_pedido);
     $stmt->execute();
     $pedido_id = $conn->insert_id;
     $stmt->close();
@@ -107,7 +107,7 @@ try {
         $precio_unitario = $item['precio'];
         $cantidad = $item['cantidad'];
         
-        $stmt->bind_param("iisdi", $pedido_id, $plato_id, $plato_nombre, $precio_unitario, $cantidad);
+        $stmt->bind_param("iissi", $pedido_id, $plato_id, $plato_nombre, $precio_unitario, $cantidad);
         $stmt->execute();
     }
     $stmt->close();
