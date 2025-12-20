@@ -81,7 +81,8 @@ try {
     $stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     echo "✅ Consulta preparada<br>";
     
-    $stmt->bind_param("ssdssiiii", 
+    echo "<h2>7b. Vinculando parámetros...</h2>";
+    $stmt->bind_param("ssssiiii", 
         $nombre, 
         $descripcion, 
         $precio, 
