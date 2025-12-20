@@ -91,38 +91,7 @@ if (!$resultado['exito']) {
 
 $imagen_ruta = $resultado['ruta'];
 
-// ============================================
-// VALIDACIÓN DE LÍMITES DEL PLAN (Tenant ID)
-// ============================================
-if (file_exists(__DIR__ . '/tenant_config.php')) {
-    require_once __DIR__ . '/tenant_config.php';
-    require_once __DIR__ . '/includes/tenant_limits.php';
-    
-    // Verificar límite de platos
-    $limitCheck = checkCanAddMenuItem();
-    
-    if (!$limitCheck['allowed']) {
-        // Eliminar imagen subida
-        eliminarArchivoSeguro($imagen_ruta);
-        closeDatabaseConnection($conn);
-        header("Location: admin.php?error=" . urlencode($limitCheck['message']));
-        exit;
-    }
-    
-    // Verificar límite de almacenamiento
-    if (file_exists($imagen_ruta)) {
-        $fileSize = filesize($imagen_ruta);
-        $storageCheck = checkStorageLimit($fileSize);
-        
-        if (!$storageCheck['allowed']) {
-            // Eliminar imagen subida
-            eliminarArchivoSeguro($imagen_ruta);
-            closeDatabaseConnection($conn);
-            header("Location: admin.php?error=" . urlencode($storageCheck['message']));
-            exit;
-        }
-    }
-}
+// [BLOQUE SAAS ELIMINADO PARA VPS STANDALONE]
 
 // Preparar y ejecutar la consulta de inserción
 $stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
