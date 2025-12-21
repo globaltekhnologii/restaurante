@@ -5,9 +5,11 @@ verificarSesion();
 verificarRolORedirect(['admin'], '../login.php');
 
 require_once '../config.php';
+require_once '../includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 header('Content-Type: application/json');
 
 $conn = getDatabaseConnection();
+$tenant_id = getCurrentTenantId(); // Obtener tenant actual
 $uploadDir = '../publicidad/';
 
 // Asegurar que existe el directorio
@@ -21,27 +23,27 @@ $accion = $_REQUEST['accion'] ?? '';
 try {
     switch ($accion) {
         case 'listar':
-            listarAnuncios($conn);
+            listarAnuncios($conn, $tenant_id);
             break;
             
         case 'crear':
-            crearAnuncio($conn, $uploadDir);
+            crearAnuncio($conn, $uploadDir, $tenant_id);
             break;
             
         case 'actualizar':
-            actualizarAnuncio($conn);
+            actualizarAnuncio($conn, $tenant_id);
             break;
             
         case 'renovar':
-            renovarAnuncio($conn);
+            renovarAnuncio($conn, $tenant_id);
             break;
             
         case 'cambiar_estado':
-            cambiarEstado($conn);
+            cambiarEstado($conn, $tenant_id);
             break;
             
         case 'eliminar':
-            eliminarAnuncio($conn, $uploadDir);
+            eliminarAnuncio($conn, $uploadDir, $tenant_id);
             break;
             
         default:
@@ -56,8 +58,8 @@ $conn->close();
 
 // Funciones Auxiliares
 
-function listarAnuncios($conn) {
-    $sql = "SELECT * FROM publicidad ORDER BY orden ASC, fecha_creacion DESC";
+function listarAnuncios($conn, $tenant_id) {
+    $sql = "SELECT * FROM publicidad WHERE tenant_id = $tenant_id ORDER BY orden ASC, fecha_creacion DESC";
     $result = $conn->query($sql);
     
     $anuncios = [];
@@ -70,7 +72,7 @@ function listarAnuncios($conn) {
     echo json_encode($anuncios);
 }
 
-function crearAnuncio($conn, $uploadDir) {
+function crearAnuncio($conn, $uploadDir, $tenant_id) {
     if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
         throw new Exception('Error al subir archivo');
     }
@@ -101,13 +103,11 @@ function crearAnuncio($conn, $uploadDir) {
         throw new Exception('Error al guardar el archivo en el servidor');
     }
 
-    $sql = "INSERT INTO publicidad (titulo, tipo, archivo_url, link_destino, fecha_inicio, fecha_fin, activo) 
-            VALUES (?, ?, ?, ?, ?, ?, 1)";
+    $sql = "INSERT INTO publicidad (tenant_id, titulo, tipo, archivo_url, link_destino, fecha_inicio, fecha_fin, activo) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
             
     $stmt = $conn->prepare($sql);
-    // Guardamos la ruta absoluta o relativa, aquí guardamos el nombre del archivo para ser flexible
-    // Pero en listar ajustamos la ruta.
-    $stmt->bind_param("ssssss", $titulo, $tipo, $fileName, $link, $inicio, $fin);
+    $stmt->bind_param("issssss", $tenant_id, $titulo, $tipo, $fileName, $link, $inicio, $fin);
     
     if (!$stmt->execute()) {
         unlink($targetPath); // Borrar archivo si falla BD
@@ -117,13 +117,13 @@ function crearAnuncio($conn, $uploadDir) {
     echo json_encode(['success' => true]);
 }
 
-function cambiarEstado($conn) {
+function cambiarEstado($conn, $tenant_id) {
     $id = (int)($_POST['id'] ?? 0);
     $activo = (int)($_POST['activo'] ?? 0);
     
-    $sql = "UPDATE publicidad SET activo = ? WHERE id = ?";
+    $sql = "UPDATE publicidad SET activo = ? WHERE id = ? AND tenant_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ii", $activo, $id);
+    $stmt->bind_param("iii", $activo, $id, $tenant_id);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
@@ -132,13 +132,13 @@ function cambiarEstado($conn) {
     }
 }
 
-function eliminarAnuncio($conn, $uploadDir) {
+function eliminarAnuncio($conn, $uploadDir, $tenant_id) {
     $id = (int)($_POST['id'] ?? 0);
     
     // Obtener archivo para borrar
-    $sql = "SELECT archivo_url FROM publicidad WHERE id = ?";
+    $sql = "SELECT archivo_url FROM publicidad WHERE id = ? AND tenant_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
+    $stmt->bind_param("ii", $id, $tenant_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -149,9 +149,9 @@ function eliminarAnuncio($conn, $uploadDir) {
         }
     }
     
-    $sqlDelete = "DELETE FROM publicidad WHERE id = ?";
+    $sqlDelete = "DELETE FROM publicidad WHERE id = ? AND tenant_id = ?";
     $stmtDelete = $conn->prepare($sqlDelete);
-    $stmtDelete->bind_param("i", $id);
+    $stmtDelete->bind_param("ii", $id, $tenant_id);
     
     if ($stmtDelete->execute()) {
         echo json_encode(['success' => true]);
@@ -160,7 +160,7 @@ function eliminarAnuncio($conn, $uploadDir) {
     }
 }
 
-function actualizarAnuncio($conn) {
+function actualizarAnuncio($conn, $tenant_id) {
     $id = (int)($_POST['id'] ?? 0);
     $titulo = $_POST['titulo'] ?? '';
     $fecha_inicio = !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : NULL;
@@ -173,10 +173,10 @@ function actualizarAnuncio($conn) {
     
     $sql = "UPDATE publicidad 
             SET titulo = ?, fecha_inicio = ?, fecha_fin = ?, link_destino = ? 
-            WHERE id = ?";
+            WHERE id = ? AND tenant_id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssi", $titulo, $fecha_inicio, $fecha_fin, $link_destino, $id);
+    $stmt->bind_param("ssssii", $titulo, $fecha_inicio, $fecha_fin, $link_destino, $id, $tenant_id);
     
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);

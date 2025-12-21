@@ -9,7 +9,12 @@ verificarRolORedirect(['mesero'], 'login.php');
 require_once 'config.php';
 require_once 'config.php';
 require_once 'includes/info_negocio.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Obtener información del mesero
 $mesero_id = $_SESSION['user_id'];
@@ -33,14 +38,14 @@ $stmt->execute();
 $stats['mesas_ocupadas'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
-// Total de mesas
-$stats['total_mesas'] = $conn->query("SELECT COUNT(*) as count FROM mesas")->fetch_assoc()['count'];
+// Total de mesas (FILTRADO POR TENANT)
+$stats['total_mesas'] = $conn->query("SELECT COUNT(*) as count FROM mesas WHERE tenant_id = $tenant_id")->fetch_assoc()['count'];
 
 // Mesas disponibles
-$stats['mesas_disponibles'] = $conn->query("SELECT COUNT(*) as count FROM mesas WHERE estado = 'disponible'")->fetch_assoc()['count'];
+$stats['mesas_disponibles'] = $conn->query("SELECT COUNT(*) as count FROM mesas WHERE tenant_id = $tenant_id AND estado = 'disponible'")->fetch_assoc()['count'];
 
-// Pedidos activos del mesero
-$stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE usuario_id = $mesero_id AND estado IN ('pendiente', 'confirmado', 'preparando')")->fetch_assoc()['count'];
+// Pedidos activos del mesero (FILTRADO POR TENANT)
+$stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND usuario_id = $mesero_id AND estado IN ('pendiente', 'confirmado', 'preparando')")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -540,6 +545,7 @@ $stats['pedidos_activos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos 
                             FROM mesas m 
                             LEFT JOIN pedidos p ON m.pedido_actual = p.id 
                             LEFT JOIN usuarios u ON m.mesero_asignado = u.id 
+                            WHERE m.tenant_id = $tenant_id
                             ORDER BY m.numero_mesa";
                     $result = $conn->query($sql);
                     

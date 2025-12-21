@@ -8,17 +8,22 @@ verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
 require_once 'includes/csrf_helper.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
 
-// Obtener estadísticas de usuarios
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
+
+// Obtener estadísticas de usuarios (FILTRADO POR TENANT)
 $stats = [];
-$stats['total'] = $conn->query("SELECT COUNT(*) as count FROM usuarios")->fetch_assoc()['count'];
-$stats['admins'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'admin'")->fetch_assoc()['count'];
-$stats['meseros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'mesero'")->fetch_assoc()['count'];
-$stats['chefs'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'chef'")->fetch_assoc()['count'];
-$stats['cajeros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'cajero'")->fetch_assoc()['count'];
-$stats['domiciliarios'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE rol = 'domiciliario'")->fetch_assoc()['count'];
-$stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE activo = 1")->fetch_assoc()['count'];
+$stats['total'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id")->fetch_assoc()['count'];
+$stats['admins'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'admin'")->fetch_assoc()['count'];
+$stats['meseros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'mesero'")->fetch_assoc()['count'];
+$stats['chefs'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'chef'")->fetch_assoc()['count'];
+$stats['cajeros'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'cajero'")->fetch_assoc()['count'];
+$stats['domiciliarios'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'domiciliario'")->fetch_assoc()['count'];
+$stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE tenant_id = $tenant_id AND activo = 1")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -403,9 +408,10 @@ $stats['activos'] = $conn->query("SELECT COUNT(*) as count FROM usuarios WHERE a
             </div>
 
             <?php
-            // Obtener todos los usuarios
+            // Obtener todos los usuarios (FILTRADO POR TENANT)
             $sql = "SELECT id, usuario, nombre, email, telefono, rol, activo, fecha_creacion, ultimo_acceso 
                     FROM usuarios 
+                    WHERE tenant_id = $tenant_id
                     ORDER BY rol ASC, nombre ASC";
             $result = $conn->query($sql);
 

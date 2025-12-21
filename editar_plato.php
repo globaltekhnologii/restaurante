@@ -17,11 +17,16 @@ $id_plato = $_GET['id'];
 // Usar configuración centralizada
 require_once 'config.php';
 require_once 'includes/csrf_helper.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
 
-// Obtener datos del plato
-$stmt = $conn->prepare("SELECT * FROM platos WHERE id = ?");
-$stmt->bind_param("i", $id_plato);
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
+
+// Obtener datos del plato (verificando que pertenece al tenant actual)
+$stmt = $conn->prepare("SELECT * FROM platos WHERE id = ? AND tenant_id = ?");
+$stmt->bind_param("ii", $id_plato, $tenant_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

@@ -6,6 +6,7 @@ require_once 'auth_helper.php';
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 require_once 'includes/info_negocio.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 require_once 'includes/csrf_helper.php';
 
 // Cargar configuración de tenant si existe
@@ -471,12 +472,15 @@ if (file_exists(__DIR__ . '/tenant_config.php')) {
         }
         $conn = getDatabaseConnection();
 
-        // Obtener estadísticas
+        // Obtener tenant_id del usuario actual
+        $tenant_id = getCurrentTenantId();
+
+        // Obtener estadísticas filtradas por tenant
         $stats = [];
-        $stats['total'] = $conn->query("SELECT COUNT(*) as count FROM platos")->fetch_assoc()['count'];
-        $stats['populares'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE popular = 1")->fetch_assoc()['count'];
-        $stats['nuevos'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE nuevo = 1")->fetch_assoc()['count'];
-        $stats['veganos'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE vegano = 1")->fetch_assoc()['count'];
+        $stats['total'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE tenant_id = $tenant_id")->fetch_assoc()['count'];
+        $stats['populares'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE tenant_id = $tenant_id AND popular = 1")->fetch_assoc()['count'];
+        $stats['nuevos'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE tenant_id = $tenant_id AND nuevo = 1")->fetch_assoc()['count'];
+        $stats['veganos'] = $conn->query("SELECT COUNT(*) as count FROM platos WHERE tenant_id = $tenant_id AND vegano = 1")->fetch_assoc()['count'];
         ?>
 
         <!-- Tarjetas de Estadísticas -->
@@ -618,13 +622,14 @@ if (file_exists(__DIR__ . '/tenant_config.php')) {
             </div>
             
             <?php
-            // Consulta mejorada con todas las columnas
+            // Consulta mejorada con todas las columnas filtrada por tenant
             $sql = "SELECT id, nombre, descripcion, precio, imagen_ruta, 
                     COALESCE(categoria, 'General') as categoria,
                     COALESCE(popular, 0) as popular,
                     COALESCE(nuevo, 0) as nuevo,
                     COALESCE(vegano, 0) as vegano
                     FROM platos 
+                    WHERE tenant_id = $tenant_id
                     ORDER BY categoria ASC, nombre ASC";
             
             $result = $conn->query($sql);

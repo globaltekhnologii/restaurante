@@ -16,11 +16,15 @@ if (!isset($_GET['id'])) {
 
 $pedido_id = intval($_GET['id']);
 
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
 
-// Verificar que el pedido existe y está en preparación
-$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND estado = 'preparando'");
-$stmt->bind_param("i", $pedido_id);
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
+
+// Verificar que el pedido existe, pertenece al tenant y está en preparación
+$stmt = $conn->prepare("SELECT * FROM pedidos WHERE id = ? AND tenant_id = ? AND estado = 'preparando'");
+$stmt->bind_param("ii", $pedido_id, $tenant_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -54,8 +58,8 @@ if ($pedido_actual['tipo_pedido'] ?? 'domicilio' === 'domicilio') { // Asumiendo
     $es_domicilio = true; // Simplificación, en realidad deberíamos chequear si tiene dirección
     
     if ($es_domicilio) {
-        // Contar domiciliarios activos
-        $count_stmt = $conn->query("SELECT id FROM usuarios WHERE rol = 'domiciliario' AND activo = 1");
+        // Contar domiciliarios activos del mismo tenant
+        $count_stmt = $conn->query("SELECT id FROM usuarios WHERE tenant_id = $tenant_id AND rol = 'domiciliario' AND activo = 1");
         if ($count_stmt->num_rows === 1) {
             // Solo hay uno, asignarlo automáticamente
             $row = $count_stmt->fetch_assoc();

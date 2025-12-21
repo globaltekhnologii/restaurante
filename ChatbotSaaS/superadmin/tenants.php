@@ -27,25 +27,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $subscription_end = date('Y-m-d', strtotime('+30 days'));
         $next_billing_date = date('Y-m-d', strtotime('+30 days'));
         
-        $stmt = $conn->prepare("INSERT INTO saas_tenants 
-            (restaurant_name, owner_email, owner_password, phone, address, plan, 
-             subscription_start, subscription_end, next_billing_date, monthly_fee, status) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')");
+        // Iniciar transacción
+        $conn->begin_transaction();
         
-        $stmt->bind_param("sssssssssd", 
-            $restaurant_name, $owner_email, $password_hash, $phone, $address, $plan,
-            $subscription_start, $subscription_end, $next_billing_date, $monthly_fee
-        );
-        
-        if ($stmt->execute()) {
-            $message = "Restaurante creado exitosamente";
+        try {
+            // Generar tenant_key único
+            $tenant_key = 'tenant_' . uniqid() . '_' . bin2hex(random_bytes(8));
+            
+            // 1. Crear el tenant
+            $stmt = $conn->prepare("INSERT INTO saas_tenants 
+                (restaurant_name, owner_email, owner_password, phone, address, plan, 
+                 subscription_start, subscription_end, next_billing_date, monthly_fee, tenant_key, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')");
+            
+            $stmt->bind_param("sssssssssds", 
+                $restaurant_name, $owner_email, $password_hash, $phone, $address, $plan,
+                $subscription_start, $subscription_end, $next_billing_date, $monthly_fee, $tenant_key
+            );
+            
+            $stmt->execute();
+            $new_tenant_id = $conn->insert_id;
+            $stmt->close();
+            
+            // 2. Crear usuario administrador para el tenant
+            $admin_username = 'admin_' . $new_tenant_id;
+            $admin_nombre = 'Administrador';
+            $admin_password_hash = password_hash($password, PASSWORD_DEFAULT); // Usar la misma contraseña
+            
+            $stmt = $conn->prepare("INSERT INTO usuarios (tenant_id, usuario, clave, nombre, email, rol, activo) 
+                                    VALUES (?, ?, ?, ?, ?, 'admin', 1)");
+            $stmt->bind_param("issss", $new_tenant_id, $admin_username, $admin_password_hash, $admin_nombre, $owner_email);
+            $stmt->execute();
+            $stmt->close();
+            
+            // 3. Crear configuración inicial para el tenant
+            $stmt = $conn->prepare("INSERT INTO configuracion_sistema 
+                (tenant_id, nombre_restaurante, direccion, telefono, email, logo_url) 
+                VALUES (?, ?, ?, ?, ?, 'img/logo_default.png')");
+            $stmt->bind_param("issss", $new_tenant_id, $restaurant_name, $address, $phone, $owner_email);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Confirmar transacción
+            $conn->commit();
+            
+            $message = "Restaurante creado exitosamente.<br>
+                       <strong>Usuario admin:</strong> $admin_username<br>
+                       <strong>Contraseña:</strong> (la misma del tenant)<br>
+                       <strong>Tenant Key:</strong> $tenant_key";
             $message_type = "success";
-        } else {
-            $message = "Error al crear restaurante: " . $stmt->error;
+            
+        } catch (Exception $e) {
+            // Revertir en caso de error
+            $conn->rollback();
+            $message = "Error al crear restaurante: " . $e->getMessage();
             $message_type = "error";
         }
-        
-        $stmt->close();
     }
     elseif ($action === 'update_status') {
         // Actualizar estado

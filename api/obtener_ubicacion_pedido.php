@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 
 require_once '../config.php';
+require_once '../includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 // Validar pedido_id
 if (!isset($_GET['pedido_id'])) {
@@ -12,6 +13,7 @@ if (!isset($_GET['pedido_id'])) {
 
 $pedido_id = intval($_GET['pedido_id']);
 $conn = getDatabaseConnection();
+$tenant_id = getCurrentTenantId(); // Obtener tenant actual
 
 // Obtener ubicación del domiciliario asignado al pedido
 // UNIR con tabla de usuarios para obtener nombre y teléfono
@@ -25,11 +27,11 @@ $sql = "SELECT
             ud.ultima_actualizacion 
         FROM pedidos p 
         JOIN usuarios u ON p.domiciliario_id = u.id 
-        LEFT JOIN ubicacion_domiciliarios ud ON u.id = ud.usuario_id 
-        WHERE p.id = ?";
+        LEFT JOIN ubicacion_domiciliarios ud ON u.id = ud.usuario_id AND ud.tenant_id = ?
+        WHERE p.id = ? AND p.tenant_id = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $pedido_id);
+$stmt->bind_param("iii", $tenant_id, $pedido_id, $tenant_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

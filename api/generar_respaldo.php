@@ -2,8 +2,8 @@
 session_start();
 require_once '../auth_helper.php';
 require_once '../config.php';
+require_once '../includes/tenant_context.php';
 
-// Verificar permisos (solo admin puede respaldar)
 verificarSesion();
 if ($_SESSION['rol'] !== 'admin') {
     http_response_code(403);
@@ -14,99 +14,106 @@ if ($_SESSION['rol'] !== 'admin') {
 header('Content-Type: application/json');
 
 try {
-    // 1. Configuración de Rutas
-    $backupDir = '../backups'; // Carpeta local para guardar
-    if (!file_exists($backupDir)) {
-        if (!mkdir($backupDir, 0777, true)) {
-            throw new Exception("No se pudo crear el directorio de respaldos");
+    $conn = getDatabaseConnection();
+    $tenant_id = getCurrentTenantId();
+    
+    // Configuración de Rutas
+    $backupDir = realpath('../backups');
+    if (!$backupDir) {
+        $backupDir = '../backups';
+        if (!file_exists($backupDir)) {
+            mkdir($backupDir, 0777, true);
         }
+        $backupDir = realpath($backupDir);
     }
     
-    // Proteger directorio (crear .htaccess si no existe)
+    // Proteger directorio
     $htaccess = $backupDir . '/.htaccess';
     if (!file_exists($htaccess)) {
         file_put_contents($htaccess, "Order Deny,Allow\nDeny from all");
     }
 
     $fecha = date('Y-m-d_H-i-s');
-    $filename = "Respaldo_Restaurante_{$fecha}";
-    $sqlFile = "{$backupDir}/{$filename}.sql";
+    $filename = "Respaldo_Tenant_{$tenant_id}_{$fecha}";
+    $jsonFile = "{$backupDir}/{$filename}.json";
     $zipFile = "{$backupDir}/{$filename}.zip";
 
-    // 2. Generar Dump de Base de Datos (MySQL)
-    $dbHost = DB_HOST;
-    $dbUser = DB_USER;
-    $dbPass = DB_PASSWORD;
-    $dbName = DB_NAME;
+    // Exportar datos del tenant en JSON
+    $backup_data = [];
+    $backup_data['_tenant_id'] = $tenant_id;
+    $backup_data['_backup_date'] = date('Y-m-d H:i:s');
     
-    // Ruta a mysqldump (Intentar rutas comunes de XAMPP)
-    $mysqldump = 'mysqldump'; // Si está en PATH
-    if (file_exists('C:/xampp/mysql/bin/mysqldump.exe')) {
-        $mysqldump = '"C:/xampp/mysql/bin/mysqldump.exe"';
+    // Información del tenant
+    $tenant_info = $conn->query("SELECT * FROM saas_tenants WHERE id = $tenant_id")->fetch_assoc();
+    $backup_data['_tenant_info'] = $tenant_info;
+    
+    // Lista de tablas a respaldar
+    $tablas = [
+        'platos', 'clientes', 'pedidos', 'pedido_items', 'usuarios', 'mesas',
+        'ingredientes', 'recetas', 'proveedores', 'movimientos_inventario',
+        'configuracion_sistema', 'configuracion_domicilios', 'config_pagos',
+        'metodos_pago_config', 'publicidad'
+    ];
+    
+    $tablas_respaldadas = 0;
+    foreach ($tablas as $tabla) {
+        // Verificar si la tabla existe
+        $check = $conn->query("SHOW TABLES LIKE '$tabla'");
+        if ($check->num_rows == 0) continue;
+        
+        // Verificar si tiene columna tenant_id
+        $check_column = $conn->query("SHOW COLUMNS FROM $tabla LIKE 'tenant_id'");
+        if ($check_column->num_rows == 0) continue;
+        
+        $sql = "SELECT * FROM $tabla WHERE tenant_id = $tenant_id";
+        $result = $conn->query($sql);
+        
+        if ($result) {
+            $backup_data[$tabla] = [];
+            while ($row = $result->fetch_assoc()) {
+                $backup_data[$tabla][] = $row;
+            }
+            $tablas_respaldadas++;
+        }
     }
-
-    $command = "{$mysqldump} --user={$dbUser} --password={$dbPass} --host={$dbHost} {$dbName} > \"{$sqlFile}\"";
     
-    // Ejecutar comando
-    system($command, $returnVar);
-    
-    if ($returnVar !== 0 || !file_exists($sqlFile)) {
-        throw new Exception("Error al exportar base de datos. Código: $returnVar");
-    }
+    // Crear archivo JSON
+    file_put_contents($jsonFile, json_encode($backup_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-    // 3. Crear ZIP (SQL + Imágenes)
+    // Crear ZIP
     $zip = new ZipArchive();
-    if ($zip->open($zipFile, ZipArchive::CREATE) !== TRUE) {
+    if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
         throw new Exception("No se pudo crear el archivo ZIP");
     }
 
-    // Agregar SQL
-    $zip->addFile($sqlFile, "database_backup.sql");
-
-    // Agregar Imágenes (Recursivo)
-    $source = realpath('../img');
-    if (is_dir($source)) {
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($source),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach ($files as $name => $file) {
-            if (!$file->isDir()) {
-                $filePath = $file->getRealPath();
-                $relativePath = 'img/' . substr($filePath, strlen($source) + 1);
-                $zip->addFile($filePath, $relativePath);
-            }
-        }
-    }
-
-    // Agregar Publicidad si existe
-    $sourcePub = realpath('../publicidad');
-    if (is_dir($sourcePub)) {
-         $filesPub = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($sourcePub),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
-
-        foreach ($filesPub as $name => $file) {
-            if (!$file->isDir()) {
-                $filePath = $file->getRealPath();
-                $relativePath = 'publicidad/' . substr($filePath, strlen($sourcePub) + 1);
-                $zip->addFile($filePath, $relativePath);
-            }
-        }
-    }
-
+    // Agregar JSON
+    $zip->addFile($jsonFile, "backup_data.json");
     $zip->close();
 
-    // 4. Limpieza (Borrar SQL temporal)
-    unlink($sqlFile);
+    // Verificar que se creó correctamente
+    if (!file_exists($zipFile) || filesize($zipFile) == 0) {
+        throw new Exception("El archivo ZIP no se creó correctamente");
+    }
+
+    // Registrar en la base de datos
+    $tamano_mb = round(filesize($zipFile) / 1024 / 1024, 2);
+    $stmt = $conn->prepare("INSERT INTO respaldos (tenant_id, nombre_archivo, ruta_archivo, tamano_mb, descripcion) VALUES (?, ?, ?, ?, ?)");
+    $descripcion = "Respaldo de $tablas_respaldadas tablas - " . date('d/m/Y H:i:s');
+    $stmt->bind_param("issds", $tenant_id, $filename, $zipFile, $tamano_mb, $descripcion);
+    $stmt->execute();
+
+    // Limpieza
+    if (file_exists($jsonFile)) {
+        unlink($jsonFile);
+    }
 
     echo json_encode([
         'success' => true, 
         'mensaje' => 'Respaldo generado exitosamente',
         'archivo' => basename($zipFile),
-        'ruta_completa' => realpath($zipFile)
+        'tamano_mb' => $tamano_mb,
+        'tablas_respaldadas' => $tablas_respaldadas,
+        'ruta' => $zipFile
     ]);
 
 } catch (Exception $e) {

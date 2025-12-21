@@ -16,8 +16,12 @@ require_once 'config.php';
 require_once 'file_upload_helper.php';
 require_once 'includes/csrf_helper.php';
 require_once 'includes/sanitize_helper.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Verificar que se recibieron los datos por POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
@@ -96,10 +100,10 @@ if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] !== UPLOAD_ERR_NO_FIL
     $imagen_ruta = $resultado['ruta'];
 }
 
-// Preparar y ejecutar la consulta de actualización
-$stmt = $conn->prepare("UPDATE platos SET nombre = ?, descripcion = ?, precio = ?, imagen_ruta = ?, categoria = ?, popular = ?, nuevo = ?, vegano = ? WHERE id = ?");
+// Preparar y ejecutar la consulta de actualización (verificando tenant)
+$stmt = $conn->prepare("UPDATE platos SET nombre = ?, descripcion = ?, precio = ?, imagen_ruta = ?, categoria = ?, popular = ?, nuevo = ?, vegano = ? WHERE id = ? AND tenant_id = ?");
 
-$stmt->bind_param("ssdssiiii", 
+$stmt->bind_param("ssdssiiiii", 
     $nombre,        // s = string
     $descripcion,   // s = string
     $precio,        // d = double
@@ -108,7 +112,8 @@ $stmt->bind_param("ssdssiiii",
     $popular,       // i = integer
     $nuevo,         // i = integer
     $vegano,        // i = integer
-    $id             // i = integer
+    $id,            // i = integer
+    $tenant_id      // i = integer (NUEVO)
 );
 
 if ($stmt->execute()) {

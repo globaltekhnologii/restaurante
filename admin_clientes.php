@@ -8,7 +8,11 @@ require_once 'includes/clientes_helper.php';
 verificarSesion();
 verificarRolORedirect(['admin', 'mesero']);
 
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Manejar acciones
 $mensaje = '';
@@ -26,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ciudad = $conn->real_escape_string($_POST['ciudad']);
                 $notas = $conn->real_escape_string($_POST['notas']);
                 
-                $sql = "INSERT INTO clientes (nombre, apellido, telefono, email, direccion_principal, ciudad, notas) 
-                        VALUES ('$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad', '$notas')";
+                $sql = "INSERT INTO clientes (tenant_id, nombre, apellido, telefono, email, direccion_principal, ciudad, notas) 
+                        VALUES ($tenant_id, '$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad', '$notas')";
                 
                 if ($conn->query($sql)) {
                     $mensaje = "Cliente agregado exitosamente";
@@ -51,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sql = "UPDATE clientes 
                         SET nombre = '$nombre', apellido = '$apellido', telefono = '$telefono', 
                             email = '$email', direccion_principal = '$direccion', ciudad = '$ciudad', notas = '$notas'
-                        WHERE id = $id";
+                        WHERE id = $id AND tenant_id = $tenant_id";
                 
                 if ($conn->query($sql)) {
                     $mensaje = "Cliente actualizado exitosamente";
@@ -64,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'eliminar':
                 $id = (int)$_POST['id'];
-                $sql = "UPDATE clientes SET activo = 0 WHERE id = $id";
+                $sql = "UPDATE clientes SET activo = 0 WHERE id = $id AND tenant_id = $tenant_id";
                 
                 if ($conn->query($sql)) {
                     $mensaje = "Cliente eliminado exitosamente";
@@ -87,14 +91,23 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = 20;
 $offset = ($page - 1) * $limit;
 
-$where = "WHERE activo = 1";
+$where = "WHERE tenant_id = $tenant_id AND activo = 1";
 if (!empty($busqueda)) {
     $busqueda_esc = $conn->real_escape_string($busqueda);
     $where .= " AND (nombre LIKE '%$busqueda_esc%' OR apellido LIKE '%$busqueda_esc%' OR telefono LIKE '%$busqueda_esc%')";
 }
 
 $sql_clientes = "SELECT * FROM clientes $where ORDER BY nombre, apellido LIMIT $limit OFFSET $offset";
+
+// DEBUG TEMPORAL - BORRAR DESPUÉS
+echo "<!-- DEBUG: SQL = $sql_clientes -->";
+echo "<!-- DEBUG: Tenant ID = $tenant_id -->";
+echo "<!-- DEBUG: WHERE = $where -->";
+
 $result_clientes = $conn->query($sql_clientes);
+
+// DEBUG: Ver cuántos resultados
+echo "<!-- DEBUG: Resultados = " . $result_clientes->num_rows . " -->";
 
 $sql_total = "SELECT COUNT(*) as total FROM clientes $where";
 $total_clientes = $conn->query($sql_total)->fetch_assoc()['total'];
@@ -584,7 +597,7 @@ if (isset($_GET['exportar']) && $_GET['exportar'] === 'excel') {
     
     $sql_export = "SELECT id, nombre, apellido, telefono, email, direccion_principal, ciudad, 
                    total_pedidos, ultimo_pedido, fecha_registro 
-                   FROM clientes WHERE activo = 1 ORDER BY nombre, apellido";
+                   FROM clientes WHERE tenant_id = $tenant_id AND activo = 1 ORDER BY nombre, apellido";
     $result_export = $conn->query($sql_export);
     
     echo "<table border='1'>";

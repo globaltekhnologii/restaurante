@@ -15,7 +15,7 @@ function calcularCostoDomicilio($conn, $distancia_km) {
     // Obtener configuración
     $sql = "SELECT tarifa_base, costo_por_km, usar_rangos, activo 
             FROM configuracion_domicilios 
-            WHERE id = 1 LIMIT 1";
+            WHERE tenant_id = " . getCurrentTenantId() . " LIMIT 1";
     
     $result = $conn->query($sql);
     
@@ -102,7 +102,9 @@ function calcularPorRangos($conn, $distancia_km) {
     }
     
     // Si no hay rango que coincida, usar tarifa base
-    $sql_base = "SELECT tarifa_base FROM configuracion_domicilios WHERE id = 1";
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    $sql_base = "SELECT tarifa_base FROM configuracion_domicilios WHERE tenant_id = $tenant_id";
     $result_base = $conn->query($sql_base);
     $tarifa_base = 5000.00;
     

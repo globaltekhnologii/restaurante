@@ -5,6 +5,7 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 require_once 'includes/csrf_helper.php';
 require_once 'includes/sanitize_helper.php';
 
@@ -17,6 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 verificarTokenOError();
 
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Obtener datos del formulario y sanitizar
 $nombre_restaurante = cleanString($_POST['nombre_restaurante']);
@@ -92,7 +96,9 @@ if ($logo_url) {
     $types .= "s";
 }
 
-$sql .= " WHERE id = 1";
+$sql .= " WHERE tenant_id = ?"; // CORREGIDO: Filtrar por tenant
+$params[] = $tenant_id;
+$types .= "i";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param($types, ...$params);

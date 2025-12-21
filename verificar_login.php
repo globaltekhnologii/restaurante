@@ -15,8 +15,8 @@ $usuario_input = trim($_POST['usuario']);
 $clave_input = trim($_POST['clave']);
 
 // Prevenir SQL injection usando prepared statements
-// Ahora también obtenemos el rol y nombre del usuario
-$stmt = $conn->prepare("SELECT id, usuario, clave, rol, nombre FROM usuarios WHERE usuario = ? AND activo = 1");
+// Ahora también obtenemos el rol, nombre y tenant_id del usuario
+$stmt = $conn->prepare("SELECT id, usuario, clave, rol, nombre, tenant_id FROM usuarios WHERE usuario = ? AND activo = 1");
 $stmt->bind_param("s", $usuario_input);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -51,6 +51,7 @@ if ($result->num_rows === 1) {
         $_SESSION['usuario'] = $row['usuario'];
         $_SESSION['rol'] = $row['rol'];
         $_SESSION['nombre'] = $row['nombre'];
+        $_SESSION['tenant_id'] = $row['tenant_id']; // NUEVO: Guardar tenant_id
         $_SESSION['login_time'] = time();
         
         // Registrar último acceso

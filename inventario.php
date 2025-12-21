@@ -5,16 +5,20 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 require_once 'includes/info_negocio.php';
 $conn = getDatabaseConnection();
 
-// Obtener estadísticas
-$total_ingredientes = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE activo = 1")->fetch_assoc()['total'];
-$criticos = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE activo = 1 AND stock_actual <= stock_minimo")->fetch_assoc()['total'];
-$agotados = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE activo = 1 AND stock_actual = 0")->fetch_assoc()['total'];
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
-// Obtener ingredientes con stock bajo
-$sql_alertas = "SELECT * FROM ingredientes WHERE activo = 1 AND stock_actual <= stock_minimo ORDER BY stock_actual ASC LIMIT 10";
+// Obtener estadísticas filtradas por tenant
+$total_ingredientes = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE tenant_id = $tenant_id AND activo = 1")->fetch_assoc()['total'];
+$criticos = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE tenant_id = $tenant_id AND activo = 1 AND stock_actual <= stock_minimo")->fetch_assoc()['total'];
+$agotados = $conn->query("SELECT COUNT(*) as total FROM ingredientes WHERE tenant_id = $tenant_id AND activo = 1 AND stock_actual = 0")->fetch_assoc()['total'];
+
+// Obtener ingredientes con stock bajo filtrados por tenant
+$sql_alertas = "SELECT * FROM ingredientes WHERE tenant_id = $tenant_id AND activo = 1 AND stock_actual <= stock_minimo ORDER BY stock_actual ASC LIMIT 10";
 $alertas = $conn->query($sql_alertas);
 ?>
 <!DOCTYPE html>

@@ -8,7 +8,11 @@ verificarRolORedirect(['domiciliario'], 'login.php');
 
 require_once 'config.php';
 require_once 'includes/info_negocio.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Obtener información del domiciliario
 $domiciliario_id = $_SESSION['user_id'];
@@ -19,35 +23,35 @@ $stats = [];
 
 // Entregas del día
 $hoy = date('Y-m-d');
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND DATE(fecha_pedido) = ?");
-$stmt->bind_param("is", $domiciliario_id, $hoy);
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = ? AND domiciliario_id = ? AND DATE(fecha_pedido) = ?");
+$stmt->bind_param("iis", $tenant_id, $domiciliario_id, $hoy);
 $stmt->execute();
 $stats['entregas_hoy'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Entregas completadas hoy
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND DATE(fecha_pedido) = ? AND estado = 'entregado'");
-$stmt->bind_param("is", $domiciliario_id, $hoy);
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = ? AND domiciliario_id = ? AND DATE(fecha_pedido) = ? AND estado = 'entregado'");
+$stmt->bind_param("iis", $tenant_id, $domiciliario_id, $hoy);
 $stmt->execute();
 $stats['completadas_hoy'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Entregas pendientes (asignadas pero no entregadas)
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado IN ('listo', 'en_camino')");
-$stmt->bind_param("i", $domiciliario_id);
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = ? AND domiciliario_id = ? AND estado IN ('listo', 'en_camino')");
+$stmt->bind_param("ii", $tenant_id, $domiciliario_id);
 $stmt->execute();
 $stats['pendientes'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Entregas en camino
-$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id = ? AND estado = 'en_camino'");
-$stmt->bind_param("i", $domiciliario_id);
+$stmt = $conn->prepare("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = ? AND domiciliario_id = ? AND estado = 'en_camino'");
+$stmt->bind_param("ii", $tenant_id, $domiciliario_id);
 $stmt->execute();
 $stats['en_camino'] = $stmt->get_result()->fetch_assoc()['count'];
 $stmt->close();
 
 // Pedidos listos para recoger (sin asignar domiciliario)
-$stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE domiciliario_id IS NULL AND estado = 'listo' AND tipo_pedido = 'domicilio'")->fetch_assoc()['count'];
+$stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND domiciliario_id IS NULL AND estado = 'listo' AND tipo_pedido = 'domicilio'")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -472,10 +476,10 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                     <?php
                     $sql = "SELECT p.* 
                             FROM pedidos p 
-                            WHERE p.domiciliario_id = ? AND p.estado IN ('listo', 'en_camino') 
+                            WHERE p.tenant_id = ? AND p.domiciliario_id = ? AND p.estado IN ('listo', 'en_camino') 
                             ORDER BY p.fecha_pedido ASC";
                     $stmt = $conn->prepare($sql);
-                    $stmt->bind_param("i", $domiciliario_id);
+                    $stmt->bind_param("ii", $tenant_id, $domiciliario_id);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     
@@ -544,10 +548,13 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                     <?php
                     $sql = "SELECT p.* 
                             FROM pedidos p 
-                            WHERE p.domiciliario_id IS NULL AND p.estado = 'listo' 
+                            WHERE p.tenant_id = ? AND p.domiciliario_id IS NULL AND p.estado = 'listo' 
                             AND p.tipo_pedido = 'domicilio'
                             ORDER BY p.fecha_pedido ASC";
-                    $result = $conn->query($sql);
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $tenant_id);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
                     
                     if ($result->num_rows > 0) {
                         while($pedido = $result->fetch_assoc()) {
@@ -590,11 +597,11 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
                 <?php
                 $sql = "SELECT p.* 
                         FROM pedidos p 
-                        WHERE p.domiciliario_id = ? AND p.estado = 'entregado' 
+                        WHERE p.tenant_id = ? AND p.domiciliario_id = ? AND p.estado = 'entregado' 
                         ORDER BY p.hora_entrega DESC 
                         LIMIT 20";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("i", $domiciliario_id);
+                $stmt->bind_param("ii", $tenant_id, $domiciliario_id);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 
@@ -970,7 +977,6 @@ $stats['listos'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE dom
             } else {
                 console.log(mensaje);
             }
-        }
         }
         
         // Estilo para pulse

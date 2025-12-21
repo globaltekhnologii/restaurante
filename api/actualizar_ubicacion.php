@@ -4,6 +4,7 @@ session_start();
 
 require_once '../config.php';
 require_once '../auth_helper.php';
+require_once '../includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 // Verificar sesión y rol
 if (!isset($_SESSION['user_id']) || $_SESSION['rol'] !== 'domiciliario') {
@@ -36,21 +37,22 @@ if (!$latitud || !$longitud) {
 
 $usuario_id = $_SESSION['user_id'];
 $conn = getDatabaseConnection();
+$tenant_id = getCurrentTenantId(); // Obtener tenant actual
 
 // Verificar si ya existe registro de ubicación para este usuario
-$check = $conn->prepare("SELECT id FROM ubicacion_domiciliarios WHERE usuario_id = ?");
-$check->bind_param("i", $usuario_id);
+$check = $conn->prepare("SELECT id FROM ubicacion_domiciliarios WHERE usuario_id = ? AND tenant_id = ?");
+$check->bind_param("ii", $usuario_id, $tenant_id);
 $check->execute();
 $result = $check->get_result();
 
 if ($result->num_rows > 0) {
     // Actualizar
-    $stmt = $conn->prepare("UPDATE ubicacion_domiciliarios SET latitud = ?, longitud = ?, ultima_actualizacion = NOW() WHERE usuario_id = ?");
-    $stmt->bind_param("ddi", $latitud, $longitud, $usuario_id);
+    $stmt = $conn->prepare("UPDATE ubicacion_domiciliarios SET latitud = ?, longitud = ?, ultima_actualizacion = NOW() WHERE usuario_id = ? AND tenant_id = ?");
+    $stmt->bind_param("ddii", $latitud, $longitud, $usuario_id, $tenant_id);
 } else {
     // Insertar
-    $stmt = $conn->prepare("INSERT INTO ubicacion_domiciliarios (usuario_id, latitud, longitud) VALUES (?, ?, ?)");
-    $stmt->bind_param("idd", $usuario_id, $latitud, $longitud);
+    $stmt = $conn->prepare("INSERT INTO ubicacion_domiciliarios (tenant_id, usuario_id, latitud, longitud) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iidd", $tenant_id, $usuario_id, $latitud, $longitud);
 }
 
 $check->close();

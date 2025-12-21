@@ -7,7 +7,11 @@ verificarSesion();
 verificarRolORedirect(['mesero'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 $mesero_id = $_SESSION['user_id'];
 $mesero_nombre = $_SESSION['nombre'];
@@ -36,9 +40,9 @@ if ($mesa_id > 0) {
     $tipo_pedido = 'domicilio';
 }
 
-// Obtener platos disponibles del menú
+// Obtener platos disponibles del menú filtrados por tenant
 $platos = [];
-$sql = "SELECT * FROM platos ORDER BY categoria, nombre";
+$sql = "SELECT * FROM platos WHERE tenant_id = $tenant_id ORDER BY categoria, nombre";
 $result = $conn->query($sql);
 while ($row = $result->fetch_assoc()) {
     $platos[] = $row;

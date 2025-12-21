@@ -92,7 +92,10 @@ function geocodificarConCache($conn, $direccion, $ciudad = 'Bogotá', $pais = 'C
  * @return array|false Array con ['lat', 'lon'] o false si no están configuradas
  */
 function obtenerCoordenadasRestaurante($conn) {
-    $sql = "SELECT latitud_restaurante, longitud_restaurante FROM configuracion_sistema WHERE id = 1 LIMIT 1";
+    // CORREGIDO: Obtener coordenadas del tenant actual
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    $sql = "SELECT latitud_restaurante, longitud_restaurante FROM configuracion_sistema WHERE tenant_id = $tenant_id LIMIT 1";
     $result = $conn->query($sql);
     
     if ($result && $result->num_rows > 0) {
@@ -130,7 +133,7 @@ function geocodificarYGuardarRestaurante($conn, $direccion, $ciudad, $pais) {
     
     $sql = "UPDATE configuracion_sistema 
             SET latitud_restaurante = ?, longitud_restaurante = ? 
-            WHERE id = 1";
+            WHERE tenant_id = $tenant_id";
     
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("dd", $lat, $lon);

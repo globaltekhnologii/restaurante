@@ -538,15 +538,20 @@ $categorias = [];
 $totalPlatos = 0;
 
 try {
+    require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
     $conn = getDatabaseConnection();
     
-    // Consulta optimizada
+    // Obtener tenant_id (usar 1 por defecto para menú público)
+    $tenant_id = getCurrentTenantId();
+    
+    // Consulta optimizada con filtro de tenant
     $sql = "SELECT nombre, descripcion, precio, imagen_ruta, 
             COALESCE(categoria, 'General') as categoria,
             COALESCE(popular, 0) as popular,
             COALESCE(nuevo, 0) as nuevo,
             COALESCE(vegano, 0) as vegano
             FROM platos 
+            WHERE tenant_id = $tenant_id
             ORDER BY categoria ASC, nombre ASC";
     
     $result = $conn->query($sql);

@@ -14,8 +14,12 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
 require_once 'config.php';
 require_once 'includes/csrf_helper.php';
 require_once 'includes/sanitize_helper.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // === LÓGICA DE PROCESAMIENTO (POST) ===
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -31,9 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
     
-    // Primero obtener la ruta de la imagen para eliminarla
-    $stmt = $conn->prepare("SELECT imagen_ruta FROM platos WHERE id = ?");
-    $stmt->bind_param("i", $id_plato);
+    // Primero obtener la ruta de la imagen para eliminarla (verificando tenant)
+    $stmt = $conn->prepare("SELECT imagen_ruta FROM platos WHERE id = ? AND tenant_id = ?");
+    $stmt->bind_param("ii", $id_plato, $tenant_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
@@ -48,9 +52,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $imagen_ruta = $plato['imagen_ruta'];
     $stmt->close();
     
-    // Eliminar el plato de la base de datos
-    $stmt = $conn->prepare("DELETE FROM platos WHERE id = ?");
-    $stmt->bind_param("i", $id_plato);
+    // Eliminar el plato de la base de datos (verificando tenant)
+    $stmt = $conn->prepare("DELETE FROM platos WHERE id = ? AND tenant_id = ?");
+    $stmt->bind_param("ii", $id_plato, $tenant_id);
     
     if ($stmt->execute()) {
         // Eliminar la imagen del servidor si existe
@@ -84,9 +88,9 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $id_plato = cleanInt($_GET['id']);
 
-// Obtener info del plato
-$stmt = $conn->prepare("SELECT nombre, imagen_ruta FROM platos WHERE id = ?");
-$stmt->bind_param("i", $id_plato);
+// Obtener info del plato (verificando tenant)
+$stmt = $conn->prepare("SELECT nombre, imagen_ruta FROM platos WHERE id = ? AND tenant_id = ?");
+$stmt->bind_param("ii", $id_plato, $tenant_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

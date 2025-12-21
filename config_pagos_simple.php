@@ -1,8 +1,12 @@
 <?php
 // Versión temporal sin autenticación - solo para configurar
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
+// Iniciar sesión para obtener tenant_id
+session_start();
 $conn = getDatabaseConnection();
+$tenant_id = getCurrentTenantId();
 
 // Guardar configuración
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -12,8 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $publicKey = $_POST['public_key'] ?? '';
     $secretKey = $_POST['secret_key'] ?? '';
     
-    $stmt = $conn->prepare("UPDATE config_pagos SET activa = ?, modo = ?, public_key = ?, secret_key = ? WHERE pasarela = ?");
-    $stmt->bind_param("issss", $activa, $modo, $publicKey, $secretKey, $pasarela);
+    $stmt = $conn->prepare("UPDATE config_pagos SET activa = ?, modo = ?, public_key = ?, secret_key = ? WHERE pasarela = ? AND tenant_id = ?");
+    $stmt->bind_param("issssi", $activa, $modo, $publicKey, $secretKey, $pasarela, $tenant_id);
     
     if ($stmt->execute()) {
         $mensaje = "✅ Configuración guardada exitosamente";
@@ -22,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Obtener configuraciones
-$pasarelas = $conn->query("SELECT * FROM config_pagos ORDER BY pasarela")->fetch_all(MYSQLI_ASSOC);
+// Obtener configuraciones filtradas por tenant
+$pasarelas = $conn->query("SELECT * FROM config_pagos WHERE tenant_id = $tenant_id ORDER BY pasarela")->fetch_all(MYSQLI_ASSOC);
 $conn->close();
 ?>
 <!DOCTYPE html>

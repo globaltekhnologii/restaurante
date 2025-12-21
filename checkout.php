@@ -291,9 +291,11 @@ require_once 'includes/csrf_helper.php';
                         try {
                             if (file_exists('config.php')) {
                                 require_once 'config.php';
+                                require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
                                 $conn = getDatabaseConnection();
-                                // CORRECCIÓN: Usar 'estado' en lugar de 'ocupada'
-                                $sql = "SELECT id, numero_mesa FROM mesas WHERE estado = 'disponible' ORDER BY numero_mesa";
+                                $tenant_id = getCurrentTenantId(); // Obtener tenant actual
+                                // CORRECCIÓN: Usar 'estado' en lugar de 'ocupada' y filtrar por tenant
+                                $sql = "SELECT id, numero_mesa FROM mesas WHERE tenant_id = $tenant_id AND estado = 'disponible' ORDER BY numero_mesa";
                                 $result = $conn->query($sql);
                                 
                                 if ($result) {

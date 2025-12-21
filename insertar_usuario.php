@@ -11,6 +11,10 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Validar que se recibieron los datos
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -94,9 +98,9 @@ if (file_exists(__DIR__ . '/tenant_config.php')) {
 // Hashear contraseña
 $clave_hash = password_hash($clave, PASSWORD_DEFAULT);
 
-// Insertar usuario
-$stmt = $conn->prepare("INSERT INTO usuarios (usuario, clave, nombre, email, telefono, rol, activo) VALUES (?, ?, ?, ?, ?, ?, 1)");
-$stmt->bind_param("ssssss", $usuario, $clave_hash, $nombre, $email, $telefono, $rol);
+// Insertar usuario (INCLUYE tenant_id)
+$stmt = $conn->prepare("INSERT INTO usuarios (tenant_id, usuario, clave, nombre, email, telefono, rol, activo) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+$stmt->bind_param("issssss", $tenant_id, $usuario, $clave_hash, $nombre, $email, $telefono, $rol);
 
 if ($stmt->execute()) {
     $stmt->close();

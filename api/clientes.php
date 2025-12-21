@@ -2,6 +2,7 @@
 // api/clientes.php - API REST para gestión de clientes
 header('Content-Type: application/json');
 require_once '../config.php';
+require_once '../includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 require_once '../includes/auth_helper.php';
 
 // Verificar autenticación (solo admin y meseros pueden gestionar clientes)
@@ -16,9 +17,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // Funciones auxiliares
 function buscarClientes($conn, $termino) {
+    $tenant_id = getCurrentTenantId();
     $termino = $conn->real_escape_string($termino);
     $sql = "SELECT * FROM clientes 
-            WHERE (nombre LIKE '%$termino%' 
+            WHERE tenant_id = $tenant_id
+            AND (nombre LIKE '%$termino%' 
             OR apellido LIKE '%$termino%' 
             OR telefono LIKE '%$termino%'
             OR email LIKE '%$termino%')
@@ -34,8 +37,9 @@ function buscarClientes($conn, $termino) {
 }
 
 function obtenerCliente($conn, $id) {
+    $tenant_id = getCurrentTenantId();
     $id = (int)$id;
-    $sql = "SELECT * FROM clientes WHERE id = $id";
+    $sql = "SELECT * FROM clientes WHERE id = $id AND tenant_id = $tenant_id";
     $result = $conn->query($sql);
     return $result->fetch_assoc();
 }
@@ -87,8 +91,9 @@ switch ($method) {
             }
         } elseif (isset($_GET['telefono'])) {
             // Buscar por teléfono exacto
+            $tenant_id = getCurrentTenantId();
             $telefono = $conn->real_escape_string($_GET['telefono']);
-            $sql = "SELECT * FROM clientes WHERE telefono = '$telefono' AND activo = 1";
+            $sql = "SELECT * FROM clientes WHERE telefono = '$telefono' AND tenant_id = $tenant_id AND activo = 1";
             $result = $conn->query($sql);
             $cliente = $result->fetch_assoc();
             if ($cliente) {
@@ -99,11 +104,12 @@ switch ($method) {
             }
         } else {
             // Listar todos los clientes (con paginación)
+            $tenant_id = getCurrentTenantId();
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = 50;
             $offset = ($page - 1) * $limit;
             
-            $sql = "SELECT * FROM clientes WHERE activo = 1 ORDER BY nombre, apellido LIMIT $limit OFFSET $offset";
+            $sql = "SELECT * FROM clientes WHERE tenant_id = $tenant_id AND activo = 1 ORDER BY nombre, apellido LIMIT $limit OFFSET $offset";
             $result = $conn->query($sql);
             $clientes = [];
             while ($row = $result->fetch_assoc()) {
@@ -111,7 +117,7 @@ switch ($method) {
             }
             
             // Contar total
-            $total_result = $conn->query("SELECT COUNT(*) as total FROM clientes WHERE activo = 1");
+            $total_result = $conn->query("SELECT COUNT(*) as total FROM clientes WHERE tenant_id = $tenant_id AND activo = 1");
             $total = $total_result->fetch_assoc()['total'];
             
             echo json_encode(['success' => true, 'clientes' => $clientes, 'total' => $total, 'page' => $page]);
@@ -121,6 +127,7 @@ switch ($method) {
     case 'POST':
         // Crear nuevo cliente
         $data = json_decode(file_get_contents('php://input'), true);
+        $tenant_id = getCurrentTenantId();
         
         $nombre = $conn->real_escape_string($data['nombre']);
         $apellido = $conn->real_escape_string($data['apellido'] ?? '');
@@ -130,8 +137,8 @@ switch ($method) {
         $ciudad = $conn->real_escape_string($data['ciudad'] ?? '');
         $notas = $conn->real_escape_string($data['notas'] ?? '');
         
-        $sql = "INSERT INTO clientes (nombre, apellido, telefono, email, direccion_principal, ciudad, notas) 
-                VALUES ('$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad', '$notas')";
+        $sql = "INSERT INTO clientes (tenant_id, nombre, apellido, telefono, email, direccion_principal, ciudad, notas) 
+                VALUES ($tenant_id, '$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad', '$notas')";
         
         if ($conn->query($sql)) {
             $cliente_id = $conn->insert_id;
@@ -152,6 +159,7 @@ switch ($method) {
     case 'PUT':
         // Actualizar cliente
         $data = json_decode(file_get_contents('php://input'), true);
+        $tenant_id = getCurrentTenantId();
         
         $id = (int)$data['id'];
         $nombre = $conn->real_escape_string($data['nombre']);
@@ -170,7 +178,7 @@ switch ($method) {
                     direccion_principal = '$direccion', 
                     ciudad = '$ciudad', 
                     notas = '$notas'
-                WHERE id = $id";
+                WHERE id = $id AND tenant_id = $tenant_id";
         
         if ($conn->query($sql)) {
             echo json_encode(['success' => true, 'message' => 'Cliente actualizado exitosamente']);
@@ -182,9 +190,10 @@ switch ($method) {
     case 'DELETE':
         // Eliminar cliente (soft delete)
         $data = json_decode(file_get_contents('php://input'), true);
+        $tenant_id = getCurrentTenantId();
         $id = (int)$data['id'];
         
-        $sql = "UPDATE clientes SET activo = 0 WHERE id = $id";
+        $sql = "UPDATE clientes SET activo = 0 WHERE id = $id AND tenant_id = $tenant_id";
         
         if ($conn->query($sql)) {
             echo json_encode(['success' => true, 'message' => 'Cliente eliminado exitosamente']);

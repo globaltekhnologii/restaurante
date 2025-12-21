@@ -8,14 +8,19 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== TRUE) {
 
 // Usar configuración centralizada
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Filtros
 $filtro_estado = isset($_GET['estado']) ? $_GET['estado'] : '';
 $filtro_fecha = isset($_GET['fecha']) ? $_GET['fecha'] : '';
 
-// Construir consulta
-$sql = "SELECT * FROM pedidos WHERE 1=1";
+// Construir consulta (FILTRADO POR TENANT)
+$sql = "SELECT * FROM pedidos WHERE tenant_id = $tenant_id";
 $params = [];
 $types = "";
 
@@ -44,14 +49,14 @@ if (!empty($params)) {
 
 $pedidos = $result->fetch_all(MYSQLI_ASSOC);
 
-// Estadísticas
+// Estadísticas (FILTRADAS POR TENANT)
 $stats = [];
-$stats['total'] = $conn->query("SELECT COUNT(*) as count FROM pedidos")->fetch_assoc()['count'];
-$stats['pendientes'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'pendiente'")->fetch_assoc()['count'];
-$stats['en_proceso'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado IN ('confirmado', 'preparando', 'listo', 'en_camino')")->fetch_assoc()['count'];
-$stats['entregados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'entregado'")->fetch_assoc()['count'];
-$stats['hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE DATE(fecha_pedido) = CURDATE()")->fetch_assoc()['count'];
-$stats['total_ventas'] = $conn->query("SELECT SUM(total) as sum FROM pedidos WHERE estado = 'entregado'")->fetch_assoc()['sum'] ?? 0;
+$stats['total'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id")->fetch_assoc()['count'];
+$stats['pendientes'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado = 'pendiente'")->fetch_assoc()['count'];
+$stats['en_proceso'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado IN ('confirmado', 'preparando', 'listo', 'en_camino')")->fetch_assoc()['count'];
+$stats['entregados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado = 'entregado'")->fetch_assoc()['count'];
+$stats['hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND DATE(fecha_pedido) = CURDATE()")->fetch_assoc()['count'];
+$stats['total_ventas'] = $conn->query("SELECT SUM(total) as sum FROM pedidos WHERE tenant_id = $tenant_id AND estado = 'entregado'")->fetch_assoc()['sum'] ?? 0;
 
 $conn->close();
 ?>

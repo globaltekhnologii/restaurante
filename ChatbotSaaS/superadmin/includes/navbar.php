@@ -12,15 +12,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="notifications.php" class="<?php echo ($current_page == 'notifications.php') ? 'active' : ''; ?>">🔔 Notificaciones</a>
         <a href="audit_logs.php" class="<?php echo ($current_page == 'audit_logs.php') ? 'active' : ''; ?>">📝 Auditoría</a>
         <a href="updates.php" class="<?php echo ($current_page == 'updates.php') ? 'active' : ''; ?>">🔄 Actualizaciones</a>
-        <div class="user-info" style="display: flex; align-items: center; gap: 15px;">
-            <span><?php echo htmlspecialchars($current_admin['name'] ?? 'Admin'); ?></span>
-            <div class="dropdown" style="position: relative; display: inline-block;">
-                <button class="dropbtn" style="background: none; border: none; cursor: pointer; color: #6b7280;">⬇️</button>
-                <div class="dropdown-content" style="display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1;">
-                    <a href="profile.php" style="color: black; padding: 12px 16px; text-decoration: none; display: block;">👤 Mi Perfil</a>
-                    <a href="logout.php" style="color: black; padding: 12px 16px; text-decoration: none; display: block;">🚪 Salir</a>
-                </div>
-            </div>
+        
+        <div style="display: flex; align-items: center; gap: 15px; margin-left: 20px; padding-left: 20px; border-left: 2px solid #e5e7eb;">
+            <span style="color: #6b7280;">👤 <?php echo htmlspecialchars($current_admin['name'] ?? 'Admin'); ?></span>
+            <a href="logout.php" style="background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+                🚪 Cerrar Sesión
+            </a>
         </div>
     </div>
 </nav>

@@ -15,22 +15,27 @@ if (!isset($_GET['id'])) {
 }
 
 $pedido_id = intval($_GET['id']);
+
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id (de sesión si existe, o 1 por defecto para acceso público)
+$tenant_id = getCurrentTenantId();
 
 // Determinar si es acceso público o con sesión
 $es_acceso_publico = !isset($_SESSION['user_id']);
 
 if ($es_acceso_publico) {
-    // Acceso público: solo obtener el pedido sin restricciones de usuario
+    // Acceso público: filtrar por tenant (usar tenant 1 por defecto)
     $sql = "SELECT p.*, m.numero_mesa, u.nombre as mesero_nombre, d.nombre as domiciliario_nombre, d.telefono as domiciliario_telefono
             FROM pedidos p 
             LEFT JOIN mesas m ON p.mesa_id = m.id 
             LEFT JOIN usuarios u ON p.usuario_id = u.id 
             LEFT JOIN usuarios d ON p.domiciliario_id = d.id 
-            WHERE p.id = ?";
+            WHERE p.id = ? AND p.tenant_id = ?";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $pedido_id);
+    $stmt->bind_param("ii", $pedido_id, $tenant_id);
 } else {
     // Acceso con sesión: aplicar restricciones según rol
     require_once 'auth_helper.php';
@@ -44,7 +49,7 @@ if ($es_acceso_publico) {
             LEFT JOIN mesas m ON p.mesa_id = m.id 
             LEFT JOIN usuarios u ON p.usuario_id = u.id 
             LEFT JOIN usuarios d ON p.domiciliario_id = d.id 
-            WHERE p.id = ?";
+            WHERE p.id = ? AND p.tenant_id = ?";
     
     // Si no es admin, agregar filtros de permiso
     if ($user_rol === 'mesero') {
@@ -56,9 +61,9 @@ if ($es_acceso_publico) {
     $stmt = $conn->prepare($sql);
     
     if ($user_rol === 'mesero' || $user_rol === 'domiciliario') {
-        $stmt->bind_param("ii", $pedido_id, $user_id);
+        $stmt->bind_param("iii", $pedido_id, $tenant_id, $user_id);
     } else {
-        $stmt->bind_param("i", $pedido_id);
+        $stmt->bind_param("ii", $pedido_id, $tenant_id);
     }
 }
 

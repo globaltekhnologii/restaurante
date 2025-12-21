@@ -19,8 +19,12 @@ if (isset($_SESSION['info_negocio']) && !empty($_SESSION['info_negocio'])) {
     // Usar datos en cache para ahorrar consulta SQL
     $info_negocio = $_SESSION['info_negocio'];
 } else {
-    // Consultar Base de Datos
-    $sql = "SELECT * FROM configuracion_sistema WHERE id = 1 LIMIT 1";
+    // Obtener tenant_id actual
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    
+    // Consultar Base de Datos filtrando por tenant
+    $sql = "SELECT * FROM configuracion_sistema WHERE tenant_id = $tenant_id LIMIT 1";
     $result = $conn->query($sql);
     
     if ($result && $result->num_rows > 0) {

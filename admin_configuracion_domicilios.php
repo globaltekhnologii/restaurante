@@ -5,8 +5,12 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 require_once 'includes/geocoding_service.php';
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Procesar formulario
 $mensaje = '';
@@ -20,9 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $lat = floatval($_POST['latitud_restaurante']);
             $lon = floatval($_POST['longitud_restaurante']);
             
-            $sql = "UPDATE configuracion_sistema SET latitud_restaurante = ?, longitud_restaurante = ? WHERE id = 1";
+            $sql = "UPDATE configuracion_sistema SET latitud_restaurante = ?, longitud_restaurante = ? WHERE tenant_id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("dd", $lat, $lon);
+            $stmt->bind_param("ddi", $lat, $lon, $tenant_id);
             
             if ($stmt->execute()) {
                 $mensaje = "Coordenadas GPS del restaurante guardadas exitosamente";
@@ -45,13 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $lat = $coords['lat'];
                 $lon = $coords['lon'];
                 
-                $sql = "UPDATE configuracion_sistema SET latitud_restaurante = ?, longitud_restaurante = ? WHERE id = 1";
+                $sql = "UPDATE configuracion_sistema 
+                        SET direccion = ?, ciudad = ?, pais = ?, latitud_restaurante = ?, longitud_restaurante = ? 
+                        WHERE tenant_id = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("dd", $lat, $lon);
+                $stmt->bind_param("sssddi", $direccion, $ciudad, $pais, $lat, $lon, $tenant_id);
                 
                 if ($stmt->execute()) {
                     $mensaje = "Dirección geocodificada y guardada: {$coords['display_name']}";
                     $tipo_mensaje = "success";
+                    
+                    // Limpiar caché de sesión
+                    unset($_SESSION['info_negocio']);
                 } else {
                     $mensaje = "Error al guardar coordenadas";
                     $tipo_mensaje = "error";
@@ -71,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $sql = "UPDATE configuracion_domicilios 
                     SET tarifa_base = ?, costo_por_km = ?, distancia_maxima = ?, usar_rangos = ? 
-                    WHERE id = 1";
+                    WHERE tenant_id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("dddi", $tarifa_base, $costo_por_km, $distancia_maxima, $usar_rangos);
+            $stmt->bind_param("dddii", $tarifa_base, $costo_por_km, $distancia_maxima, $usar_rangos, $tenant_id);
             
             if ($stmt->execute()) {
                 $mensaje = "Configuración de tarifas guardada exitosamente";
@@ -87,11 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Obtener configuración actual
-$sql_config = "SELECT * FROM configuracion_sistema WHERE id = 1";
+$sql_config = "SELECT * FROM configuracion_sistema WHERE tenant_id = $tenant_id";
 $result_config = $conn->query($sql_config);
 $config_sistema = $result_config->fetch_assoc();
 
-$sql_tarifas = "SELECT * FROM configuracion_domicilios WHERE id = 1";
+$sql_tarifas = "SELECT * FROM configuracion_domicilios WHERE tenant_id = $tenant_id";
 $result_tarifas = $conn->query($sql_tarifas);
 $config_tarifas = $result_tarifas->fetch_assoc();
 ?>

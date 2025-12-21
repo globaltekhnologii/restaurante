@@ -74,7 +74,9 @@ function calcularDistanciaDesdeRestaurante($conn, $lat_cliente, $lon_cliente) {
  * @return bool True si está dentro del rango
  */
 function verificarDistanciaPermitida($conn, $distancia_km) {
-    $sql = "SELECT distancia_maxima FROM configuracion_domicilios WHERE id = 1 AND activo = 1";
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    $sql = "SELECT distancia_maxima FROM configuracion_domicilios WHERE tenant_id = $tenant_id AND activo = 1";
     $result = $conn->query($sql);
     
     if ($result && $result->num_rows > 0) {

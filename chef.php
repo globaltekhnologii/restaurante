@@ -9,29 +9,34 @@ verificarRolORedirect(['chef'], 'login.php');
 require_once 'config.php';
 require_once 'config.php';
 require_once 'includes/info_negocio.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Obtener información del chef
 $chef_nombre = $_SESSION['nombre'];
 
-// Obtener estadísticas
+// Obtener estadísticas (FILTRADAS POR TENANT)
 $stats = [];
 
 // Pedidos pendientes
-$stats['pendientes'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado IN ('confirmado', 'preparando')")->fetch_assoc()['count'];
+$stats['pendientes'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado IN ('confirmado', 'preparando')")->fetch_assoc()['count'];
 
 // Pedidos del día
 $hoy = date('Y-m-d');
-$stats['hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE DATE(fecha_pedido) = '$hoy'")->fetch_assoc()['count'];
+$stats['hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND DATE(fecha_pedido) = '$hoy'")->fetch_assoc()['count'];
 
 // Pedidos completados hoy
-$stats['completados_hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE DATE(fecha_pedido) = '$hoy' AND estado = 'entregado'")->fetch_assoc()['count'];
+$stats['completados_hoy'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND DATE(fecha_pedido) = '$hoy' AND estado = 'entregado'")->fetch_assoc()['count'];
 
 // Pedidos en preparación
-$stats['preparando'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'preparando'")->fetch_assoc()['count'];
+$stats['preparando'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado = 'preparando'")->fetch_assoc()['count'];
 
 // Pedidos confirmados (esperando preparación)
-$stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE estado = 'confirmado'")->fetch_assoc()['count'];
+$stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHERE tenant_id = $tenant_id AND estado = 'confirmado'")->fetch_assoc()['count'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -375,7 +380,7 @@ $stats['confirmados'] = $conn->query("SELECT COUNT(*) as count FROM pedidos WHER
                         FROM pedidos p 
                         LEFT JOIN mesas m ON p.mesa_id = m.id 
                         LEFT JOIN usuarios u ON p.usuario_id = u.id 
-                        WHERE p.estado IN ('confirmado', 'preparando') 
+                        WHERE p.tenant_id = $tenant_id AND p.estado IN ('confirmado', 'preparando') 
                         ORDER BY p.fecha_pedido ASC";
                 $result = $conn->query($sql);
                 

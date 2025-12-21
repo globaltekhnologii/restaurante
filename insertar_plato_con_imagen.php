@@ -21,8 +21,12 @@ require_once 'config.php';
 require_once 'file_upload_helper.php';
 require_once 'includes/csrf_helper.php';
 require_once 'includes/sanitize_helper.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Verificar que se recibieron los datos por POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
@@ -103,10 +107,11 @@ $imagen_ruta = $resultado['ruta'];
 
 // [BLOQUE SAAS ELIMINADO PARA VPS STANDALONE]
 
-// Preparar y ejecutar la consulta de inserción
-$stmt = $conn->prepare("INSERT INTO platos (nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+// Preparar y ejecutar la consulta de inserción (INCLUYE tenant_id)
+$stmt = $conn->prepare("INSERT INTO platos (tenant_id, nombre, descripcion, precio, imagen_ruta, categoria, popular, nuevo, vegano) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-$stmt->bind_param("ssssiiii", 
+$stmt->bind_param("issdsiiii", 
+    $tenant_id,  // NUEVO: tenant_id
     $nombre, 
     $descripcion, 
     $precio, 

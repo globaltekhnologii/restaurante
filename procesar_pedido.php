@@ -10,7 +10,15 @@ error_reporting(E_ALL);
 require_once 'config.php';
 require_once 'includes/csrf_helper.php';
 require_once 'includes/functions_inventario.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
+
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id (de sesión si existe, o 1 por defecto para pedidos públicos)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$tenant_id = getCurrentTenantId();
 
 // Verificar que se recibieron los datos por POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
@@ -123,11 +131,12 @@ try {
     // Obtener tipo de pedido
     $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'domicilio';
     
-    // Insertar el pedido principal
+    // Insertar el pedido principal (INCLUYE tenant_id)
     // Insertar pedido con datos GPS, documento y ciudad si están disponibles
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, cliente_id, nombre_cliente, telefono, tipo_documento, numero_documento, direccion, ciudad_entrega, email, total, estado, notas, tipo_pedido, latitud_cliente, longitud_cliente, distancia_km, costo_domicilio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO pedidos (tenant_id, numero_pedido, cliente_id, nombre_cliente, telefono, tipo_documento, numero_documento, direccion, ciudad_entrega, email, total, estado, notas, tipo_pedido, latitud_cliente, longitud_cliente, distancia_km, costo_domicilio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmado', ?, ?, ?, ?, ?, ?)");
     
-    $stmt->bind_param("sississssdssdddd", 
+    $stmt->bind_param("isississssdssdddd", 
+        $tenant_id,         // NUEVO: tenant_id
         $numero_pedido,
         $cliente_id,
         $nombre_cliente,

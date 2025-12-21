@@ -4,6 +4,11 @@ require_once 'auth_helper.php';
 verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 require_once 'includes/info_negocio.php';
+require_once 'includes/tenant_context.php';
+require_once 'config.php';
+
+$conn = getDatabaseConnection();
+$tenant_id = getCurrentTenantId();
 
 // Manejo de Descarga / Borrado
 if (isset($_GET['action']) && isset($_GET['file'])) {
@@ -18,8 +23,27 @@ if (isset($_GET['action']) && isset($_GET['file'])) {
         exit;
     }
 
-    if ($_GET['action'] == 'delete' && file_exists($filepath)) {
-        unlink($filepath);
+    if ($_GET['action'] == 'delete' && isset($_GET['id'])) {
+        $id = (int)$_GET['id'];
+        
+        // Verificar que el respaldo pertenece al tenant
+        $stmt = $conn->prepare("SELECT ruta_archivo FROM respaldos WHERE id = ? AND tenant_id = ?");
+        $stmt->bind_param("ii", $id, $tenant_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            // Eliminar archivo físico
+            if (file_exists($row['ruta_archivo'])) {
+                unlink($row['ruta_archivo']);
+            }
+            
+            // Eliminar registro de BD
+            $stmt_delete = $conn->prepare("DELETE FROM respaldos WHERE id = ? AND tenant_id = ?");
+            $stmt_delete->bind_param("ii", $id, $tenant_id);
+            $stmt_delete->execute();
+        }
+        
         header("Location: admin_respaldos.php?deleted=1");
         exit;
     }
@@ -134,40 +158,55 @@ if (isset($_GET['action']) && isset($_GET['file'])) {
         <!-- Lista de Respaldos -->
         <div id="backup-list">
             <?php
-            $dir = 'backups';
-            if (is_dir($dir)) {
-                $files = scandir($dir);
-                $backups = [];
-                foreach ($files as $file) {
-                    if (pathinfo($file, PATHINFO_EXTENSION) === 'zip') {
-                        $backups[] = $file;
-                    }
-                }
-                // Ordenar por fecha (más reciente primero)
-                rsort($backups);
-
-                foreach ($backups as $backup) {
-                    $size = round(filesize($dir . '/' . $backup) / 1024 / 1024, 2); // MB
-                    $date = date("d/m/Y H:i:s", filemtime($dir . '/' . $backup));
+            // Obtener respaldos del tenant desde la base de datos
+            $sql = "SELECT * FROM respaldos WHERE tenant_id = $tenant_id ORDER BY fecha_creacion DESC";
+            $result = $conn->query($sql);
+            
+            if ($result && $result->num_rows > 0) {
+                while ($backup = $result->fetch_assoc()) {
+                    $archivo = basename($backup['nombre_archivo']);
+                    $fecha = date("d/m/Y H:i:s", strtotime($backup['fecha_creacion']));
+                    $tamano = $backup['tamano_mb'];
+                    
+                    // Verificar si el archivo existe
+                    $archivo_existe = file_exists($backup['ruta_archivo']);
+                    $clase_extra = $archivo_existe ? '' : 'style="opacity: 0.5;"';
+                    
                     echo "
-                    <div class='backup-card'>
+                    <div class='backup-card' $clase_extra>
                         <div class='backup-info'>
-                            <h4>📦 {$backup}</h4>
-                            <p>📅 Fecha: {$date} | 💾 Tamaño: {$size} MB</p>
+                            <h4>📦 {$archivo}.zip</h4>
+                            <p>📅 Fecha: {$fecha} | 💾 Tamaño: {$tamano} MB</p>";
+                    
+                    if (!empty($backup['descripcion'])) {
+                        echo "<p style='font-size: 0.85em; color: #888;'>{$backup['descripcion']}</p>";
+                    }
+                    
+                    if (!$archivo_existe) {
+                        echo "<p style='color: #e74a3b; font-weight: bold;'>⚠️ Archivo no encontrado</p>";
+                    }
+                    
+                    echo "
                         </div>
-                        <div class='backup-actions'>
-                            <a href='admin_respaldos.php?action=download&file={$backup}' class='btn btn-small' style='background:#4CAF50; color:white;'>⬇️ Descargar</a>
-                            <a href='admin_respaldos.php?action=delete&file={$backup}' class='btn btn-small' style='background:#f44336; color:white;' onclick='return confirm(\"¿Estás seguro de eliminar este respaldo?\")'>🗑️ Eliminar</a>
+                        <div class='backup-actions'>";
+                    
+                    if ($archivo_existe) {
+                        echo "
+                            <a href='admin_respaldos.php?action=download&file={$archivo}.zip' class='btn btn-small' style='background:#4CAF50; color:white;'>⬇️ Descargar</a>
+                            <a href='admin_respaldos.php?action=delete&file={$archivo}.zip&id={$backup['id']}' class='btn btn-small' style='background:#f44336; color:white;' onclick='return confirm(\"¿Estás seguro de eliminar este respaldo?\")'>🗑️ Eliminar</a>";
+                    } else {
+                        echo "<button class='btn btn-small' style='background:#ccc; color:#666;' disabled>Archivo perdido</button>";
+                    }
+                    
+                    echo "
                         </div>
                     </div>";
                 }
-
-                if (empty($backups)) {
-                    echo "<p style='text-align:center; color:#999; padding:40px;'>No hay respaldos generados aún.</p>";
-                }
             } else {
-                echo "<p style='text-align:center; color:#999;'>El directorio de respaldos no existe.</p>";
+                echo "<p style='text-align:center; color:#999; padding:40px;'>No hay respaldos generados aún. Crea tu primer respaldo.</p>";
             }
+            
+            $conn->close();
             ?>
         </div>
     </div>

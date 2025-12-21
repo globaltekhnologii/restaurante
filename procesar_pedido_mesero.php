@@ -13,6 +13,7 @@ verificarRolORedirect(['mesero'], 'login.php');
 
 require_once 'config.php';
 require_once 'includes/functions_inventario.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 
 // Validar que se recibieron los datos
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -51,6 +52,9 @@ if (empty($items)) {
 }
 
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Generar número de pedido único
 $numero_pedido = 'PED-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
@@ -92,8 +96,8 @@ try {
     $tipo_pedido = isset($_POST['tipo_pedido']) ? $_POST['tipo_pedido'] : 'mesa';
     
     $estado = 'confirmado';
-    $stmt = $conn->prepare("INSERT INTO pedidos (numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
-    $stmt->bind_param("sssssssiis", $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id, $tipo_pedido);
+    $stmt = $conn->prepare("INSERT INTO pedidos (tenant_id, numero_pedido, nombre_cliente, telefono, direccion, notas, total, estado, mesa_id, usuario_id, fecha_pedido, tipo_pedido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)");
+    $stmt->bind_param("isssssssiis", $tenant_id, $numero_pedido, $nombre_cliente, $telefono, $direccion, $notas, $total, $estado, $mesa_id, $mesero_id, $tipo_pedido);
     $stmt->execute();
     $pedido_id = $conn->insert_id;
     $stmt->close();

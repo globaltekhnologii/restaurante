@@ -5,7 +5,11 @@ verificarSesion();
 verificarRolORedirect(['admin'], 'login.php');
 
 require_once 'config.php';
+require_once 'includes/tenant_context.php'; // NUEVO: Soporte multi-tenencia
 $conn = getDatabaseConnection();
+
+// Obtener tenant_id del usuario actual
+$tenant_id = getCurrentTenantId();
 
 // Procesar actualización de configuración
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,15 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Actualizar configuración
+    // Actualizar configuración filtrada por tenant
     $stmt = $conn->prepare("UPDATE metodos_pago_config SET numero_cuenta = ?, nombre_titular = ?" . 
                            ($qr_imagen ? ", qr_imagen = ?" : "") . 
-                           " WHERE metodo = ?");
+                           " WHERE metodo = ? AND tenant_id = ?");
     
     if ($qr_imagen) {
-        $stmt->bind_param("ssss", $numero_cuenta, $nombre_titular, $qr_imagen, $metodo);
+        $stmt->bind_param("ssssi", $numero_cuenta, $nombre_titular, $qr_imagen, $metodo, $tenant_id);
     } else {
-        $stmt->bind_param("sss", $numero_cuenta, $nombre_titular, $metodo);
+        $stmt->bind_param("sssi", $numero_cuenta, $nombre_titular, $metodo, $tenant_id);
     }
     
     if ($stmt->execute()) {
@@ -47,9 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Obtener métodos de pago
+// Obtener métodos de pago filtrados por tenant
 $metodos = [];
-$result = $conn->query("SELECT * FROM metodos_pago_config WHERE activo = 1 ORDER BY orden");
+$result = $conn->query("SELECT * FROM metodos_pago_config WHERE tenant_id = $tenant_id AND activo = 1 ORDER BY orden");
 while ($row = $result->fetch_assoc()) {
     $metodos[] = $row;
 }

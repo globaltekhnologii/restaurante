@@ -5,8 +5,10 @@
  * Buscar cliente por teléfono
  */
 function buscarClientePorTelefono($conn, $telefono) {
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
     $telefono = $conn->real_escape_string($telefono);
-    $sql = "SELECT * FROM clientes WHERE telefono = '$telefono' AND activo = 1 LIMIT 1";
+    $sql = "SELECT * FROM clientes WHERE tenant_id = $tenant_id AND telefono = '$telefono' AND activo = 1 LIMIT 1";
     $result = $conn->query($sql);
     return $result->fetch_assoc();
 }
@@ -15,8 +17,10 @@ function buscarClientePorTelefono($conn, $telefono) {
  * Buscar cliente por ID
  */
 function obtenerClientePorId($conn, $cliente_id) {
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
     $cliente_id = (int)$cliente_id;
-    $sql = "SELECT * FROM clientes WHERE id = $cliente_id LIMIT 1";
+    $sql = "SELECT * FROM clientes WHERE tenant_id = $tenant_id AND id = $cliente_id LIMIT 1";
     $result = $conn->query($sql);
     return $result->fetch_assoc();
 }
@@ -25,6 +29,9 @@ function obtenerClientePorId($conn, $cliente_id) {
  * Crear cliente automáticamente desde pedido
  */
 function crearClienteAutomatico($conn, $datos) {
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    
     $nombre = $conn->real_escape_string($datos['nombre']);
     $apellido = $conn->real_escape_string($datos['apellido'] ?? '');
     $telefono = $conn->real_escape_string($datos['telefono']);
@@ -38,8 +45,8 @@ function crearClienteAutomatico($conn, $datos) {
         return $existe['id'];
     }
     
-    $sql = "INSERT INTO clientes (nombre, apellido, telefono, email, direccion_principal, ciudad) 
-            VALUES ('$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad')";
+    $sql = "INSERT INTO clientes (tenant_id, nombre, apellido, telefono, email, direccion_principal, ciudad) 
+            VALUES ($tenant_id, '$nombre', '$apellido', '$telefono', '$email', '$direccion', '$ciudad')";
     
     if ($conn->query($sql)) {
         $cliente_id = $conn->insert_id;
@@ -124,10 +131,12 @@ function actualizarEstadisticasCliente($conn, $cliente_id) {
  * Buscar clientes por término (nombre, apellido, teléfono)
  */
 function buscarClientes($conn, $termino, $limit = 10) {
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
     $termino = $conn->real_escape_string($termino);
     $sql = "SELECT id, nombre, apellido, telefono, email, direccion_principal 
             FROM clientes 
-            WHERE (nombre LIKE '%$termino%' 
+            WHERE tenant_id = $tenant_id AND (nombre LIKE '%$termino%' 
             OR apellido LIKE '%$termino%' 
             OR telefono LIKE '%$termino%')
             AND activo = 1
@@ -145,28 +154,32 @@ function buscarClientes($conn, $termino, $limit = 10) {
  * Obtener resumen de estadísticas de clientes
  */
 function obtenerEstadisticasClientes($conn) {
+    require_once __DIR__ . '/tenant_context.php';
+    $tenant_id = getCurrentTenantId();
+    
     $stats = [];
     
     // Total de clientes activos
-    $result = $conn->query("SELECT COUNT(*) as total FROM clientes WHERE activo = 1");
+    $result = $conn->query("SELECT COUNT(*) as total FROM clientes WHERE tenant_id = $tenant_id AND activo = 1");
     $stats['total_clientes'] = $result->fetch_assoc()['total'];
     
     // Nuevos clientes este mes
     $result = $conn->query("SELECT COUNT(*) as total FROM clientes 
-                           WHERE activo = 1 
+                           WHERE tenant_id = $tenant_id
+                           AND activo = 1 
                            AND MONTH(fecha_registro) = MONTH(CURRENT_DATE())
                            AND YEAR(fecha_registro) = YEAR(CURRENT_DATE())");
     $stats['nuevos_mes'] = $result->fetch_assoc()['total'];
     
     // Con pedidos realizados
     $result = $conn->query("SELECT COUNT(*) as total FROM clientes 
-                           WHERE activo = 1 AND total_pedidos > 0");
+                           WHERE tenant_id = $tenant_id AND activo = 1 AND total_pedidos > 0");
     $stats['con_pedidos'] = $result->fetch_assoc()['total'];
     
     // Top 5 clientes por pedidos
     $result = $conn->query("SELECT nombre, apellido, telefono, total_pedidos 
                            FROM clientes 
-                           WHERE activo = 1 AND total_pedidos > 0
+                           WHERE tenant_id = $tenant_id AND activo = 1 AND total_pedidos > 0
                            ORDER BY total_pedidos DESC 
                            LIMIT 5");
     $top_clientes = [];
